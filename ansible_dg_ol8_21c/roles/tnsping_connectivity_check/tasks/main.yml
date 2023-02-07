@@ -1,0 +1,16 @@
+---
+# tasks file for tnsping_connectivity_check
+
+- block:
+   - name: tnsping connectivity check from {{node1_hostname}}
+     shell: . {{oracle_scripts_dir }}/setEnv.sh; tnsping {{prim_oracle_unqname}}; tnsping {{stby_oracle_unqname}}
+     register: tnsping_out_node1
+   - debug: var=tnsping_out_node1.stdout_lines
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+
+- block:
+   - name: tnsping connectivity check from {{node2_hostname}}
+     shell: . {{oracle_scripts_dir }}/setEnv.sh; tnsping {{prim_oracle_unqname}}; tnsping {{stby_oracle_unqname}}
+     register: tnsping_out_node2
+   - debug: var=tnsping_out_node2.stdout_lines
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node2']

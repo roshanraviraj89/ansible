@@ -1,0 +1,55 @@
+---
+# tasks file for oracle_dg_prereqs_node2
+
+- name: Generate data guard prereqs template for {{node2_hostname }}
+  template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+  with_items:
+        - { src: "oracle_dg_prereqs_node2.sh.j2", dest: "{{ oracle_software_dir }}/oracle_dg_prereqs_node2.sh" }
+        - { src: "rman_duplicate.sh.j2", dest: "{{ oracle_software_dir }}/rman_duplicate.sh"}
+
+- name: configure data guard prereqs for {{node2_hostname }}
+  shell: "{{ oracle_software_dir }}/oracle_dg_prereqs_node2.sh > {{ oracle_software_dir }}/oracle_dg_prereqs_node2.log"
+
+
+- name: create the password file on {{ node2_hostname }} #password file name should match the instance name
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; orapwd file='{{ oracle_base_config }}/dbs/orapw{{ instance_name }}'  password={{ sys_password }} force=y 
+
+  
+
+# - name: change the ownership of password file to oracle
+#   become: true
+#   become_user: root
+#   file:
+#     path: /tmp/orapw{{ oracle_sid }}
+#     owner: oracle
+#     group: oinstall 
+
+# - name: move password file to dbs location
+#   command: mv /tmp/orapw{{ oracle_sid }} {{oracle_base}}/dbs/orapw{{ oracle_sid }}
+
+# - name: copy password file to dbs location
+#   copy:
+#       src: /tmp/orapw{{ oracle_sid }}
+#       dest: "{{oracle_base}}/dbs/orapw{{ oracle_sid }}"
+#       remote_src: true
+ 
+
+## create adump directory
+- name: check if adump directory exists
+  stat: 
+    path: "{{oracle_base}}/admin/{{stby_oracle_unqname}}/adump"
+  register: adump_out
+# - debug: var=adump_out
+
+- name: create adump directory
+  file:
+    path: "{{oracle_base}}/admin/{{stby_oracle_unqname}}/adump"
+    state: directory
+    owner: oracle
+    group: oinstall
+  when: not adump_out.stat.exists

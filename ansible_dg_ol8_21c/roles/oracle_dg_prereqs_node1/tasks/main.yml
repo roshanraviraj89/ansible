@@ -1,0 +1,67 @@
+---
+# tasks file for oracle_dg_prereqs_node1
+
+- name: check if oracle data guard prereqs have already been configured
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 100 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n  SELECT MEMBER FROM V\$LOGFILE WHERE TYPE = 'STANDBY';" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+  register: dg_status
+
+- block:
+    - name: validate if the oracle user data guard prereqs have been configured successfully
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 100 LINESIZE 200 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n {{item}};\n " | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      register: dg_prereqs_out
+      with_items: 
+       - select log_mode from v\$database
+       - select FLASHBACK_ON from v\$database
+       - select force_logging from v\$database
+       - select name, value from v\$parameter where name in ('log_archive_config', 'log_archive_dest_1', 'fal_server', 'fal_client', 'standby_file_management')
+       - SELECT MEMBER FROM V\$LOGFILE WHERE TYPE = 'STANDBY'
+    - debug: var=dg_prereqs_out.results|map(attribute='stdout_lines')|list|trim
+  when: dg_status.stdout|length != 0
+
+- block:
+    - name: Generate oracle data guard prereqs template for node1
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - { src: "oracle_dg_prereqs_node1.sh.j2", dest: "{{ oracle_software_dir }}/oracle_dg_prereqs_node1.sh" }
+
+    - name: configure oracle user data guard prereqs
+      shell: "{{ oracle_software_dir }}/oracle_dg_prereqs_node1.sh > {{ oracle_software_dir }}/oracle_dg_prereqs_node1.log"
+
+    - name: validate if the oracle user data guard prereqs have been configured successfully
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 100 LINESIZE 200 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n {{item}};\n " | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      register: dg_prereqs_out
+      with_items: 
+       - select log_mode from v\$database
+       - select FLASHBACK_ON from v\$database
+       - select force_logging from v\$database
+       - select name, value from v\$parameter where name in ('log_archive_config', 'log_archive_dest_1', 'fal_server', 'fal_client', 'standby_file_management')
+       - SELECT MEMBER FROM V\$LOGFILE WHERE TYPE = 'STANDBY'
+    - debug: var=dg_prereqs_out.results|map(attribute='stdout_lines')|list|trim
+  when: dg_status.stdout|length == 0  
+
+## data guard prereqs on primary server (node 1)
+# 1. archivelog mode : it's already been configured with oracle_create_db role
+# 2. Enable flashback
+# 3. enable force loging
+# 4. create standby redologs
+# 5. set log_archive_* parameters
+# 6. set falserver and fal client
+# 7. set standby_file_management to auto
+# 8. set remote_login_passwordfile to exclusive : it's already set by default with the db creation
+# 9. create static listener entry -- it's already been configured with grid_dg_prereqs_node1
+# 10. create tns entries for primary and standby dbs
+
+- name: if password file exists on {{ node1_hostname }}
+  stat: 
+    path: "{{oracle_base_config}}/dbs/orapw{{ oracle_sid }}"
+  register: password_file_out
+
+- name: fail the task if password file doesn't exist
+  fail:
+     msg: "No password file found"
+  when: not password_file_out.stat.exists

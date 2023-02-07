@@ -1,0 +1,42 @@
+. {{ oracle_scripts_dir }}/setEnv.sh
+
+
+cat > ${TNS_ADMIN}/tnsnames.ora <<EOF
+
+{{ prim_oracle_unqname }} =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = {{ node1_hostname }})(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = {{ prim_oracle_unqname }})
+        (GLOBAL_NAME = {{ prim_oracle_unqname }})
+    )
+  )
+
+
+{{ stby_oracle_unqname }} =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = {{ node2_hostname }})(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = {{ stby_oracle_unqname }})
+        (GLOBAL_NAME =  {{ stby_oracle_unqname }})
+    )
+  )
+
+EOF
+
+cat > ${TNS_ADMIN}/sqlnet.ora <<EOF
+SQLNET.INBOUND_CONNECT_TIMEOUT=400
+NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)
+EOF
+
+
+cat > ${ORACLE_BASE}/dbs/init${ORACLE_UNQNAME}.ora <<EOF
+*.db_name='${ORACLE_SID}'
+
+EOF
+
+

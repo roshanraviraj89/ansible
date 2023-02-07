@@ -1,0 +1,24 @@
+. {{ oracle_scripts_dir }}/setEnv.sh
+
+rman target sys/{{sys_password}}@{{prim_oracle_unqname}} auxiliary sys/{{sys_password}}@{{stby_oracle_unqname}}<<EOF
+run {
+allocate channel p1 type disk;
+allocate auxiliary channel s1 type disk;
+duplicate target database 
+for standby
+from active database 
+  dorecover 
+  spfile 
+    set db_unique_name='{{stby_oracle_unqname}}' COMMENT 'Is standby' 
+    set fal_client='{{stby_oracle_unqname}}'
+    set fal_server='{{prim_oracle_unqname}}'
+    set standby_file_management='AUTO'
+    set log_archive_config='dg_config=({{prim_oracle_unqname}},{{stby_oracle_unqname}})'
+    set log_archive_dest_1='location=use_db_recovery_file_dest valid_for=(all_logfiles,all_roles) db_unique_name={{stby_oracle_unqname}}' 
+    set log_archive_dest_2='service={{prim_oracle_unqname}} async valid_for=(online_logfiles,primary_role) db_unique_name={{prim_oracle_unqname}}' 
+    set audit_file_dest='{{oracle_base}}/admin/{{ stby_oracle_unqname }}/adump'
+  nofilenamecheck;
+  RELEASE CHANNEL p1;
+  RELEASE CHANNEL s1;
+}
+EOF

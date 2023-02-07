@@ -1,0 +1,39 @@
+---
+# tasks file for oracle_os_prereqs
+#
+- name: Add hosts entry on node1
+  lineinfile:
+    state: present
+    dest: /etc/hosts
+    line: "{{ item }}"
+  with_items: 
+    - "{{ node1_ip_address }} {{ node1_hostname }} {{ node1_short_hostname }}"
+    - "{{ node2_ip_address }} {{ node2_hostname }} {{ node2_short_hostname }}"
+
+# - name: Add hosts entry on node2
+#   lineinfile:
+#     state: present
+#     dest: /etc/hosts
+#     line: "{{ node2_ip_address }} {{ node2_hostname }} {{ node2_short_hostname }}"
+#   when: inventory_hostname in groups['oracle_dg_ol8_21c_node2']
+
+#
+- name: Install packages
+  dnf:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items: "{{ packages }}"
+#
+- name: Configure firewall
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items: "{{ fwrules }}"
+#
+- name: Set SELinux to permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+#
