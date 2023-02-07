@@ -1,0 +1,55 @@
+---
+# tasks file for grid_dg_prereqs_node1
+
+
+- name: Generate grid static listener entries template for {{ node1_hostname }}
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: grid
+    group: oinstall
+    mode: "u=rwx,g=rwx,o=r"
+  with_items:
+    - { src: "grid_dg_prereqs_node1.sh.j2", dest: "{{ grid_software_dir }}/grid_dg_prereqs_node1.sh" }
+
+
+
+- name: Check if static listener services already exist
+  shell: . {{grid_scripts_dir }}/setEnv.sh; lsnrctl status | grep -B 1 UNKNOWN
+  ignore_errors: true
+  register: lsn_result
+  changed_when: False
+
+
+- name: Display a message if static listener services were not found 
+  debug:
+    msg: "No data guard related static listener services were found"
+  when: lsn_result.stdout|length == 0
+
+- name: Display a message if static listener services were  found 
+  debug:
+    msg: 
+      - "Data guard related static listener services were found"
+      - "{{lsn_result.stdout_lines}}"
+  when: lsn_result.stdout|length != 0
+
+
+
+- block:
+    - name: create grid static listener services
+      shell: "{{ grid_software_dir }}/grid_dg_prereqs_node1.sh > {{ grid_software_dir }}/grid_dg_prereqs_node1.log"
+
+    - name: validate the static listener services
+      shell: . {{grid_scripts_dir }}/setEnv.sh; lsnrctl status | grep -B 1 UNKNOWN
+      register: lsn_new_result
+    - debug: var=lsn_new_result.stdout_lines
+  when: lsn_result.stdout|length == 0
+
+
+
+
+   
+
+    
+
+

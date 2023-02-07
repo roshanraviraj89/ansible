@@ -1,0 +1,27 @@
+. {{ grid_scripts_dir }}/setEnv.sh
+
+cat >> ${ORACLE_HOME}/network/admin/listener.ora <<EOF
+
+SID_LIST_LISTENER =
+   (SID_LIST =
+     (SID_DESC =
+       (GLOBAL_DBNAME = {{ prim_oracle_unqname }})
+       (ORACLE_HOME = {{ oracle_home }})
+       (SID_NAME = {{ oracle_sid }})
+     )
+	 (SID_DESC =
+       (GLOBAL_DBNAME = {{ prim_oracle_unqname }}_DGMGRL)
+       (ORACLE_HOME = {{ oracle_home }})
+       (SID_NAME = {{ oracle_sid }})
+     )
+   )
+
+EOF
+
+echo "Restarting the listener"
+srvctl stop listener
+srvctl start listener
+
+echo "Displaying the listener status after the restart"
+srvctl status listener
+

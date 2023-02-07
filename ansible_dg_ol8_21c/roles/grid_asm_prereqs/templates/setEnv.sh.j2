@@ -1,0 +1,20 @@
+# grid
+
+if [ -f ~/.bashrc ]; then
+. ~/.bashrc
+fi
+
+export ORACLE_SID=+ASM
+export ORACLE_BASE={{ grid_base }}
+export ORACLE_HOME={{ grid_home }}
+export ORACLE_TERM= xterm
+export TNS_ADMIN=${ORACLE_HOME}/network/admin
+export JAVA_HOME=/usr/bin/java
+PATH=.:${JAVA_HOME}/bin:${PATH}:$HOME/bin:$ORACLE_HOME/bin:${ORACLE_HOME}/OPatch
+PATH=${PATH}:/usr/bin:/bin:/usr/local/bin
+export PATH
+export TEMP=/tmp
+export TMPDIR=/tmp
+umask 022
+
+

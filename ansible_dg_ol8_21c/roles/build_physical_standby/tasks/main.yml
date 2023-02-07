@@ -1,0 +1,122 @@
+---
+# tasks file for build_physical_standby
+- name: check if standby database is already configured
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl config database -db {{ stby_oracle_unqname }}
+  register: stby_db_out
+  ignore_errors: true
+
+- name: display a message if standby db already exists
+  debug: 
+    msg: 
+      - "database {{ stby_oracle_unqname }} already exists"
+      - "{{ stby_db_out.stdout_lines }}"
+  when: "'The resource for database' and '(stby_oracle_unqname|string)' and 'could not be found' not in stby_db_out.stdout"
+
+- block:
+    - name: startup the standby db in nomount mode
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "startup nomount pfile='${ORACLE_BASE}/dbs/init${ORACLE_UNQNAME}.ora'" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      register: startup_out
+    - debug: var=startup_out.stdout_lines
+
+    - name: RMAN duplicate
+      shell: "{{ oracle_software_dir }}/rman_duplicate.sh > {{ oracle_software_dir }}/rman_duplicate.log"
+    - name: post RMAN duplicate check
+      shell: grep  "Finished Duplicate Db*" {{ oracle_software_dir }}/rman_duplicate.log
+      register: duplicate_out
+      
+    - name: display the output from post RMAN duplicate check
+      debug: msg="{{ duplicate_out.stdout_lines}}"
+
+    - name: enable flashback on standby db
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "ALTER DATABASE FLASHBACK ON;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      
+    - name: enable mrp process
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "alter database recover managed standby database disconnect from session;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+
+    - name: enable auto db start after reboot
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl add database -dbname {{ oracle_sid }} -db {{ stby_oracle_unqname }} -instance {{ instance_name }} -oraclehome {{ oracle_home }} -startoption MOUNT -stopoption IMMEDIATE -role physical_standby
+      
+  when: "'The resource for database' and '(stby_oracle_unqname|string)' and 'could not be found' in stby_db_out.stdout"   
+
+- name: check spfile location  
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e  "SET HEADING OFF\n select value from v\$parameter where name='spfile';" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+  register: spfile_out
+- debug: 
+    msg: 
+     - "spfile is on the file system"
+     - "{{ spfile_out.stdout_lines }}"
+  when: '"dbs" in  spfile_out.stdout'
+
+- block:
+    - name: create PARAMETERFILE directory in asm
+      become: true
+      become_user: grid
+      shell: . {{ grid_scripts_dir }}/setEnv.sh; asmcmd mkdir {{ data_dg }}/{{ stby_oracle_unqname }}/PARAMETERFILE
+
+    - name: create pfile from spfile
+      shell: . {{ oracle_scripts_dir }}/setEnv.sh; echo "create pfile from spfile;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+    
+    - name: create spfile in asm from pfile 
+      shell: . {{ oracle_scripts_dir }}/setEnv.sh; echo "create spfile='{{ data_dg }}/{{ stby_oracle_unqname }}/PARAMETERFILE/spfile{{ instance_name }}.ora' from pfile;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+     
+    - name: move the spfile to asm
+      shell: "{{item}}"
+      register: move_spfile_out
+      with_items: 
+         - mv {{ oracle_base_config }}/dbs/spfile{{ instance_name }}.ora {{ oracle_base_config }}/dbs/spfile{{ instance_name }}.ora.bak
+         - echo "SPFILE='{{ data_dg }}/{{ stby_oracle_unqname }}/PARAMETERFILE/spfile{{ instance_name }}.ora'" > {{ oracle_base_config }}/dbs/init{{ instance_name}}.ora
+         - . {{ oracle_scripts_dir }}/setEnv.sh; srvctl modify database -db {{ stby_oracle_unqname }} -p {{ data_dg }}/{{ stby_oracle_unqname }}/PARAMETERFILE/spfile{{ instance_name }}.ora
+         - . {{ oracle_scripts_dir }}/setEnv.sh; echo "shutdown immediate;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+         - . {{ oracle_scripts_dir }}/setEnv.sh; {{oracle_home}}/bin/srvctl start database -db {{ stby_oracle_unqname }}
+         - . {{ oracle_scripts_dir }}/setEnv.sh; {{oracle_home}}/bin/srvctl status database -db {{ stby_oracle_unqname }}
+
+    - debug: var=move_spfile_out.results|map(attribute='stdout_lines')|list|trim
+
+
+    - name: validate the spfile location  
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e  "SET HEADING OFF\n select value from v\$parameter where name='spfile';" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      register: spfile_new_out
+    - debug: 
+        msg: 
+         - "spfile has now been moved to asm"
+         - "{{ spfile_new_out.stdout_lines }}"
+      when: '"PARAMETERFILE" in  spfile_new_out.stdout'
+
+    - name: restart the mrp process
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "alter database recover managed standby database disconnect from session;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+    
+  when: '"dbs" in  spfile_out.stdout'   
+
+- name: validate mrp process is running
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "select inst_id, process ,status ,thread#,SEQUENCE# from gv\$managed_standby where process='MRP0';" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+  register: mrp_out
+
+#- debug: var=mrp_out
+
+- name: display a message if mrp is applying log ok 
+  debug: 
+    msg:
+     - "mrp process is applying log ok"   
+     - "{{mrp_out.stdout_lines}}"
+  when: '"APPLYING_LOG" in mrp_out.stdout'
+
+- name: fail the task if mrp process is not running
+  fail: 
+   msg: 
+     - "mrp process is not running on standby. Investigate and fix the issue"
+     - "{{mrp_out.stdout_lines}}"
+  when: '"APPLYING_LOG" not in mrp_out.stdout'
+
+
+
+
+
+         
+
+         
+
+
+  
+
+
+      

@@ -1,0 +1,3 @@
+LINUX.X64_213000_grid_home.zip
+oracleasmlib-2.0.17-1.el8.x86_64.rpm
+oracleasm-support-2.1.12-1.el8.x86_64.rpm

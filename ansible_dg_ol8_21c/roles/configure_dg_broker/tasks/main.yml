@@ -1,0 +1,71 @@
+---
+# tasks file for configure_dg_broker
+
+- name: check if the dg broker has already been configured
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "show parameter dg_broker_start;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+  ignore_errors: true
+  register: broker_out
+  #when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+
+#- debug: var=broker_out.stdout
+
+- name: display a message if dg_broker is already configured previously
+  debug:
+    msg:
+      - "DG broker has already been configured"
+      - "{{broker_out.stdout_lines}}"
+  when: '"TRUE" in broker_out.stdout'
+ 
+
+- block:
+    - name: do the dg broker prereqs for {{node1_hostname}}
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "{{item}};" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+      with_items:
+        - alter system set dg_broker_start=true scope=both
+        - alter system set LOG_ARCHIVE_DEST_2='' SCOPE=BOTH
+        - ALTER SYSTEM SET local_listener='(ADDRESS=(PROTOCOl=TCP)(HOST={{node1_hostname}})(PORT=1521))' SCOPE=BOTH
+
+    - name: do the dg broker prereqs for {{node2_hostname}}
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "{{item}};" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      when: inventory_hostname in groups['oracle_dg_ol8_21c_node2']
+      with_items:
+        - alter system set dg_broker_start=true scope=both
+        - alter system set LOG_ARCHIVE_DEST_2='' SCOPE=BOTH
+        - ALTER SYSTEM SET local_listener='(ADDRESS=(PROTOCOl=TCP)(HOST={{node2_hostname}})(PORT=1521))' SCOPE=BOTH
+
+  # to avoid ORA-16613: initialization in progress for database error, pause the play for 2 minutes
+    - name: sleep for 2 minutes and continue with the next tasks
+      wait_for:
+        timeout: 120
+
+    - name: do dg_broker configuration part
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "{{item}};" | {{ oracle_home }}/bin/dgmgrl sys/{{sys_password}}@{{prim_oracle_unqname}}
+      when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+      with_items:
+        - create configuration my_dg_config as primary database is {{prim_oracle_unqname}} connect identifier is {{prim_oracle_unqname}}
+        - add database {{stby_oracle_unqname}} as connect identifier is {{stby_oracle_unqname}} maintained as physical
+        - show configuration
+        - enable configuration
+        - show database {{prim_oracle_unqname}}
+        - show database {{stby_oracle_unqname}}
+      register: dg_broker_config_out
+
+    - name: display the broker config output
+      debug: var=dg_broker_config_out.results|map(attribute='stdout_lines')|list|trim
+      when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+  when: '"FALSE" in broker_out.stdout'
+
+- name: check the dg broker status 
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; echo "show configuration;" | {{ oracle_home }}/bin/dgmgrl sys/{{sys_password}}@{{prim_oracle_unqname}}
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+  register: dg_broker_status
+
+- name: Display the final message
+  debug:
+    msg:
+      - "Data guard setup has now been completed. Cheers"
+      - "{{ dg_broker_status.stdout_lines}}"
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node1'] and ("SUCCESS" in dg_broker_status.stdout)
+  #
+ 

@@ -1,0 +1,25 @@
+---
+# tasks file for grid_sw_install
+#check if grid software has already been installed
+
+- name: check if grid software has already been installed
+  shell: . {{grid_scripts_dir }}/setEnv.sh; crsctl status resource -t
+  register: crsctl_out
+  ignore_errors: true
+
+- name: display crsctl_out
+  debug: var=crsctl_out
+
+- block:
+    - name: grid software-only install
+      shell: "{{ grid_software_dir }}/grid_software_installation.sh > {{ grid_software_dir }}/grid_software_install.log"
+      #when: crsctl_out.rc != 0
+      tags: grid_sw_install
+
+    - name: validate if software has been successfully installed
+      shell: grep  "Successfully Setup Software*" {{ grid_software_dir }}/grid_software_install.log
+      register: grid_sw_install_out
+
+    - name: display the output from post grid_sw_install check
+      debug: msg="{{ grid_sw_install_out.stdout_lines}}"
+  when: crsctl_out.rc != 0

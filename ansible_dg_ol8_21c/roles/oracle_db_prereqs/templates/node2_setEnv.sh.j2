@@ -1,0 +1,18 @@
+# Regular settings.
+export TMP=/tmp
+export TMPDIR=$TMP
+export ORACLE_HOSTNAME={{ node2_hostname }}
+export ORACLE_UNQNAME={{ stby_oracle_unqname }}
+export ORACLE_BASE={{ oracle_base }}
+export ORACLE_HOME={{ oracle_home }}
+export TNS_ADMIN={{ oracle_base_home }}/network/admin
+export ORA_INVENTORY={{ ora_inventory }}
+export ORACLE_SID={{ oracle_sid }}
+export PDB_NAME={{ pdb_name }}
+export PATH=/usr/sbin:/usr/local/bin:$PATH
+export PATH=$ORACLE_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export CLASSPATH=$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+export SOFTWARE_DIR={{ oracle_software_dir }}
+export SID_LIST={{ oracle_sid }}
+

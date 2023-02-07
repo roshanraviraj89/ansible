@@ -1,0 +1,81 @@
+---
+# tasks file for oracle_db_prereqs
+#
+#
+- name: Check if the directories already exist
+  stat:
+    path: "{{ item }}"
+  with_items:
+    - "{{ oracle_scripts_dir }}"
+    - "{{ oracle_home }}"
+    - "{{ oracle_software_dir }}"
+  register: dir_result
+
+- name: display a message if the directories exist
+  debug:
+    msg: "directory {{ item.item }} exists"
+  with_items: "{{ dir_result.results }}"
+  when: item.stat.exists
+
+- name: create directories if directories don't exist
+  file:
+    path: "{{ item.item }}"
+    state: directory
+    owner: oracle
+    group: oinstall
+    recurse: yes
+    mode: "0775"
+
+  with_items:
+    - "{{ dir_result.results }}"
+  when: not item.stat.exists
+
+- name: Generate templates for node1
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rwx,g=rwx,o=r"
+  with_items:
+    - { src: "node1_setEnv.sh.j2", dest: "{{ oracle_scripts_dir }}/setEnv.sh" }
+    - { src: "oracle_software_installation.sh.j2", dest: "{{ oracle_software_dir }}/oracle_software_installation.sh" }
+    - { src: "oracle_root_scripts.sh.j2", dest: "{{ oracle_software_dir }}/oracle_root_scripts.sh" }
+    - { src: "oracle_create_database.sh.j2", dest: "{{ oracle_software_dir }}/oracle_create_database.sh" }
+    - { src: "set_archivelog_mode.sh.j2", dest: "{{ oracle_scripts_dir }}/set_archivelog_mode.sh" }
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node1']
+
+- name: Generate templates for node2
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rwx,g=rwx,o=r"
+  with_items:
+    - { src: "node2_setEnv.sh.j2", dest: "{{ oracle_scripts_dir }}/setEnv.sh" }
+    - { src: "oracle_software_installation.sh.j2", dest: "{{ oracle_software_dir }}/oracle_software_installation.sh" }
+    - { src: "oracle_root_scripts.sh.j2", dest: "{{ oracle_software_dir }}/oracle_root_scripts.sh" }
+  when: inventory_hostname in groups['oracle_dg_ol8_21c_node2']
+
+- name: Source setEnv.sh from .bash_profile
+  lineinfile:
+    state: present
+    dest: /home/oracle/.bash_profile
+    line: ". {{ oracle_scripts_dir }}/setEnv.sh"
+
+- name: Check if software already exists
+  stat:
+    path: "{{ oracle_software_dir }}/{{ db_software }}"
+  register: software_result
+
+- name: Copy files to {{ software_dir }}
+  copy:
+    src: "{{ item }}"
+    dest: "{{ oracle_software_dir }}/{{ item }}"
+    owner: oracle
+    group: oinstall
+  with_items:
+    - "{{ db_software }}"
+  when: not software_result.stat.exists
+
