@@ -1,0 +1,75 @@
+---
+# Host information.
+node1_hostname: bath-node1.localdomain
+node1_short_hostname: bath-node1
+node1_ip_address: 192.168.68.124
+
+
+node2_hostname: bath-node2.localdomain
+node2_short_hostname: bath-node2
+node2_ip_address: 192.168.68.128
+#
+
+#paths
+rpm_dir: /u01/rpm
+grid_base: /u01/app/grid
+grid_home: /u01/app/21.0.0/grid
+grid_scripts_dir: /home/grid/scripts
+grid_software_dir: /u05/grid_software
+grid_software: LINUX.X64_213000_grid_home.zip
+ora_inventory: /u01/app/oraInventory
+grid_sid: +ASM
+swap_file_path: /swapfile
+swap_file_size_mb: 4096
+
+oracle_base: /u01/app/oracle
+oracle_base_config: /u01/app/oracle
+oracle_base_home: "{{ oracle_base_config }}/homes/OraDB21Home1"
+oracle_home:  /u01/app/oracle/product/21.0.0/dbhome_1
+
+oracle_software_dir: /home/oracle/software
+
+data_dg: +DATA_DG
+oracle_scripts_dir: /home/oracle/scripts
+fra_dg: +FRA_DG
+fra_size: 20G
+
+
+
+#database
+oracle_sid: CDBDEV
+pdb_name: PDB_DEV
+prim_oracle_unqname: CDBDEV
+stby_oracle_unqname: CDBDEV_STBY
+instance_name: CDBDEV
+# #
+# # # # Software and Patching
+db_software: LINUX.X64_213000_db_home.zip
+#
+
+# OS Packages
+packages:
+  - 'zip'
+  - 'unzip'
+  - 'tar'
+  - 'cpio'
+  - 'tmux'
+  - 'oracle-database-preinstall-21c'
+  - 'kmod-oracleasm'
+  - 'sshpass'
+  - 'rsync'
+#       
+rpms:
+  - 'oracleasmlib-2.0.17-1.el8.x86_64.rpm'
+  - 'oracleasm-support-2.1.12-1.el8.x86_64.rpm'
+
+# Firewall Rules
+fwrules:
+  - '22/tcp'
+  - '1521/tcp'
+  - '2484/tcp'
+#                   #
+#
+sys_password: Rosha1989*
+grid_password: grid123
+oracle_password: oracle123

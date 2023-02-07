@@ -1,0 +1,160 @@
+- name: Configure OS prerequisites
+  hosts: oracle_dg_ol8_21c
+  tags: oracle_os_prereqs
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_os_prereqs
+
+- name: Configure grid_asm prerequisites
+  hosts: oracle_dg_ol8_21c
+  tags: grid_asm_prereqs
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - grid_asm_prereqs
+
+- name: install grid software
+  hosts: oracle_dg_ol8_21c
+  tags: grid_sw_install
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_sw_install
+
+- name: Run grid root scripts
+  hosts: oracle_dg_ol8_21c
+  tags: grid_root_scripts
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - grid_root_scripts
+
+- name: do grid configuration
+  hosts: oracle_dg_ol8_21c
+  tags: grid_configuration
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_configuration
+
+- name: do oracle db prerequisites
+  hosts: oracle_dg_ol8_21c
+  tags: oracle_db_prereqs
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_db_prereqs
+
+- name: Install Oracle Software
+  hosts: oracle_dg_ol8_21c
+  tags: oracle_sw_install
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_sw_install
+
+- name: Run oracle root scripts
+  hosts: oracle_dg_ol8_21c
+  tags: oracle_root_scripts
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_root_scripts
+
+- name: Create database only on Primary
+  hosts: oracle_dg_ol8_21c_node1
+  tags: oracle_create_db
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_create_db
+
+- name: do dataguard prerequisites on node1
+  hosts: oracle_dg_ol8_21c_node1
+  tags: dg_prereqs_node1
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  
+  roles:
+    - role: grid_dg_prereqs_node1
+      become_user: grid
+      tags: grid_dg_prereqs_node1
+    - role: oracle_dg_prereqs_node1
+      become_user: oracle
+      tags: oracle_dg_prereqs_node1
+
+
+- name: do dataguard prerequisites on node2
+  hosts: oracle_dg_ol8_21c_node2
+  tags: dg_prereqs_node2
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  
+  roles:
+    - role: grid_dg_prereqs_node2
+      become_user: grid
+      tags: grid_dg_prereqs_node2
+    - role: oracle_dg_prereqs_node2
+      become_user: oracle
+      tags: oracle_dg_prereqs_node2
+
+- name: validate the network connectivity between primary and standby
+  hosts: oracle_dg_ol8_21c
+  tags: tnsping_connectivity_check
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - role: tnsping_connectivity_check
+
+- name: build physical standby
+  hosts: oracle_dg_ol8_21c_node2
+  tags: build_physical_standby
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - build_physical_standby
+
+- name: configure data guard broker
+  hosts: oracle_dg_ol8_21c
+  tags: configure_dg_broker
+  vars_files: host_vars/dg_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - configure_dg_broker
+
+ 
+
+
+
+
+
+# - name: do oracle dataguard prerequisites on node 1
+#   hosts: oracle_dg_ol8_21c_node1
+#   tags: oracle_dg_prereqs_node1
+#   vars_files: host_vars/dg_vars.yml
+#   become: true
+#   become_user: oracle
+#   roles:
+#     - oracle_dg_prereqs_node1
+    
+# - name: configure data guard broker
+#   hosts: oracle_dg_ol8_21c
+#   tags: oracle_data_guard_broker_configuration
+#   vars_files: host_vars/dg_vars.yml
+#   become: true
+#   become_user: oracle
+#   roles:
+#     - 
