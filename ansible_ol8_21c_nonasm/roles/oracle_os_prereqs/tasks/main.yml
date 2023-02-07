@@ -1,0 +1,28 @@
+---
+# tasks file for oracle_os_prereqs
+
+- name: Add hosts entry
+  lineinfile:
+    state: present
+    dest: /etc/hosts
+    line: "{{ ip_address }} {{ hostname }} {{ short_hostname }}"
+
+- name: Install packages
+  dnf:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items: "{{ packages }}"
+
+- name: Configure firewall
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items: "{{ fwrules }}"
+
+- name: Set SELinux to permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+

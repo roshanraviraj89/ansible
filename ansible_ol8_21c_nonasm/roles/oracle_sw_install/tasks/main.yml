@@ -1,0 +1,14 @@
+---
+# tasks file for oracle_sw_install
+
+- name: Check if root.sh already exists
+  stat:
+    path: "{{ oracle_home }}/root.sh"
+  register: root_sh_result
+  tags: oracle_sw_install
+
+- name: Oracle software-only install
+  shell: "{{ software_dir }}/oracle_software_installation.sh >> {{ software_dir }}/oracle_software_install_{{ ansible_date_time.iso8601 }}.log"
+  when: not root_sh_result.stat.exists
+  tags: oracle_sw_install
+

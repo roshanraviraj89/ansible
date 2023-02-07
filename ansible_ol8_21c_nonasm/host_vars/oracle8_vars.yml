@@ -1,0 +1,54 @@
+---
+# Host information.
+hostname: barnet.localdomain
+short_hostname: barnet
+ip_address: 192.168.68.114
+# #
+#
+# # Paths
+oracle_base: /u01/app/oracle
+oracle_home_ext: product/21.0.0/dbhome_1
+oracle_home: "{{ oracle_base }}/{{ oracle_home_ext }}"
+ora_inventory: /u01/app/oraInventory
+data_dir: /u02/oradata
+scripts_dir: /home/oracle/scripts
+software_dir: /u03/software
+fra_dir: /u03/app/oracle/fra
+fra_size: 20G
+# #
+#
+# # Database
+oracle_sid: cdbt
+pdb_name: pdb_test
+oracle_unqname: cdbt
+# #
+# # # Software and Patching
+db_software: LINUX.X64_213000_db_home.zip
+opatch_file: p6880880_210000_Linux-x86-64.zip
+patch_file: p34527084_210000_Linux-x86-64.zip
+patch_top: /u03/software
+patch_path: "{{ patch_top }}/34527084"
+# #
+#
+
+# OS Packages
+packages:
+  - 'zip'
+  - 'unzip'
+  - 'tar'
+  - 'cpio'
+  - 'tmux'
+  - 'oracle-database-preinstall-21c'
+#
+## Firewall Rules
+fwrules:
+  - '22/tcp'
+  - '1521/tcp'
+  - '2484/tcp'
+#
+
+# # sys password
+sys_password: Rosha1989
+# #
+#
+#

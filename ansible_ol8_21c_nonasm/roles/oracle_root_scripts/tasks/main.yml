@@ -1,0 +1,13 @@
+---
+# tasks file for oracle_root_scripts
+
+- name: Check if /etc/oratab already exists
+  stat:
+    path: "/etc/oratab"
+  register: oratab_result
+  tags: oracle_root_scripts
+       
+- name: Run Oracle root scripts
+  shell: "{{ software_dir }}/oracle_root_scripts.sh >> {{ software_dir }}/root_scripts.log"
+  when: not oratab_result.stat.exists
+  tags: oracle_root_scripts

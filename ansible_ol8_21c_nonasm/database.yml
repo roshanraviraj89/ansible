@@ -1,0 +1,63 @@
+- name: Configure OS prerequisites
+  hosts: oracle_21c_nonasm
+  tags: oracle_os_prereqs
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_os_prereqs
+
+- name: Configure DB prerequisites
+  hosts: oracle_21c_nonasm
+  tags: oracle_db_prereqs
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_db_prereqs
+#
+- name: Install Oracle Software
+  hosts: oracle_21c_nonasm
+  tags: oracle_sw_install
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_sw_install
+#
+- name: Run root scripts
+  hosts: oracle_21c_nonasm
+  tags: oracle_root_scripts
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_root_scripts
+#
+- name: Patch Oracle software
+  hosts: oracle_21c_nonasm
+  tags: oracle_sw_patch
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_sw_patch
+#
+- name: Create database
+  hosts: oracle_21c_nonasm
+  tags: oracle_create_db
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_create_db
+#
+- name: Create dbora service
+  hosts: oracle_21c_nonasm
+  tags: oracle_create_service
+  vars_files: host_vars/oracle8_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_create_service
+#

@@ -1,0 +1,12 @@
+---
+# tasks file for oracle_sw_patch
+
+
+- name: Check if patched.ansible file already exists
+  stat:
+    path: "{{ oracle_home }}/patched.ansible"
+  register: patch_result
+
+- name: Run Oracle patches
+  shell: "{{ software_dir }}/oracle_software_patch.sh >> {{ software_dir }}/patch_{{ ansible_date_time.iso8601 }}.log"
+  when: not patch_result.stat.exists

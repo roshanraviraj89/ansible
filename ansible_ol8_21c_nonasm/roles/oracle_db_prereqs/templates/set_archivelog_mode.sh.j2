@@ -1,0 +1,27 @@
+. {{ scripts_dir }}/setEnv.sh
+
+log_mode=$(sqlplus -s / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF
+select log_mode from v\$database;
+exit;
+EOF
+)
+
+
+
+if [[ $log_mode == NOARCHIVELOG ]]
+then
+sqlplus -s / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF
+whenever sqlerror exit sql.sqlcode;
+shutdown immediate;
+startup mount;
+alter database archivelog;
+alter database open;
+shutdown immediate;
+startup;
+alter system set db_recovery_file_dest_size={{ fra_size }} scope=both;
+exit;
+EOF
+fi
+
