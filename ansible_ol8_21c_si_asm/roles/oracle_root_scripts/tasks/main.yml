@@ -1,0 +1,14 @@
+---
+# tasks file for oracle_root_scripts
+
+- name: check if database entry exists in /etc/oratab
+  shell: grep "^{{ oracle_sid }}" /etc/oratab
+  register: oracle_sid_out
+  ignore_errors: true
+  tags: oracle_root_scripts
+
+       
+- name: Run Oracle root scripts
+  shell: "{{ oracle_software_dir }}/oracle_root_scripts.sh > {{ oracle_software_dir }}/root_scripts.log"
+  when: oracle_sid_out.rc != 0
+  tags: oracle_root_scripts

@@ -1,0 +1,81 @@
+- name: Configure OS prerequisites
+  hosts: oracle_ol8_21c_si_asm
+  tags: oracle_os_prereqs
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_os_prereqs
+
+- name: Configure grid_asm prerequisites
+  hosts: oracle_ol8_21c_si_asm
+  tags: grid_asm_prereqs
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - grid_asm_prereqs
+
+- name: install grid software
+  hosts: oracle_ol8_21c_si_asm
+  tags: grid_sw_install
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_sw_install
+
+- name: Run grid root scripts
+  hosts: oracle_ol8_21c_si_asm
+  tags: grid_root_scripts
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - grid_root_scripts
+
+- name: do grid configuration
+  hosts: oracle_ol8_21c_si_asm
+  tags: grid_configuration
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_configuration
+
+- name: do oracle db prerequisites
+  hosts: oracle_ol8_21c_si_asm
+  tags: oracle_db_prereqs
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_db_prereqs
+
+- name: Install Oracle Software
+  hosts: oracle_ol8_21c_si_asm
+  tags: oracle_sw_install
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_sw_install
+
+- name: Run oracle root scripts
+  hosts: oracle_ol8_21c_si_asm
+  tags: oracle_root_scripts
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_root_scripts
+
+- name: Create database
+  hosts: oracle_ol8_21c_si_asm
+  tags: oracle_create_db
+  vars_files: host_vars/ansible_ol8_21c_si_asm_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_create_db
+

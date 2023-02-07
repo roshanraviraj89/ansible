@@ -1,0 +1,14 @@
+. {{ grid_scripts_dir }}/setEnv.sh
+
+# Stop script running more than once.
+#if [[ -f /etc/oratab ]]
+#then
+#  exit 0
+#fi
+
+sh {{ ora_inventory }}/orainstRoot.sh
+
+sh {{ grid_home }}/root.sh
+
+exit 0
+

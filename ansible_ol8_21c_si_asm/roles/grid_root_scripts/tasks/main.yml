@@ -1,0 +1,28 @@
+---
+# tasks file for grid_root_scripts
+#
+# - name: check if oratab has +ASM entry on item
+#   lineinfile:
+#      path: /etc/oratab
+#      #line: "+ASM:/u01/app/"
+#      search_string: "+ASM"
+#      state: present
+#   check_mode: yes
+#   register: asm_out
+#   ignore_errors: true
+
+- name: check +ASM entry exists in /etc/oratab
+  shell: grep "^+ASM" /etc/oratab
+  register: asm_out
+  ignore_errors: true
+  tags: grid_root_scripts
+#- debug: var=asm_out
+
+
+
+- name: Run Oracle root scripts
+  shell: "{{ grid_software_dir }}/grid_root_scripts.sh > {{ grid_software_dir }}/root_scripts.log"
+  when: asm_out.rc != 0
+  tags: grid_root_scripts
+
+
