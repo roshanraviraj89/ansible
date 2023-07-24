@@ -1,0 +1,90 @@
+- name: do dns configuration
+  hosts: dns_ol8
+  tags: dns_setup
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - dns_setup
+
+- name: Configure OS prerequisites
+  hosts: oracle_rac_ol8_21c
+  tags: oracle_os_prereqs
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_os_prereqs
+
+- name: Configure cluster prerequisites
+  hosts: oracle_rac_ol8_21c
+  tags: cluster_prereqs
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - cluster_prereqs
+
+- name: install grid software
+  hosts: oracle_rac_ol8_21c_node1
+  tags: grid_sw_install
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_sw_install
+
+- name: Run grid root scripts
+  hosts: oracle_rac_ol8_21c
+  tags: grid_root_scripts
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - grid_root_scripts
+
+- name: do grid configuration
+  hosts: oracle_rac_ol8_21c_node1
+  tags: grid_configuration
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - grid_configuration
+
+- name: do oracle rac_db prerequisites
+  hosts: oracle_rac_ol8_21c
+  tags: oracle_rac_db_prereqs
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_rac_db_prereqs
+
+- name: Install Oracle Software
+  hosts: oracle_rac_ol8_21c_node1
+  tags: oracle_sw_install
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_sw_install
+
+- name: Run oracle root scripts
+  hosts: oracle_rac_ol8_21c
+  tags: oracle_root_scripts
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - oracle_root_scripts
+
+- name: Create rac database
+  hosts: oracle_rac_ol8_21c_node1
+  tags: oracle_create_rac_db
+  vars_files: host_vars/rac_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - oracle_create_rac_db
+

@@ -1,0 +1,120 @@
+---
+# Host information.
+#
+domain_name: localdomain
+node1_hostname: host01
+node1_fq_hostname: "{{node1_hostname}}.{{domain_name}}"
+node1_vipname: "{{node1_hostname}}-vip"
+node1_fq_vipname:  "{{node1_hostname}}-vip.{{domain_name}}"
+node1_privname: "{{node1_hostname}}-priv"
+node1_fq_privname:  "{{node1_hostname}}-priv.{{domain_name}}"
+node1_public_ip: 192.168.69.100
+node1_priv_ip: 192.168.1.10
+node1_vip: 192.168.69.101
+
+
+node2_hostname: host02
+node2_fq_hostname: "{{node2_hostname}}.{{domain_name}}"
+node2_vipname: "{{node2_hostname}}-vip"
+node2_fq_vipname:  "{{node2_hostname}}-vip.{{domain_name}}"
+node2_privname: "{{node2_hostname}}-priv"
+node2_fq_privname:  "{{node2_hostname}}-priv.{{domain_name}}"
+node2_public_ip: 192.168.69.102
+node2_priv_ip: 192.168.1.11
+node2_vip: 192.168.69.103
+
+scan_ip_1: 192.168.69.121
+scan_ip_2: 192.168.69.122
+scan_ip_3: 192.168.69.123
+cluster_name: cluster01
+scan_name: "{{cluster_name}}-scan"
+scan_fq_name: "{{ scan_name}}.{{ domain_name}}"
+scan_port: 1521
+#
+dns_server_ip: 192.168.68.114
+dns_cidr: 192.168.68.0/24
+dns_hostname: dns
+dns_fq_hostname: "{{dns_hostname}}.{{domain_name}}"
+
+node1_reverse_public_ip: 100
+node2_reverse_public_ip: 102
+scan_reverse_ip_1: 121
+scan_reverse_ip_2: 122
+scan_reverse_ip_3: 123
+node1_reverse_vip: 101
+node2_reverse_vip: 103
+
+#paths
+rpm_dir: /u01/rpm
+grid_base: /u01/app/grid
+grid_home: /u01/app/21.0.0/grid
+grid_os_home: /home/grid
+grid_scripts_dir: /home/grid/scripts
+grid_software_dir: /u02/grid_software
+grid_software: LINUX.X64_213000_grid_home.zip
+ora_inventory: /u01/app/oraInventory
+node1_grid_sid: +ASM1
+node2_grid_sid: +ASM2
+swap_file_path: /swapfile
+swap_file_size_mb: 4096
+
+oracle_base: /u01/app/oracle
+oracle_base_config: /u01/app/oracle
+oracle_base_home: "{{ oracle_base_config }}/homes/OraDB21Home1"
+oracle_home:  /u01/app/oracle/product/21.0.0/dbhome_1
+
+tmp_dir: /tmp
+
+oracle_software_dir: /u03/oracle_software
+oracle_os_home: /home/oracle
+
+crs_dg: CRS_DG
+data_dg: DATA_DG
+oracle_scripts_dir: /home/oracle/scripts
+fra_dg: FRA_DG
+fra_size: 20G
+
+# password-less authentication script
+setupSSH: setupSSH.expect
+ssh_dir: .ssh
+
+#database
+oracle_unqname: RAC
+pdb_name: PDB_DEV
+node1_oracle_sid: RAC1
+node2_oracle_sid: RAC2
+cdb_service: RAC_SERV
+pdb_service: DEV_SERV
+
+# #
+# # # # Software and Patching
+db_software: LINUX.X64_213000_db_home.zip
+#
+
+# OS Packages
+packages:
+  - 'zip'
+  - 'unzip'
+  - 'tar'
+  - 'cpio'
+  - 'tmux'
+  - 'oracle-database-preinstall-21c'
+  - 'oracle-epel-release-el8'
+  - 'kmod-oracleasm'
+  - 'sshpass'
+  - 'rsync'
+#       
+rpms:
+  - 'oracleasmlib-2.0.17-1.el8.x86_64.rpm'
+  - 'oracleasm-support-2.1.12-1.el8.x86_64.rpm'
+
+# Firewall Rules
+fwrules:
+  - '22/tcp'
+  - '1521/tcp'
+  - '2484/tcp'
+#                   #
+#
+sys_password: Rosha1989*
+grid_password: grid123
+oracle_password: oracle123
