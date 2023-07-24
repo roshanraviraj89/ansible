@@ -1,0 +1,19 @@
+---
+# tasks file for oracle_root_scripts
+
+- name: check if database entry exists in /etc/oratab
+  shell: grep "^{{ node1_oracle_sid }}" /etc/oratab
+  register: oracle_sid_out
+  ignore_errors: true
+  tags: oracle_root_scripts
+
+ # first run the root script on node1 and then node 2      
+- name: Run Oracle root scripts
+  shell: "{{ oracle_software_dir }}/oracle_root_scripts.sh > {{ oracle_software_dir }}/root_scripts.log"
+  when: (oracle_sid_out.rc != 0) and (inventory_hostname in groups['oracle_rac_ol8_21c_node1'])
+  tags: oracle_root_scripts
+
+- name: Run Oracle root scripts
+  shell: "{{ oracle_software_dir }}/oracle_root_scripts.sh > {{ oracle_software_dir }}/root_scripts.log"
+  when: (oracle_sid_out.rc != 0) and (inventory_hostname in groups['oracle_rac_ol8_21c_node2'])
+  tags: oracle_root_scripts

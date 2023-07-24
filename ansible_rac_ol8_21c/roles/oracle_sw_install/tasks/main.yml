@@ -1,0 +1,22 @@
+---
+# tasks file for oracle_sw_install
+
+- name: Check if root.sh already exists
+  stat:
+    path: "{{ oracle_home }}/root.sh"
+  register: root_sh_result
+  tags: oracle_sw_install
+
+- block:
+    - name: Oracle software-only install
+      shell: "{{ oracle_software_dir }}/oracle_software_installation.sh > {{ oracle_software_dir }}/oracle_software_install.log"
+      #when: not root_sh_result.stat.exists
+      tags: oracle_sw_install
+
+    - name: validate if the software has been successfully installed
+      shell: grep  "Successfully Setup Software*" {{ oracle_software_dir }}/oracle_software_install.log
+      register: oracle_sw_install_out
+
+    - name: display the output from post oracle_sw_install check
+      debug: msg="{{ oracle_sw_install_out.stdout_lines}}"
+  when: not root_sh_result.stat.exists

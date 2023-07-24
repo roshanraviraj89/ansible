@@ -1,0 +1,36 @@
+. {{ oracle_scripts_dir }}/setEnv.sh
+
+log_mode=$(sqlplus -s / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF
+select log_mode from v\$database;
+exit;
+EOF
+)
+
+
+
+if [[ $log_mode == NOARCHIVELOG ]]
+then
+srvctl stop database -d {{oracle_unqname}}
+srvctl start database -d {{oracle_unqname}} -o mount
+
+sqlplus -s / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF
+whenever sqlerror exit sql.sqlcode;
+alter database archivelog;
+exit;
+EOF
+srvctl stop database -d {{oracle_unqname}}
+srvctl start database -d {{oracle_unqname}}
+
+sqlplus -s / as sysdba <<EOF
+SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF
+whenever sqlerror exit sql.sqlcode;
+alter system set log_archive_dest_1='LOCATION=+{{fra_dg}}' scope=both sid='*';
+alter system set db_recovery_file_dest_size={{ fra_size }} scope=both sid='*';
+exit;
+EOF
+
+
+fi
+

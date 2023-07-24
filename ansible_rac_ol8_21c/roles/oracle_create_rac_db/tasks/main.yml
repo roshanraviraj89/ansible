@@ -1,0 +1,51 @@
+---
+# tasks file for oracle_create_rac_db
+
+- name: Check if database already exists
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl status database -d {{ oracle_unqname }}
+  ignore_errors: true
+  register: db_result
+
+- debug: var=db_result
+
+- name: Display a message when database does not exist
+  debug:
+    msg: "Database {{ oracle_unqname }} does not exist"
+  when: "'The resource for database' and '(oracle_unqname|string)' and 'could not be found' in db_result.stdout" 
+
+- block:
+    - name: create Oracle CDB & a PDB
+      shell: "{{ oracle_software_dir }}/oracle_create_database.sh > {{ oracle_software_dir }}/create_db.log"
+      
+
+    - name: check if database has already been set to archivelog mode
+      tags: set_archivelog_mode
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select log_mode from v\$database;" | {{ oracle_home }}/bin/sqlplus -s / as sysdba
+      register: archive_mode
+
+    - name: Display the archive mode
+      tags: set_archivelog_mode
+      debug: 
+        var: archive_mode.stdout 
+
+    - name: set database to archivelog mode
+      tags: set_archivelog_mode
+      shell: "{{ oracle_scripts_dir }}/set_archivelog_mode.sh > {{ oracle_scripts_dir }}/set_archivelog_mode.log"
+      when: archive_mode.stdout == "NOARCHIVELOG"
+    
+    - name: check the database status now
+      shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl status database -d {{ oracle_unqname }}
+      register: db_status
+
+    - name: display db_status
+      debug:
+        var: db_status.stdout
+  when: "'The resource for database' and '(oracle_unqname|string)' and 'could not be found' in db_result.stdout"
+
+- name: Finally check the database configuration  
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl config database -d {{ oracle_unqname }}
+  register: db_config
+
+- name: display the db configuration output
+  debug: 
+    var: db_config.stdout_lines

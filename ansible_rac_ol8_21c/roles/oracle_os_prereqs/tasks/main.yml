@@ -1,0 +1,56 @@
+---
+# tasks file for oracle_os_prereqs
+#
+# - name: Add hosts entry on node1 & node2
+#   lineinfile:
+#     state: present
+#     dest: /etc/hosts
+#     line: "{{ item }}"
+#   with_items:
+#     - "{{ node1_public_ip }} {{ node1_fq_hostname}} {{ node1_hostname }}"  
+#     - "{{ node2_public_ip }} {{ node2_fq_hostname}} {{ node2_hostname }}" 
+#     - "{{ node1_priv_ip }} {{ node1_fq_privname }} {{ node1_privname }}"
+#     - "{{ node2_priv_ip }} {{ node2_fq_privname }} {{ node2_privname }}"
+#     - "{{ node1_vip }} {{ node1_fq_vipname }} {{ node1_vipname }}"
+#     - "{{ node2_vip }} {{ node2_fq_vipname }} {{ node2_vipname }}"
+#     - "{{ scan_ip_1}} {{ scan_fq_name }} {{ scan_name }}"
+#     - "{{ scan_ip_2}} {{ scan_fq_name }} {{ scan_name }}"
+#     - "{{ scan_ip_3}} {{ scan_fq_name }} {{ scan_name }}"
+
+
+- name: copy hosts entries to /etc/hosts file
+  template:
+    src: hosts.j2
+    dest: "/etc/hosts"
+    owner: root
+    group: root
+    mode: 0644
+  changed_when: false
+
+    
+- name: Install packages
+  dnf:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items: "{{ packages }}"
+
+- name: to make the changes made on the kernal parameters to take effect
+  shell: sysctl -p
+  changed_when: false
+#
+- name: Configure firewall
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  with_items: "{{ fwrules }}"
+#
+- name: Set SELinux to permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: update the nameserver entry on  resolv.conf file
+  shell: echo -e 'nameserver {{ dns_server_ip }}\n search {{ domain_name }}' > /etc/resolv.conf 
+  changed_when: false

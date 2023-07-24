@@ -1,0 +1,42 @@
+. {{ oracle_scripts_dir }}/setEnv.sh
+
+# Stop script running more than once.
+if [[ -f $ORACLE_HOME/root.sh ]]
+then
+  exit 0
+fi
+
+
+cd ${ORACLE_HOME}
+unzip -oq {{ oracle_software_dir }}/{{ db_software }}
+
+echo "******************************************************************************"
+echo "Do software-only installation." `date`
+echo "******************************************************************************"
+#export CV_ASSUME_DISTID=OEL7.6
+
+${ORACLE_HOME}/runInstaller -ignorePrereq -waitforcompletion -silent           \
+    -responseFile ${ORACLE_HOME}/install/response/db_install.rsp               \
+    oracle.install.option=INSTALL_DB_SWONLY                                    \
+    ORACLE_HOSTNAME={{ node1_hostname }}                                       \
+    UNIX_GROUP_NAME=oinstall                                                   \
+    INVENTORY_LOCATION=${ORA_INVENTORY}                                        \
+    SELECTED_LANGUAGES=en,en_GB                                                \
+    ORACLE_HOME=${ORACLE_HOME}                                                 \
+    ORACLE_BASE=${ORACLE_BASE}                                                 \
+    oracle.install.db.InstallEdition=EE                                        \
+    oracle.install.db.OSDBA_GROUP=dba                                          \
+    oracle.install.db.OSBACKUPDBA_GROUP=backupdba                              \
+    oracle.install.db.OSDGDBA_GROUP=dgdba                                      \
+    oracle.install.db.OSKMDBA_GROUP=kmdba                                       \
+    oracle.install.db.OSRACDBA_GROUP=racdba                                      \
+    oracle.install.db.CLUSTER_NODES={{ node1_hostname }},{{ node2_hostname }}    \
+    oracle.install.db.isRACOneInstall=false                                     \
+    oracle.install.db.rac.serverpoolCardinality=0                                \
+    oracle.install.db.config.starterdb.type=GENERAL_PURPOSE                     \
+    oracle.install.db.ConfigureAsContainerDB=false                             \
+    SECURITY_UPDATES_VIA_MYORACLESUPPORT=false                                 \
+    DECLINE_SECURITY_UPDATES=true
+
+exit 0
+
