@@ -1,0 +1,20 @@
+$TTL 86400
+@ IN SOA localhost root.localhost (
+2014051001 ; serial
+3600 ; refresh
+1800 ; retry
+604800 ; expire
+86400 ; minimum
+)
+@ IN NS localhost
+localhost IN A 127.0.0.1
+{{dns_hostname}} IN A {{dns_server_ip}}
+{{node1_hostname}} IN A {{node1_public_ip}}
+{{node2_hostname}} IN A {{node2_public_ip}}
+{{node1_privname}} IN A {{node1_priv_ip}}
+{{node2_privname}} IN A {{node2_priv_ip}}
+{{node1_vipname}} IN A {{node1_vip}}
+{{node2_vipname}} IN A {{node2_vip}}
+{{scan_name}} IN A {{scan_ip_1}}
+{{scan_name}} IN A {{scan_ip_2}}
+{{scan_name}} IN A {{scan_ip_3}}

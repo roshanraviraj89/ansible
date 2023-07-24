@@ -1,0 +1,659 @@
+---
+# tasks file for grid_asm_prereqs
+#
+## add asm os groups
+- name: check group for asmadmin
+  shell: grep asmadmin /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add group for asmadmin
+  shell: /usr/sbin/groupadd -g 54329 asmadmin
+  changed_when: False
+  when: result.failed == true
+
+- name: check group for asmdba
+  shell: grep asmdba /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add group for asmdba
+  shell: /usr/sbin/groupadd -g 54327 asmdba
+  changed_when: False
+  when: result.failed == true
+
+- name: check group for asmoper
+  shell: grep asmoper /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add group for asmoper
+  shell: /usr/sbin/groupadd -g 54328 asmoper
+  changed_when: False
+  when: result.failed == true
+
+## add asmdba as a secondary group for oracle
+#
+- name: check if oracle user exists
+  shell: id oracle
+  register: result
+  changed_when: False
+
+- name: print a message if oracle exists
+  debug:
+    var: result.stdout
+  when: result.failed == false
+
+- name: Change password for oracle user
+  user:
+    name: "oracle"
+    state: present
+    password: "{{ oracle_password | password_hash('sha512') }}"
+
+- name: add asmdba as a secondary group to oracle
+  shell: /usr/sbin/usermod -a -G asmdba oracle
+  when: result.failed == false
+  changed_when: False
+
+- name: check if grid user exists
+  shell: id grid
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: print a message if grid doesn't exists
+  debug:
+    var: result.stderr
+  when: result.failed == true
+
+- name: add user for grid
+  shell: /usr/sbin/useradd -u 54331 -g oinstall -G dba,asmadmin,asmdba,asmoper,racdba grid
+  changed_when: False
+  when: result.failed == true
+
+- name: Change password for grid user
+  user:
+    name: "grid"
+    state: present
+    password: "{{ grid_password | password_hash('sha512') }}"
+
+- name: give sudo accessto grid & oracle user
+  blockinfile:
+    path: /etc/sudoers
+    insertafter: "root    ALL=(ALL)       ALL"
+    block: |
+      # Gives sudo access to the grid & oracle users
+      grid        ALL=(ALL)       NOPASSWD: ALL
+      oracle      ALL=(ALL)       NOPASSWD: ALL
+
+# - name: generate ssh keypairs for grid user
+#   become_user: grid
+#   block:
+#     - name: generate ssh keypairs
+#       shell: ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa <<<y
+
+#     - name: copy the {{ node1_fq_hostname }} public key to {{ node2_fq_hostname }}
+#       shell: sshpass -p {{grid_password}} ssh-copy-id -o StrictHostKeyChecking=no grid@{{node2_fq_hostname}}
+#       register: ssh_out1
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+#     - debug: var=ssh_out1.stdout_lines
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+
+#     - name: copy the {{ node2_fq_hostname }} public key to {{ node1_fq_hostname }}
+#       shell: sshpass -p {{grid_password}} ssh-copy-id -o StrictHostKeyChecking=no grid@{{node1_fq_hostname}}
+#       register: ssh_out2
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+#     - debug: var=ssh_out2.stdout_lines
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+# - name: generate ssh keypairs for oracle user
+#   become_user: oracle
+#   block:
+#     - name: generate ssh keypairs
+#       shell: ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa <<<y
+
+#     - name: copy the {{ node1_fq_hostname }} public key to {{ node2_fq_hostname }}
+#       shell: sshpass -p {{oracle_password}} ssh-copy-id -o StrictHostKeyChecking=no oracle@{{node2_fq_hostname}}
+#       register: ssh_out1
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+#     - debug: var=ssh_out1.stdout_lines
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+
+#     - name: copy the {{ node2_fq_hostname }} public key to {{ node1_fq_hostname }}
+#       shell: sshpass -p {{oracle_password}} ssh-copy-id -o StrictHostKeyChecking=no oracle@{{node1_fq_hostname}}
+#       register: ssh_out2
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+#     - debug: var=ssh_out2.stdout_lines
+#       when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+- name: enable chronyd service for time synchronisation between cluster nodes
+  shell: "{{ item }}"
+  with_items:
+    - systemctl enable chronyd
+    - systemctl restart chronyd
+    - chronyc -a 'burst 4/4'
+    - chronyc -a makestep
+  
+
+# create directories
+
+- name: change /u01 & /u02 ownership to grid
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: grid
+    group: oinstall
+    mode: "0775"
+  with_items: 
+    - "/u01"
+    - "/u02"
+
+- name: change /u03 ownership to oracle
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: oracle
+    group: oinstall
+    mode: "0775"
+  with_items: 
+    - "/u03"
+    
+
+
+- name: Check if the directories already exist
+  stat:
+    path: "{{ item }}"
+  with_items:
+    - "{{ grid_base }}"
+    - "{{ grid_home }}"
+    - "{{ grid_scripts_dir }}"
+    - "{{ grid_software_dir }}"
+    - "{{ rpm_dir }}"
+    - "{{ ora_inventory }}"
+    - "/u02/temp"
+  register: dir_result
+
+- name: display dir_result variable
+  debug: var=dir_result
+
+- name: display a message if the directories exist
+  debug:
+    msg: "directory {{ item.item }} exists"
+  with_items: "{{ dir_result.results }}"
+  when: item.stat.exists
+
+- name: create directories
+  file:
+    path: "{{ item.item }}"
+    state: directory
+    owner: grid
+    group: oinstall
+    recurse: yes
+    mode: "0775"
+
+  with_items:
+    - "{{ dir_result.results }}"
+  when: not item.stat.exists
+
+
+- name: generate cluster templates for node1
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     owner: grid
+     group: oinstall
+     mode:  "u=rwx,g=rwx,o=r"
+  with_items: 
+    - { src: "node1_setEnv.sh.j2", dest: "{{ grid_scripts_dir }}/setEnv.sh" }
+    - {
+        src: "grid_software_installation.sh.j2",
+        dest: "{{ grid_software_dir }}/grid_software_installation.sh",
+      }
+    - {
+        src: "grid_root_scripts.sh.j2",
+        dest: "{{ grid_software_dir }}/grid_root_scripts.sh",
+      }
+    - {
+        src: "grid_configuration.sh.j2",
+        dest: "{{ grid_software_dir }}/grid_configuration.sh",
+      }
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node1'] 
+
+- name: generate cluster templates for node2
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     owner: grid
+     group: oinstall
+     mode:  "u=rwx,g=rwx,o=r"
+  with_items: 
+    - { src: "node2_setEnv.sh.j2", dest: "{{ grid_scripts_dir }}/setEnv.sh" }
+    - { src: "grid_root_scripts.sh.j2", dest: "{{ grid_software_dir }}/grid_root_scripts.sh" }
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+- name: Source setEnv.sh from .bash_profile
+  lineinfile:
+     state: present
+     dest: /home/grid/.bash_profile
+     line: ". {{ grid_scripts_dir }}/setEnv.sh"
+
+
+  
+
+
+
+# - name: generate templates
+#   template:
+#     src: "{{ item.src }}"
+#     dest: "{{ item.dest }}"
+#     owner: grid
+#     group: oinstall
+#     mode: "u=rwx,g=rwx,o=r"
+#   with_items:
+#     - { src: "setEnv.sh.j2", dest: "{{ grid_scripts_dir }}/setEnv.sh" }
+#     - {
+#         src: "grid_software_installation.sh.j2",
+#         dest: "{{ grid_software_dir }}/grid_software_installation.sh",
+#       }
+#     - {
+#         src: "grid_root_scripts.sh.j2",
+#         dest: "{{ grid_software_dir }}/grid_root_scripts.sh",
+#       }
+#     - {
+#         src: "grid_configuration.sh.j2",
+#         dest: "{{ grid_software_dir }}/grid_configuration.sh",
+#       }
+# - name: Source setEnv.sh from .bash_profile
+#   lineinfile:
+#     state: present
+#     dest: /home/grid/.bash_profile
+#     line: ". {{ grid_scripts_dir }}/setEnv.sh"
+
+- name: Check if asmlib rpms already exists on "{{ rpm_dir }}"
+  stat:
+    path: "{{ rpm_dir }}/{{ item }}"
+  with_items: "{{ rpms }}"
+  register: rpm_result
+
+# - name: display rpm_result variable
+#   debug: var=rpm_result
+
+- name: display a message if rpms exists on {{ rpm_dir }}
+  debug:
+    msg: "rpm {{ item.item }} exists"
+  with_items: "{{ rpm_result.results }}"
+  when: item.stat.exists
+
+- name: copy asmlib rpms to {{rpm_dir}}
+  copy:
+    src: "{{ item.item }}"
+    dest: "{{ rpm_dir }}/"
+    owner: grid
+    group: oinstall
+  with_items:
+    - "{{ rpm_result.results }}"
+  when: not item.stat.exists
+
+  #install rpms
+
+- name: Install asmlib rpms
+  dnf:
+    name: "{{ rpm_dir }}/{{ item.item }}"
+    update_cache: yes
+    state: latest
+  with_items: "{{ rpm_result.results }}"
+
+  # configure asm kernal module
+
+- name: Check if oracleasm mountpoint exists
+  stat:
+    path: "/dev/oracleasm"
+  register: oracleasm_result
+  ignore_errors: True
+
+- name: configure & load kernal module
+  shell: "{{ item }}"
+  with_items:
+    - echo -e "grid\noinstall\ny\ny" | oracleasm configure -i
+    - /usr/sbin/oracleasm init
+  when: not oracleasm_result.stat.exists
+
+  # do the below tasks on rac1 node
+- block:
+    - name: check if /dev/sde1 partition exists
+      stat:
+        path: "/dev/sde1"
+      register: sde1_out
+
+    - name: create partition /dev/sde1 if it doesn't exist
+      shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/sde
+      when: not sde1_out.stat.exists
+
+    - name: check if /dev/sdf1 partition exists
+      stat:
+        path: "/dev/sdf1"
+      register: sdf1_out
+
+    - name: create partition /dev/sdf1 if it doesn't exist
+      shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdf
+      when: not sdf1_out.stat.exists
+
+    - name: check if /dev/sdg1 partition exists
+      stat:
+        path: "/dev/sdg1"
+      register: sdg1_out
+
+    - name: create partition /dev/sdg1 if it doesn't exist
+      shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdg
+      when: not sdg1_out.stat.exists
+
+    - name: check if /dev/sdh1 partition exists
+      stat:
+        path: "/dev/sdh1"
+      register: sdh1_out
+
+    - name: create partition /dev/sdh1 if it doesn't exist
+      shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdh
+      when: not sdh1_out.stat.exists
+
+    - name: check if /dev/sdi1 partition exists
+      stat:
+        path: "/dev/sdi1"
+      register: sdi1_out
+
+    - name: create partition /dev/sdi1 if it doesn't exist
+      shell: echo -e "n\np\n1\n\n\nw" | fdisk /dev/sdi
+      when: not sdi1_out.stat.exists
+
+    # validate partitions
+
+    - name: validate partitions
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "/dev/sde1"
+        - "/dev/sdf1"
+        - "/dev/sdg1"
+        - "/dev/sdh1"
+        - "/dev/sdi1"
+      register: partitions_result
+
+    #- name: display partitions result variable
+    # debug: var=partitions_result.results
+
+    - name: display a message if partitions exists
+      debug:
+        msg: "{{ item.item }} exists"
+      with_items: "{{ partitions_result.results }}"
+      when: item.stat.exists
+
+    # create the ASM disks
+
+    - name: check if CRSDISK1 has already been createdisk
+      shell: oracleasm listdisks | grep CRSDISK1
+      register: crsdisk1_out
+      changed_when: false
+      ignore_errors: true
+
+    - name: create CRSDISK1
+      shell: oracleasm createdisk CRSDISK1 /dev/sde1
+      when: crsdisk1_out.stdout != "CRSDISK1"
+
+    - name: check if CRSDISK2 has already been createdisk
+      shell: oracleasm listdisks | grep CRSDISK2
+      register: crsdisk2_out
+      changed_when: false
+      ignore_errors: true
+
+    - name: create CRSDISK2
+      shell: oracleasm createdisk CRSDISK2 /dev/sdf1
+      when: crsdisk2_out.stdout != "CRSDISK2"
+
+    - name: check if CRSDISK3 has already been createdisk
+      shell: oracleasm listdisks | grep CRSDISK3
+      register: crsdisk3_out
+      changed_when: false
+      ignore_errors: true
+
+    - name: create CRSDISK3
+      shell: oracleasm createdisk CRSDISK3 /dev/sdg1
+      when: crsdisk3_out.stdout != "CRSDISK3"
+
+    - name: check if DATADISK1 has already been createdisk
+      shell: oracleasm listdisks | grep DATADISK1
+      register: datadisk1_out
+      changed_when: false
+      ignore_errors: true
+
+    # - name: display datadisk1_out
+    #   debug: var=datadisk1_out
+
+    - name: create DATADISK1
+      shell: oracleasm createdisk DATADISK1 /dev/sdh1
+      when: datadisk1_out.stdout != "DATADISK1"
+
+    - name: check if FRADISK1 has already been createdisk
+      shell: oracleasm listdisks | grep FRADISK1
+      register: fradisk1_out
+      ignore_errors: true
+      changed_when: false
+
+    - name: create FRADISK1
+      shell: oracleasm createdisk FRADISK1 /dev/sdi1
+      when: fradisk1_out.stdout != "FRADISK1"
+
+    - name: verify all the asm disks have been created on node1
+      shell: oracleasm listdisks
+      register: node1_asmdisks_out
+
+    - name: display all the created asm disks
+      debug: var=node1_asmdisks_out.stdout
+
+    - name: Check if grid software already exists
+      stat:
+        path: "{{ grid_software_dir }}/{{ grid_software }}"
+      register: grid_software_result
+
+    - name: Copy grid software to {{ grid_software_dir }}
+      copy:
+        src: "{{ grid_software }}"
+        dest: "{{ grid_software_dir }}/"
+        owner: grid
+        group: oinstall
+      when: not grid_software_result.stat.exists
+
+      #unzip grid software
+    - name: check if grid software has already been unzipped in {{ grid_home }}
+      find:
+        paths: "{{ grid_home }}"
+        file_type: any
+      register: grid_out
+
+    # - name: display the grid_out
+    #   debug: var=grid_out
+
+    - name: unzip 21c grid software
+      become: true
+      become_user: grid
+      unarchive: src="{{grid_software_dir}}/{{grid_software}}"
+        dest="{{ grid_home }}"
+        mode=0775
+        owner=grid
+        group=oinstall
+        remote_src=true
+      when: grid_out.matched == 0
+
+    - name: install cvu rpm from a local file
+      dnf:
+       name: "{{ grid_home }}/cv/rpm/cvuqdisk-1.0.10-1.rpm"
+       state: latest
+       disable_gpg_check: true
+
+    # setup passwordless authentication between cluster nodes
+
+    - name: Check if setupSSH.expect script already exists
+      stat:
+        path: "{{ grid_home }}/deinstall/{{ setupSSH }}"
+      register: ssh_out
+
+    - name: copy setupSSH.expect script to node1
+      copy:
+        src: "{{ setupSSH }}"
+        dest: "{{ grid_home }}/deinstall"
+        owner: grid
+        group: oinstall
+        mode: 0770
+      when: not ssh_out.stat.exists
+
+    # simple check to see if password-less authentication has been set
+    - name: check if grid .ssh directory already exists
+      stat:
+        path: "{{ grid_os_home }}/{{ ssh_dir}}"
+        #path: "/home/grid/.ssh"
+      register: ssh_dir_out
+
+    - block:
+       
+        - name: run the setupSSH.expect script
+          become: true
+          become_user: grid
+          shell:  "{{ grid_home }}/deinstall/{{ setupSSH }} 'grid' '{{ grid_home }}/deinstall' '{{ node1_hostname }} {{ node2_hostname }}' '{{ grid_password }}'"   
+      
+
+        - name: validate grid ssh setup has been successfully completed
+          shell: grep  "SSH verification complete." {{ tmp_dir }}/grid_SetupSSH.log
+          register: grid_ssh_out
+
+        - name: display the output from post ssh setup check
+          debug: msg="{{ grid_ssh_out.stdout_lines}}"
+      when: not ssh_dir_out.stat.exists
+
+    - name: check if oracle .ssh directory already exists
+      stat:
+        path: "{{ oracle_os_home }}/{{ ssh_dir}}"
+        #path: "/home/oracle/.ssh"
+      register: oracle_ssh_dir_out
+
+    - block:
+       
+        - name: run the setupSSH.expect script
+          become: true
+          become_user: oracle
+          shell:  "{{ grid_home }}/deinstall/{{ setupSSH }} 'oracle' '{{ grid_home }}/deinstall' '{{ node1_hostname }} {{ node2_hostname }}' '{{ oracle_password }}'"   
+      
+
+        - name: validate oracle ssh setup has been successfully completed
+          shell: grep  "SSH verification complete." {{ tmp_dir }}/oracle_SetupSSH.log
+          register: oracle_ssh_out
+
+        - name: display the output from post ssh setup check
+          debug: msg="{{ oracle_ssh_out.stdout_lines}}"
+      when: not oracle_ssh_dir_out.stat.exists
+
+    
+
+    # - name: setup password-less authentication for grid and oracle between cluster nodes host01 & host02
+    #   become: true
+    #   become_user: grid
+    #   shell: "{{ grid_home }}/deinstall/sshUserSetup.sh -user grid -hosts 'host01 host02' -noPromptPassphrase -confirm -advanced > {{ grid_software_dir }}/grid_ssh_user_setup.log"
+
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+
+- block:
+    - name: scan the asm disks on the 2nd node
+      shell: |
+        oracleasm scandisks
+        oracleasm listdisks
+      register: node2_asmdisks_out
+      changed_when: false
+
+    - name: verify if we can see the asm disks from node2
+      debug: var=node2_asmdisks_out
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+# copy the cvuqdisk-1.0.10-1.rpm from hos01 to host02
+
+- name: fetch the cvuqdisk-1.0.10-1.rpm from hos01 to Ansible controller
+  run_once: true
+  fetch: src="{{ grid_home }}/cv/rpm/cvuqdisk-1.0.10-1.rpm" dest=buffer/ flat=yes
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node1']
+
+- name: copy the rpm from ansible controller to host02
+  copy: src=buffer/cvuqdisk-1.0.10-1.rpm dest=/tmp/
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+- name: install cvu rpm from a local file
+  dnf:
+    name: /tmp/cvuqdisk-1.0.10-1.rpm
+    state: latest
+    disable_gpg_check: true
+  when: inventory_hostname in groups['oracle_rac_ol8_21c_node2']
+
+
+
+## add another swap file for 4g
+- name: check if swapfile path already exist
+  stat:
+    path: "{{ swap_file_path }}"
+  register: swapfile_out
+
+- block:
+    - name: Create swap file
+      command:
+        dd if=/dev/zero of={{ swap_file_path }} bs=1024 count={{ swap_file_size_mb }}k
+        creates="{{ swap_file_path }}"
+      #when: not swapfile_out.stat.exists
+      tags:
+        - swap.file.create
+
+    - name: Change swap file permissions
+      file: path="{{ swap_file_path }}"
+        owner=root
+        group=root
+        mode=0600
+      #when: not swapfile_out.stat.exists
+      tags:
+        - swap.file.permissions
+
+    - name: "Check swap file type"
+      command: file {{ swap_file_path }}
+      register: swapfile
+      #when: not swapfile_out.stat.exists
+      tags:
+        - swap.file.mkswap
+
+    - name: Make swap file
+      command: "sudo mkswap {{ swap_file_path }}"
+      when: swapfile.stdout.find('swap file') == -1
+      tags:
+        - swap.file.mkswap
+
+    - name: Write swap entry in fstab
+      mount: name=none
+        src={{ swap_file_path }}
+        fstype=swap
+        opts=sw
+        passno=0
+        dump=0
+        state=present
+      tags:
+        - swap.fstab
+
+    - name: Mount swap
+      command: "swapon {{ swap_file_path }}"
+      when: ansible_swaptotal_mb < 8192
+      tags:
+        - swap.file.swapon
+  when: not swapfile_out.stat.exists
+
+- name: Add resource limits for the oracle & grid users
+  copy: 
+    src: limits.conf
+    dest: /etc/security/
+    owner: root
+    group: root
+    mode: 0644
+  changed_when: false

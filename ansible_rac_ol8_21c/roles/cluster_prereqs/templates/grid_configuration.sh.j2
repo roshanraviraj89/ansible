@@ -1,0 +1,53 @@
+. {{ grid_scripts_dir }}/setEnv.sh
+
+#set some variables
+PUB_NET_DEVICE=`ifconfig | grep "{{ node1_public_ip }}" -B 1 | grep eth | awk '{print $1}' | sed 's/.$//'`
+PRIV_NET_DEVICE=`ifconfig | grep "{{ node1_priv_ip }}" -B 1 | grep eth | awk '{print $1}' | sed 's/.$//'`
+PUB_SUBNET=`echo "{{node1_public_ip}}" | awk -F "." '{print $1"."$2"."$3".0"}'`
+PRIV_SUBNET=`echo "{{node1_priv_ip}}" | awk -F "." '{print $1"."$2"."$3".0"}'`
+
+
+
+
+echo "******************************************************************************"
+echo "Do grid configuration." `date`
+echo "******************************************************************************"
+
+${ORACLE_HOME}/gridSetup.sh -silent -executeConfigTools \
+        -responseFile ${ORACLE_HOME}/install/response/gridsetup.rsp \
+        INVENTORY_LOCATION={{ ora_inventory  }} \
+        SELECTED_LANGUAGES=en,en_GB \
+        oracle.install.option=CRS_CONFIG \
+        ORACLE_BASE=${ORACLE_BASE} \
+        oracle.install.asm.OSDBA=asmdba \
+        oracle.install.asm.OSASM=asmadmin \
+        oracle.install.asm.OSOPER=asmoper \
+        oracle.install.crs.config.scanType=LOCAL_SCAN \
+        oracle.install.crs.config.gpnp.scanName={{ scan_name }} \
+        oracle.install.crs.config.gpnp.scanPort={{ scan_port }} \
+        oracle.install.crs.config.ClusterConfiguration=STANDALONE \
+        oracle.install.crs.config.configureAsExtendedCluster=false \
+        oracle.install.crs.config.clusterName={{ cluster_name }} \
+        oracle.install.crs.config.gpnp.configureGNS=false \
+        oracle.install.crs.config.autoConfigureClusterNodeVIP=false \
+        oracle.install.crs.config.clusterNodes={{ node1_fq_hostname }}:{{ node1_fq_vipname}}:HUB,{{ node2_fq_hostname }}:{{ node2_fq_vipname}}:HUB \
+        oracle.install.crs.config.networkInterfaceList=${PUB_NET_DEVICE}:${PUB_SUBNET}:1,${PRIV_NET_DEVICE}:${PRIV_SUBNET}:5 \
+        oracle.install.crs.configureGIMR=false \
+        oracle.install.crs.config.storageOption=FLEX_ASM_STORAGE \
+        oracle.install.crs.config.useIPMI=false \
+        oracle.install.asm.storageOption=ASM \
+        oracle.install.asm.diskGroup.name={{crs_dg }} \
+        oracle.install.asm.diskGroup.redundancy=NORMAL \
+        oracle.install.asm.diskGroup.disksWithFailureGroupNames=/dev/oracleasm/disks/CRSDISK1,CRSFG1,/dev/oracleasm/disks/CRSDISK2,CRSFG2,/dev/oracleasm/disks/CRSDISK3,CRSFG3 \
+        oracle.install.asm.diskGroup.disks=/dev/oracleasm/disks/CRSDISK1,/dev/oracleasm/disks/CRSDISK2,/dev/oracleasm/disks/CRSDISK3       \
+        oracle.install.asm.diskGroup.diskDiscoveryString=/dev/oracleasm/disks/* \
+        oracle.install.asm.monitorPassword={{ sys_password }} \
+        oracle.install.asm.SYSASMPassword={{ sys_password }}  \
+        oracle.install.asm.configureAFD=false \
+        oracle.install.crs.configureRHPS=false \
+        oracle.install.crs.config.ignoreDownNodes=false \
+        oracle.install.config.managementOption=NONE \
+        oracle.install.config.omsPort=0 \
+        oracle.install.crs.rootconfig.executeRootScript=false
+
+exit 0

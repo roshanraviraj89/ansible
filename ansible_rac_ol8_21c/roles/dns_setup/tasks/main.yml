@@ -1,0 +1,40 @@
+---
+# tasks file for dns_setup
+
+- name: check if bind packages were already installed
+  shell: yum list installed bind*
+  register: bind_out
+
+- name: display installed bind packages
+  debug: var=bind_out.stdout_lines
+
+- name: backup named.conf 
+  copy:
+    remote_src: true 
+    src: /etc/named.conf
+    dest: /etc/named.conf.bak
+
+## copy templates
+
+- name: generate templates for dns server
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     owner: root
+     group: named
+     mode:  "u=rw,g=r"
+  with_items: 
+    - { src: "named.conf.j2", dest: "/etc/named.conf"}
+    - { src: "forward.localdomain.j2", dest: "/var/named/forward.localdomain" }
+    - { src: "reverse.localdomain.j2", dest: "/var/named/reverse.localdomain" }
+   
+
+- name: restart the named service
+  shell: systemctl restart named
+
+- name: check if the hostnames are resolved ok
+  shell: nslookup {{scan_name}}
+  register: nslookup_out
+
+- name: display the nslookup result
+  debug: var=nslookup_out.stdout_lines

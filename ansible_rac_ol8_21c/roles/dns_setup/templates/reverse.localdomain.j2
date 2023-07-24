@@ -1,0 +1,16 @@
+$TTL 86400
+@ IN SOA {{dns_fq_hostname}}. root.{{domain_name}}. (
+2
+3H
+1H
+1W
+1H )
+@ IN NS {{dns_fq_hostname}}.
+@ IN PTR {{domain_name}}.
+{{node1_reverse_public_ip}} IN PTR {{node1_fq_hostname}}.
+{{node2_reverse_public_ip}} IN PTR {{node2_fq_hostname}}.
+{{scan_reverse_ip_1}} IN PTR {{scan_fq_name}}.
+{{scan_reverse_ip_2}} IN PTR {{scan_fq_name}}.
+{{scan_reverse_ip_3}} IN PTR {{scan_fq_name}}.
+{{node1_reverse_vip}} IN PTR {{node1_fq_vipname}}.
+{{node2_reverse_vip}} IN PTR {{node2_fq_vipname}}.

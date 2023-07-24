@@ -1,0 +1,80 @@
+---
+# tasks file for grid_configuration
+
+- name: check if grid has already been configured
+  shell: . {{grid_scripts_dir }}/setEnv.sh; crsctl check cluster
+  register: cluster_out
+  ignore_errors: true
+  changed_when: false
+
+- debug: var=cluster_out
+
+- block:
+    - name: grid configuration
+      shell: "{{ grid_software_dir }}/grid_configuration.sh > {{ grid_software_dir }}/grid_configuration.log"
+      tags: grid_configuration
+
+    - name: validate if grid has been successfully configured
+      shell: grep  "Successfully Configured Software *" {{ grid_software_dir }}/grid_configuration.log
+      register: grid_configuration_out
+
+    - name: display the output from post grid_configuration check
+      debug: msg="{{ grid_configuration_out.stdout_lines}}"
+  when: cluster_out.rc != 0
+
+- name: check if DATA_DG disk group exists
+  shell: . {{grid_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select name from v\$asm_diskgroup where name='DATA_DG';" | {{ grid_home }}/bin/sqlplus -s / as sysasm
+  register: data_dg_out
+  changed_when: false
+
+# - name: display the data_dg_out 
+#   debug: var=data_dg_out
+
+- block:
+    - name: create DATA_DG if it doesn't exist
+      shell: . {{grid_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING OFF ECHO OFF\n CREATE DISKGROUP DATA_DG EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/DATADISK1' ATTRIBUTE 'compatible.asm'='21.0','compatible.rdbms'='21.0';" | {{ grid_home }}/bin/sqlplus -s / as sysasm
+      register: create_data_dg_out
+  
+    - name: display a message if DATA_DG has been created 
+      debug: msg="DATA_DG diskgroup has now been created"
+      #when: create_data_dg_out.stdout == "Diskgroup created."
+      when: "'Diskgroup created.' in create_data_dg_out.stdout"
+  when: data_dg_out.stdout is defined and data_dg_out.stdout | length == 0
+
+
+
+
+
+- name: check if FRA_DG disk group exists
+  shell: . {{grid_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select name from v\$asm_diskgroup where name='FRA_DG';" | {{ grid_home }}/bin/sqlplus -s / as sysasm
+  register: fra_dg_out
+  changed_when: false
+
+# - name: display the data_dg_out 
+#   debug: var=data_dg_out
+
+- block:
+    - name: create FRA_DG if it doesn't exist
+      shell: . {{grid_scripts_dir }}/setEnv.sh; echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING OFF ECHO OFF\n CREATE DISKGROUP FRA_DG EXTERNAL REDUNDANCY DISK '/dev/oracleasm/disks/FRADISK1' ATTRIBUTE 'compatible.asm'='21.0','compatible.rdbms'='21.0';" | {{ grid_home }}/bin/sqlplus -s / as sysasm
+      register: create_fra_dg_out
+  
+    - name: display a message if FRA_DG has been created 
+      debug: msg="FRA_DG diskgroup has now been created"
+      #when: create_data_dg_out.stdout == "Diskgroup created."
+      when: "'Diskgroup created.' in create_fra_dg_out.stdout"
+  when: fra_dg_out.stdout is defined and fra_dg_out.stdout | length == 0
+
+- name: check cluster configuration
+  shell: . {{grid_scripts_dir }}/setEnv.sh; crsctl stat res -t
+  register: cluster_status_out
+
+# - name: display cluster_status_out
+#   debug: var=cluster_status_out.rc
+   
+
+- name: display cluster status
+  debug:
+    msg:
+    - "find the cluster resources status below"
+    - "{{cluster_status_out.stdout_lines}}"
+  when: cluster_status_out.rc == 0

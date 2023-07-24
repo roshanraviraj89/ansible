@@ -1,0 +1,16 @@
+. {{ grid_scripts_dir }}/setEnv.sh
+
+#set some variables
+PUBLIC_IP={{ node1_public_ip }}
+PRIVATE_IP={{ node1_priv_ip }}
+PUB_NET_DEVICE=`ifconfig | grep "{{ node1_public_ip }}" -B 1 | grep eth | awk '{print $1}' | sed 's/.$//'`
+PRIV_NET_DEVICE=`ifconfig | grep "{{ node1_priv_ip }}" -B 1 | grep eth | awk '{print $1}' | sed 's/.$//'`
+PUB_SUBNET=`echo "{{node1_public_ip}}" | awk -F "." '{print $1"."$2"."$3".0"}'`
+PRIV_SUBNET=`echo "{{node1_priv_ip}}" | awk -F "." '{print $1"."$2"."$3".0"}'`
+
+echo $PUBLIC_IP
+echo $PRIVATE_IP
+echo $PUB_NET_DEVICE
+echo $PRIV_NET_DEVICE
+echo $PUB_SUBNET
+echo $PRIV_SUBNET
