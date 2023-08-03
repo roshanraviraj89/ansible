@@ -2,7 +2,7 @@
 # Host information.
 hostname: ireland.localdomain
 short_hostname: ireland
-ip_address: 192.168.68.121
+ip_address: 192.168.100.60
 #
 
 #paths
