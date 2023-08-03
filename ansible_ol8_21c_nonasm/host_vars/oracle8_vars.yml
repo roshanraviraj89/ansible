@@ -2,7 +2,7 @@
 # Host information.
 hostname: barnet.localdomain
 short_hostname: barnet
-ip_address: 192.168.68.114
+ip_address: 192.168.100.50
 # #
 #
 # # Paths
