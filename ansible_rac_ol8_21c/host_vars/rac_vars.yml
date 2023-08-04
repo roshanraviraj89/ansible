@@ -35,6 +35,7 @@ dns_server_ip: 192.168.68.114
 dns_cidr: 192.168.68.0/24
 dns_hostname: dns
 dns_fq_hostname: "{{dns_hostname}}.{{domain_name}}"
+google_public_dns_ip: 8.8.8.8
 
 node1_reverse_public_ip: 100
 node2_reverse_public_ip: 102
