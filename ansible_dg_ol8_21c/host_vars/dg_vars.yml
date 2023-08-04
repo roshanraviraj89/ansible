@@ -2,12 +2,12 @@
 # Host information.
 node1_hostname: bath-node1.localdomain
 node1_short_hostname: bath-node1
-node1_ip_address: 192.168.68.124
+node1_ip_address: 192.168.100.70
 
 
 node2_hostname: bath-node2.localdomain
 node2_short_hostname: bath-node2
-node2_ip_address: 192.168.68.128
+node2_ip_address: 192.168.100.71
 #
 
 #paths
