@@ -17,6 +17,9 @@
 #     - "{{ scan_ip_2}} {{ scan_fq_name }} {{ scan_name }}"
 #     - "{{ scan_ip_3}} {{ scan_fq_name }} {{ scan_name }}"
 
+- name: update the nameserver entry on  resolv.conf file
+  shell: echo -e 'nameserver {{ dns_server_ip }}\nsearch {{ domain_name }}\nnameserver {{google_public_dns_ip}} ' > /etc/resolv.conf 
+  changed_when: false
 
 - name: copy hosts entries to /etc/hosts file
   template:
@@ -51,6 +54,3 @@
     policy: targeted
     state: permissive
 
-- name: update the nameserver entry on  resolv.conf file
-  shell: echo -e 'nameserver {{ dns_server_ip }}\n search {{ domain_name }}' > /etc/resolv.conf 
-  changed_when: false
