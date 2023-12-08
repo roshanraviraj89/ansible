@@ -1,0 +1,41 @@
+---
+# tasks file for meta_export
+
+- name: create data pump directory {{dump_dir}} and grant permission to system user on {{dump_dir}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{source_dp_dir}}';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to system;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: dir_out
+
+- debug: 
+    msg: "{{dir_out.stdout_lines}}"
+
+
+- name: do metadata export on {{source_pdb}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{source_dp_dir}}
+    {{source_oracle_home}}/bin/expdp system/{{source_system_passwd}}@{{source_srv}} parfile={{exp_par_file}}
+
+
+- name:  validate if the metadata export has been successfully completed.
+  shell: grep "successfully completed" {{source_dp_dir}}/{{exp_logfile}}
+  register: exp_out
+
+- fail: 
+   msg: "{{Errors on export. Fix the issue and re-run the export}}"
+  when: not exp_out.rc == 0
+  
+- debug:
+    msg: "{{exp_out.stdout_lines}}"
+  when:  exp_out.rc == 0
+ 
+
+## copy the dumps to target host
+
+- name: copy the dumpfiles to {{target_dp_dir}} on {{target_hostname}}
+  shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_dp_dir}}/*.dmp {{dest_user}}@{{target_ip_address}}:{{target_dp_dir}}
+     
