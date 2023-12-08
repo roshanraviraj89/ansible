@@ -1,0 +1,31 @@
+#!/bin/bash
+export ORACLE_SID={{target_grid_sid}}
+export ORACLE_HOME={{target_grid_home}}
+export PATH=$PATH:{{target_grid_home}}/bin
+export LD_LIBRARY_PATH={{target_grid_home}}/lib
+
+tbs={{tablespaces}}
+
+echo '' >> {{target_dp_dir}}/{{imp_par_file}}
+# Save the current IFS value
+IFS_old=$IFS
+
+# Set IFS to comma to split the list
+IFS=','
+
+# Convert the comma-separated string into an array
+
+tbs_array=($tbs)
+IFS=$IFS_old
+for i in "${tbs_array[@]}"
+do
+
+     x=$(asmcmd find --type DATAFILE +{{target_data_dg}}/{{target_db_unique_name}}/{{target_pdb_guid}}/DATAFILE ${i}*)
+     a=($x)
+     for db_file in "${a[@]}"
+     do
+        echo -e "TRANSPORT_DATAFILES='${db_file}'" >> {{target_dp_dir}}/{{imp_par_file}}
+        echo ${db_file} has been successfully added to the {{imp_par_file}}
+     done
+done
+
