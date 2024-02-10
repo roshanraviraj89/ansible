@@ -1,0 +1,38 @@
+---
+# tasks file for zdm_start_migration
+
+- name: start zdm migration
+  shell: "{{zdm_scripts_dir}}/zdm_migrate.sh > {{zdm_scripts_dir}}/zdm_migrate.log"
+
+#- name: Execute the task every minute and display the output until it doesn't produce any output
+- name: wait for 60 seconds
+  pause: 
+    seconds: 60
+
+- name: Execute the task every minute until the task is failed
+  shell: |
+    . {{ zdm_scripts_dir }}/setEnv.sh
+    while true; do
+        zdmcli query job -status EXECUTING -latest
+        query_status=$?
+        if [ $query_status -ne 0 ]; then
+           break
+        fi
+        sleep 60
+    done
+  register: query_out
+ 
+- name: check if the migration job status is  PAUSED
+  shell: |
+    {{zdm_scripts_dir}}/check_migration_job_status.sh
+  register: out
+
+- name: validate the output
+  assert:
+    that: 
+     - "'Current status: PAUSED' in out.stdout"
+    success_msg: "Migration Job has been successfully paused"
+    fail_msg: "Migration job failed. Investigate"
+
+- debug:
+    msg: "{{ out.stdout_lines }}"

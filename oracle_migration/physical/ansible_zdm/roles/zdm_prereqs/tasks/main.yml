@@ -1,0 +1,207 @@
+---
+# tasks file for zdm_prereqs
+
+- name: Install all the required packages for zdm
+  dnf:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items: "{{ packages }}"
+
+- name: check zdm os group exists
+  shell: grep zdm /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add zdm group if it doesnt exist
+  shell: /usr/sbin/groupadd zdm
+  changed_when: False
+  when: result.failed == true
+
+- name: check if zdmuser exists
+  shell: id zdmuser
+  register: result
+  changed_when: False
+  ignore_errors: True
+
+- name: print a message if zdmuser doesn't exists
+  debug:
+    var: result.stderr
+  when: result.failed == true
+
+
+- block:
+    - name: add zdmuser if it's not already exist
+      shell: /usr/sbin/useradd -g zdm zdmuser
+      changed_when: False
+  
+
+    - name: set a password for zdmuser
+      user: 
+        name: zdmuser
+        state: present
+        password: "{{ zdmuser_password | password_hash('sha512') }}"
+
+    - name: give sudo accessto zdmuser
+      blockinfile:
+        path: /etc/sudoers
+        insertafter: 'root    ALL=(ALL)       ALL'
+        block: |
+          # Gives sudo access to the dba group
+          zdmuser        ALL=(ALL)       NOPASSWD: ALL  
+
+    
+  when: result.failed == true
+
+- name: Add hosts entry on {{zdm_short_hostname}}
+  lineinfile:
+    state: present
+    dest: /etc/hosts
+    line: "{{ item }}"
+  with_items: 
+     - "{{ source_ip_address }} {{ source_hostname }} {{ source_short_hostname }}"
+     - "{{ target_ip_address }} {{ target_hostname }} {{ target_short_hostname }}"
+
+################################################
+
+- name: check if the directories already exist
+  stat:
+    path:  "{{ item }}"
+  with_items:
+    - "{{zdm_base}}"
+    - "{{zdm_home}}"
+    - "{{zdm_software_dir}}"
+    - "{{sys_wallet_dir}}"
+    - "{{oss_wallet_dir}}"
+    - "{{zdm_scripts_dir}}"
+  register: dir_result
+
+- name: display dir_result variable
+  debug: var=dir_result
+
+- name: display a message if the directories exist
+  debug:
+    msg: "directory {{ item.item }} exists"
+  with_items: "{{ dir_result.results }}"
+  when: item.stat.exists
+
+- name: create directories
+  file:
+    path: "{{ item.item }}"
+    state: directory
+    owner: zdmuser
+    group: zdm
+    recurse: yes
+    mode: "0775"
+
+  with_items:
+    - "{{ dir_result.results }}"
+  when: not item.stat.exists
+
+- name: Check if zdm software already exists
+  stat:
+    path: "{{ zdm_software_dir }}/{{ zdm_software }}"
+  register: zdm_software_result
+
+- name: Copy zdm software to {{ zdm_software_dir }}
+  copy:
+    src: "{{ zdm_software }}"
+    dest: "{{ zdm_software_dir }}/"
+    owner: zdmuser
+    group: zdm
+  when: not zdm_software_result.stat.exists
+
+- name: check if the zdm software has already been unzipped in {{zdm_software_dir}}
+  stat:
+    path:  "{{ zdm_unzipped_dir }}"
+  register: zdm_out
+
+- name: unzip zdm software
+  become: true
+  become_user: zdmuser
+  unarchive: src="{{zdm_software_dir}}/{{zdm_software}}"
+     dest="{{ zdm_software_dir }}"
+     mode=0775
+     owner=zdmuser
+     group=zdm
+     remote_src=true
+  when: not zdm_out.stat.exists
+
+
+- name: check if ssh key pair has already been created.
+  find:
+    paths: "/home/zdmuser/.ssh"
+    file_type: any
+  register: ssh_out
+
+
+- name: generate ssh keypairs for zdmuser
+  become_user: zdmuser
+  block:
+    - name: generate ssh keypairs 
+      shell: ssh-keygen -q -m PEM -t rsa -N '' -f ~/.ssh/id_rsa <<<y
+      
+    - name: copy the {{ zdm_short_hostname }} public key to {{ source_short_hostname }}
+      shell: sshpass -p {{zdmuser_password}} ssh-copy-id -o StrictHostKeyChecking=no zdmuser@{{source_short_hostname}}
+      register: ssh_out1
+     
+    - debug: var=ssh_out1.stdout_lines
+
+    - name: copy the {{ zdm_short_hostname }} public key to {{ target_short_hostname }}
+      shell: sshpass -p {{zdmuser_password}} ssh-copy-id -o StrictHostKeyChecking=no zdmuser@{{target_short_hostname}}
+      register: ssh_out2   
+    - debug: var=ssh_out2.stdout_lines
+    
+    - name: run sample commands via ssh on source
+      shell: ssh {{source_short_hostname}} "/usr/bin/sudo /bin/sh -c date"
+      register: out1
+    - debug:  var=out1.stdout_lines
+
+    - name: run sample commands via ssh on target
+      shell: ssh {{target_short_hostname}} "/usr/bin/sudo /bin/sh -c date"
+      register: out2
+    - debug:  var=out2.stdout_lines
+  when: ssh_out.matched == 0
+
+
+
+- name: generate templates for zdm migration
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+     owner: zdmuser
+     group: zdm
+     mode:  "u=rwx,g=rwx,o=r"
+  with_items: 
+    - { src: "physical_online.rsp.j2", dest: "{{zdm_scripts_dir}}/physical_online.rsp" }
+    - { src: "setEnv.sh.j2", dest: "{{zdm_scripts_dir}}/setEnv.sh" }
+    - { src: "zdm_migrate_eval.sh.j2", dest: "{{zdm_scripts_dir}}/zdm_migrate_eval.sh" }
+    - { src: "check_eval_job_status.sh.j2", dest: "{{zdm_scripts_dir}}/check_eval_job_status.sh" }
+    - { src: "zdm_migrate.sh.j2", dest: "{{zdm_scripts_dir}}/zdm_migrate.sh" }
+    - { src: "check_migration_job_status.sh.j2", dest: "{{zdm_scripts_dir}}/check_migration_job_status.sh" }
+    - { src: "zdm_complete_migration.sh.j2", dest: "{{zdm_scripts_dir}}/zdm_complete_migration.sh" }
+
+
+
+- name: Source setEnv.sh from .bash_profile
+  lineinfile:
+     state: present
+     dest: /home/zdmuser/.bash_profile
+     line: ". {{ zdm_scripts_dir }}/setEnv.sh"
+
+
+  
+    
+  
+
+
+
+
+
+  
+
+
+
+
+ 

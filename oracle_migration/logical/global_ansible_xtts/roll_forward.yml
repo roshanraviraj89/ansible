@@ -1,0 +1,17 @@
+- name: do level 1 backup on {{source_hostname}}
+  hosts: onprem_vm
+  tags: level_1_backup
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - level_1_backup
+
+- name: do level 1 restore on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: level_1_restore
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - level_1_restore

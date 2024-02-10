@@ -1,0 +1,8 @@
+if [ -f ~/.bashrc ]; then
+. ~/.bashrc
+fi
+
+
+export ZDM_BASE={{ zdm_base }}
+export ZDM_HOME={{ zdm_home }}
+PATH=${PATH}:$ZDM_HOME/bin

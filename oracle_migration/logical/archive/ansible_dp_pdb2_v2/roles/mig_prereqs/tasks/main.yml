@@ -1,0 +1,209 @@
+---
+# tasks file for mig_prereqs
+
+- block:
+    - name: Check if the directories already exist on {{source_hostname}}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{ source_dp_dir }}"
+        - "{{ source_verification_dir }}"
+      register: dir_result
+
+    # - name: display dir_result variable
+    #   debug: var=dir_result
+
+    - name: display a message if the directories already present on {{source_hostname}}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{source_hostname}}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0775"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if verification scripts are already present in the {{source_verification_dir}}
+      stat:
+        path: "{{source_verification_dir}}/{{item}}"
+      with_items: 
+         - Application_Objects_In_System_Sysaux.sql
+         - DB_Links_Details.sql
+         - Granted_Roles.sql
+         - Invalid_Objects.sql
+         - List_Schemas_And_Default_TBS.sql
+         - Object_Count_Per_Schema.sql
+         - Schedules_jobs.sql
+      register: sql_out
+
+    - name: copy the verification *.sql files to {{source_verification_dir}}
+      copy: 
+        src: "{{item.item}}"
+        dest: "{{source_verification_dir}}/"
+        owner: oracle
+        group: oinstall
+      with_items: "{{sql_out.results}}"
+      when: not item.stat.exists  
+
+    - name: generate full export par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rw,g=r,o=r"
+      with_items:
+        - {
+            src: "full_export_{{source_pdb}}.par.j2",
+            dest: "{{ source_dp_dir }}/full_export_{{source_pdb}}.par",
+          }
+
+    - name: set streams_pool_size to a reasonable property_value on {{source_hostname}} at the CDB level
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set streams_pool_size={{source_streams_pool_size}} scope=both;" | {{ source_oracle_home }}/bin/sqlplus -s / as sysdba  
+      register: out
+    
+    - name: display the streams_pool_size property_value
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n show parameter streams_pool_size" | {{ source_oracle_home }}/bin/sqlplus -s / as sysdba  
+      register: streams_out
+    
+    - debug:
+        msg: "{{streams_out.stdout_lines}}"
+      when: out.rc == 0
+
+    - name: gather statistics on {{source_hostname}}
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n exec dbms_stats.gather_dictionary_stats;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+      register: statistics_out
+
+    - name: display statistics_out
+      debug: 
+       msg: "{{statistics_out.stdout_lines}}"
+
+    - name: create data pump directory {{source_dump_dir}} and grant permission to system user on {{source_dump_dir}}
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{source_dump_dir}} as '{{source_dp_dir}}';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{source_dump_dir}} to system;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+      register: dir_out
+
+    - debug: 
+        msg: "{{dir_out.stdout_lines}}"
+
+  when: inventory_hostname in groups['onprem_vm']
+
+
+- block:
+    - name: Check if the directories already exist on {{target_hostname}}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{ target_dp_dir }}"
+        - "{{ target_verification_dir }}"
+      register: dir_result
+
+    # - name: display dir_result variable
+    #   debug: var=dir_result.stdout_lines
+
+    - name: display a message if the directories already present on {{target_hostname}}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{target_hostname}}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0775"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if verification scripts are already present in the {{target_verification_dir}}
+      stat:
+        path: "{{target_verification_dir}}/{{item}}"
+      with_items: 
+         - Application_Objects_In_System_Sysaux.sql
+         - DB_Links_Details.sql
+         - Granted_Roles.sql
+         - Invalid_Objects.sql
+         - List_Schemas_And_Default_TBS.sql
+         - Object_Count_Per_Schema.sql
+         - Schedules_jobs.sql
+      register: sql_out
+
+    - name: copy the verification *.sql files to {{target_verification_dir}}
+      copy: 
+        src: "{{item.item}}"
+        dest: "{{target_verification_dir}}/"
+        owner: oracle
+        group: oinstall
+      with_items: "{{sql_out.results}}"
+      when: not item.stat.exists  
+
+    - name: generate full import par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rw,g=r,o=r"
+      with_items:
+        - {
+            src: "full_import_{{target_pdb}}.par.j2",
+            dest: "{{ target_dp_dir }}/full_import_{{target_pdb}}.par",
+          }
+
+    - name: set streams_pool_size to a reasonable property_value on {{target_hostname}} at CDB level
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set streams_pool_size={{target_streams_pool_size}} scope=both;" | {{ target_oracle_home }}/bin/sqlplus -s / as sysdba  
+      register: out
+
+    - name: display the streams_pool_size property_value
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n show parameter streams_pool_size" | {{ target_oracle_home }}/bin/sqlplus -s / as sysdba  
+      register: streams_out
+    
+    - debug:
+        msg: "{{streams_out.stdout_lines}}"
+      when: out.rc == 0
+    
+    - name: create data pump directory {{target_dump_dir}} and grant permission to system user on {{target_dump_dir}}
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{target_dump_dir}} as '{{target_dp_dir}}';" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{target_dump_dir}} to system;" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+      register: dir_out
+
+    - debug: 
+       msg: "{{dir_out.stdout_lines}}"
+    
+
+  when: inventory_hostname in groups['target_oci_vm']
+
+

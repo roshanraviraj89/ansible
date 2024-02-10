@@ -1,0 +1,47 @@
+---
+# tasks file for checksum_dump
+- block:
+    - name: calculate checksum for the source {{source_pdb}} dump files
+      shell: |
+        cd {{source_dp_dir}}
+        /usr/bin/md5sum *.dmp
+      register: checksum_out
+
+    - name: display the source dmp files checksum values
+      debug:
+       msg: 
+        - "{{checksum_out.stdout_lines}}"
+        
+    - name: store the source {{source_pdb}} dump files checksum in a local file
+      become: true
+      become_user: ansibleadmin
+      copy: 
+        content: "{{checksum_out.stdout_lines}}"
+        dest: "source_dumps_checksum.txt"
+      delegate_to: localhost
+
+  when: inventory_hostname in groups['onprem_vm']
+
+- block:
+    - name: calculate checksum for the target {{target_pdb}} dump files
+      shell: |
+        cd {{target_dp_dir}}
+        /usr/bin/md5sum *.dmp
+      register: checksum_out
+
+    - name: display the target dmp files checksum values
+      debug:
+       msg: 
+        - "{{checksum_out.stdout_lines}}"
+        
+    - name: store the target {{target_pdb}} dump files checksum in a local file
+      become: true
+      become_user: ansibleadmin
+      copy: 
+        content: "{{checksum_out.stdout_lines}}"
+        dest: "target_dumps_checksum.txt"
+      delegate_to: localhost
+      
+  when: inventory_hostname in groups['onprem_vm']
+
+

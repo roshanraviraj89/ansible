@@ -1,0 +1,66 @@
+---
+# tasks file for full_export
+
+- name: restart the {{source_pdb}} in a restricted mode 
+  shell: |
+     export ORACLE_SID={{source_oracle_sid}}
+     export ORACLE_HOME={{source_oracle_home}}
+     echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n {{item}};" | {{ source_oracle_home }}/bin/sqlplus -s / as sysdba  
+  register: out
+  with_items: 
+    - "alter pluggable database {{source_pdb}} close"
+    - "alter pluggable database {{source_pdb}} open restricted"
+
+- debug:
+    msg: "{{out.results}}"
+
+- name: run the verification scripts capture the source db objects details 
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{target_verification_dir}}
+    echo -e '@{{ item }}' | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+  with_items: 
+      - "{{source_verification_dir}}/Application_Objects_In_System_Sysaux.sql"
+      - "{{source_verification_dir}}/DB_Links_Details.sql"
+      - "{{source_verification_dir}}/Granted_Roles.sql"
+      - "{{source_verification_dir}}/Invalid_Objects.sql"
+      - "{{source_verification_dir}}/List_Schemas_And_Default_TBS.sql"
+      - "{{source_verification_dir}}/Object_Count_Per_Schema.sql"
+      - "{{source_verification_dir}}/Schedules_jobs.sql"
+  register: sql_out
+
+- name: display sql_out
+  debug: 
+     msg: "{{item.stdout_lines}}"
+  with_items: "{{sql_out.results}}" 
+
+- name: do full export on {{source_pdb}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{source_dp_dir}}
+    {{source_oracle_home}}/bin/expdp system/{{source_system_passwd}}@{{source_srv}} parfile={{exp_par_file}}
+
+- name:  validate if the full export has been successfully completed.
+  shell: grep "successfully completed" {{source_dp_dir}}/{{exp_logfile}}
+  register: exp_out
+
+- fail: 
+   msg: "{{Errors on export. Fix the issue and re-run the export}}"
+  when: not exp_out.rc == 0
+  
+- debug:
+    msg: "{{exp_out.stdout_lines}}"
+  when:  exp_out.rc == 0
+
+
+
+## copy the dumps to target host
+
+- name: copy the dumpfiles to {{target_dp_dir}} on {{target_hostname}}
+  shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_dp_dir}}/*.dmp {{dest_user}}@{{target_ip_address}}:{{target_dp_dir}}
+     
+
+
+

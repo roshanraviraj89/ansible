@@ -1,0 +1,30 @@
+---
+# tasks file for find_datafiles
+
+# find the datafile locations in ASM and append the datafile locations to the meta_import.par file
+
+- name: create the dbfiles.sh
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: grid
+    group: oinstall
+    mode: "u=rwx,g=rw,o=r"
+  with_items:
+    - { src: "dbfiles.sh.j2", dest: "{{ target_dp_dir }}/dbfiles.sh" }
+
+- name: execute the script
+  shell: "{{ target_dp_dir }}/dbfiles.sh > {{ target_dp_dir }}/dbfiles.log"
+
+- name: check the dbfiles.log
+  shell: grep "successfully" {{ target_dp_dir }}/dbfiles.log
+  register: log_out
+
+- name: display log_out
+  debug: 
+    msg: "{{log_out.stdout_lines}}"
+  when: log_out.rc == 0
+
+- fail: 
+   msg: "errors while getting the data file locations from asm."
+  when: not log_out.rc == 0

@@ -1,0 +1,74 @@
+zdm_hostname: oracle-zdm.publicsubnet.demovcn.oraclevcn.com
+zdm_short_hostname: oracle-zdm
+zdm_ip_address: 141.147.53.145
+
+source_scanname: ec2-18-135-112-126.eu-west-2.compute.amazonaws.com
+source_short_scanname: ec2-18-135-112-126
+source_hostname: ip-10-1-6-152.eu-west-2.compute.internal
+source_short_hostname: ip-10-1-6-152
+source_ip_address: 18.135.112.126
+
+source_oracle_sid: cdb1
+source_db_unique_name: cdb1
+source_oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
+source_cdb_srv: cdb1
+source_sys_user: sys
+source_sys_passwd: CloudDBA2023##
+source_system_passwd: CloudDBA2023##
+source_conn_str: "{{source_sys_user}}/{{source_sys_passwd}}@{{source_cdb_srv}}"
+
+
+target_scanname: barnet-scan.publicsubnet.demovcn.oraclevcn.com
+target_short_scanname: barnet-scan
+target_hostname: barnet.publicsubnet.demovcn.oraclevcn.com
+target_short_hostname: barnet
+target_ip_address: 130.61.75.212
+
+target_db_unique_name: cdb1_ht7_fra
+target_oracle_sid: cdb1
+target_oracle_home: /u01/app/oracle/product/19.0.0.0/dbhome_1
+#target_cdb_srv: mig_serv_raccdb       ##tns alias
+target_sys_user: sys
+target_sys_passwd: CloudDBA2023##
+target_system_passwd: CloudDBA2023##
+#target_conn_str: "{{target_sys_user}}/{{target_sys_passwd}}@{{target_cdb_srv}}"
+
+
+
+
+##ZDM packages
+
+packages:
+  - 'glibc-devel'
+  - 'expect'
+  - 'unzip'
+  - 'libaio'
+  - 'libnsl'
+  - 'ncurses-compat-libs'
+  - 'oraclelinux-developer-release-el8'
+  - 'sshpass'
+ # - 'python38'
+
+#ora_inventory: /u01/app/oraInventory
+zdmuser_password: CloudDBA2023##*
+zdm_base: /u01/app/zdm_base
+zdm_home: /u01/app/zdm_home
+zdm_software_dir: /u01/app/zdm_software
+zdm_software: V1037236-01.zip
+zdm_unzipped_dir: /u01/app/zdm_software/zdm21.4.1
+sys_wallet_dir: "/home/zdmuser/sysWallet"
+oss_wallet_dir: "/home/zdmuser/ossWallet"
+oss_auth_token: '"[StMHq5S>4B+M[0Ix{;X"'
+zdm_scripts_dir: /home/zdmuser/scripts
+zdm_backupuser: '"oracleidentitycloudservice/roshan.harrichandran@version1.com"'
+
+##zdm physical migration rsp file parameter
+zdm_migration_method: ONLINE_PHYSICAL
+zdm_data_transfer_medium: OSS
+zdm_platform_type: VMDB
+zdm_host: "https://swiftobjectstorage.eu-frankfurt-1.oraclecloud.com/v1/v1erp"
+zdm_skip_fallback: TRUE
+zdm_opc_container: zdm_bucket
+zdm_dg_broker: TRUE
+source_shutdown: TRUE
+

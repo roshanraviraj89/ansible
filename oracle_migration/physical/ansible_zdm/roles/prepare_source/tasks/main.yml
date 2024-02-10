@@ -1,0 +1,163 @@
+---
+# tasks file for prepare_source
+##create zdmuser
+- name: check zdm os group exists
+  shell: grep zdm /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add zdm group if it doesnt exist
+  shell: /usr/sbin/groupadd zdm
+  changed_when: False
+  when: result.failed == true
+
+- name: check if zdmuser exists
+  shell: id zdmuser
+  register: result
+  changed_when: False
+  ignore_errors: True
+
+- name: print a message if zdmuser doesn't exists
+  debug:
+    var: result.stderr
+  when: result.failed == true
+
+- block:
+    - name: add zdmuser if it's not already exist
+      shell: /usr/sbin/useradd -g zdm zdmuser
+      changed_when: False
+  
+
+    - name: set a password for zdmuser
+      user: 
+        name: zdmuser
+        state: present
+        password: "{{ zdmuser_password | password_hash('sha512') }}"
+
+    - name: give sudo accessto zdmuser
+      blockinfile:
+        path: /etc/sudoers
+        insertafter: 'root    ALL=(ALL)       ALL'
+        block: |
+          # Gives sudo access to the dba group
+          zdmuser        ALL=(ALL)       NOPASSWD: ALL  
+
+  when: result.failed == true
+
+- name: Add hosts entry on node1
+  lineinfile:
+      state: present
+      dest: /etc/hosts
+      line: "{{ item }}"
+  with_items: 
+      - "{{ target_ip_address }} {{ target_hostname }} {{ target_short_hostname }}"
+      - "{{ target_ip_address }} {{ target_scanname }} {{ target_short_scanname }}"
+
+- name: check if the source database has already been set archivelog mode
+  become_user: oracle
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select log_mode from v\$database;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: archive_mode
+
+- name: display the archivelog mode
+  debug: 
+    msg: "{{archive_mode.stdout_lines}}"
+
+# fail if the source db is  on archivelog mode
+- fail:
+    msg: "Source Database is on NOARCHIVELOG mode. It must be on ARCHIVELOG mode"
+  when: archive_mode.rc == 0 and  "NOARCHIVELOG" in archive_mode.stdout_lines
+
+ 
+- name: check if the source database TDE keystore is open & wallet_type is AUTO_LOGIN
+  become_user: oracle
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SELECT status, wallet_type FROM v\$encryption_wallet;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba 
+  register: query_result
+
+- name: dsplay the query_result
+  debug: var=query_result.stdout_lines
+
+
+- name: Validate query output
+  assert:
+    that:
+      - "'OPEN' in query_result.stdout_lines[0]"
+    #  - "'AUTO_LOGIN' in query_result.stdout_lines"
+    fail_msg: "TDE key store is not open"
+    success_msg: "TDE key store is open"
+
+- name: Validate query output
+  assert:
+    that:
+    #  - "'OPEN' in query_result.stdout_lines[0]"
+      - "'AUTOLOGIN' in query_result.stdout_lines[0]"
+    fail_msg: "WALLET_TYPE is not AUTOLOGIN"
+    success_msg: "WALLET_TYPE is AUTOLOGIN"
+
+##To protect against unlogged direct writes in the primary database that cannot be propagated to the standby database, turn on FORCE LOGGING at the primary database:
+
+
+- name: check if the FORCE LOGGING is enabled on source database 
+  become_user: oracle
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select force_logging from v\$database;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: log_out
+
+- name: dsplay the query_result
+  debug: var=log_out.stdout_lines
+
+- name: Validate the log output
+  assert:
+    that:
+      - "'YES' in log_out.stdout_lines"
+    fail_msg: "FORCE_LOGGING is not enabled"
+    success_msg: "FORCE_LOGGING is enabled"
+
+- name: check SQL*Net connectivity from source to target
+  become_user: oracle
+  shell: |
+      export ORACLE_SID={{source_oracle_sid}}
+      export ORACLE_HOME={{source_oracle_home}}
+      {{ source_oracle_home }}/bin/tnsping {{target_short_hostname}}:1521
+  register: tnsping_output
+  ignore_errors: true
+
+- name: display tnsping output
+  debug: var=tnsping_output.stdout_lines
+
+- name: validate the SQL connectivity from source to target
+  assert:
+    that:
+     - tnsping_output.rc == 0
+    success_msg: "SQL connectivity check is successful."
+    fail_msg: "SQL Connectivity check failed. Please investigate."
+  when: tnsping_output is defined
+
+- name: check if rman autobackup on source database
+  shell: |
+      export ORACLE_SID={{source_oracle_sid}}
+      export ORACLE_HOME={{source_oracle_home}}
+      echo -e "show controlfile autobackup;" | {{ source_oracle_home }}/bin/rman target {{source_conn_str}}
+  register: rman_out
+  ignore_errors: true
+
+- name: display rman_out 
+  debug: var=rman_out.stdout_lines
+
+- name: validate if autobackup turned on 
+  assert:
+    that: 
+      - "'CONFIGURE CONTROLFILE AUTOBACKUP ON' in rman_out.stdout"
+    success_msg: "RMAN CONTROLFILE AUTOBACKUP already enabled"
+    fail_msg: "Enable the controlfile AUTOBACKUP to continue"
+
+        
+        

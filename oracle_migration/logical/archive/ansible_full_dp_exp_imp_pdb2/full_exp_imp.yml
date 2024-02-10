@@ -1,0 +1,70 @@
+
+- name: Configure the datapump Migration prerequisites
+  hosts: migration_vms
+  tags: mig_prereqs
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - mig_prereqs
+
+- name: do a full export on "{{source_pdb}}" on "{{source_hostname}}"
+  hosts: onprem_vm
+  tags: full_export
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - full_export
+
+- name: do the checksum for dumps 
+  hosts: migration_vms
+  tags: checksum_dump
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - checksum_dump
+
+
+- name: compare the checksum between the source and the target dumpfiles
+  hosts: localhost
+  tags: checksum_dump 
+  tasks:
+    - name: generate diff
+      command: diff source_dumps_checksum.txt target_dumps_checksum.txt
+      register: diff_result
+    
+    - name: show diff result
+      debug: 
+        msg: 
+         - "{{diff_result.stdout_lines}}"
+         - "Checksum match so progressing to the data pump import stage"
+      when: diff_result.stdout is defined and diff_result.stdout == ""  
+
+
+    - fail: 
+        msg: "checksum don't match between the source and the target dumfiles" 
+      when: diff_result.stdout is defined and diff_result.stdout != "" 
+
+- name: do a full import on "{{target_pdb}}" on "{{target_hostname}}"
+  hosts: target_oci_vm
+  tags: full_import
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - full_import
+  
+- name: do post migration tasks
+  hosts: target_oci_vm
+  tags: post_mig_check
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - post_mig_check
+
+
+
+

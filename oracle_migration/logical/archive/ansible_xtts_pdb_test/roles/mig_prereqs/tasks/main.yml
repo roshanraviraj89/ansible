@@ -1,0 +1,194 @@
+---
+# tasks file for mig_prereqs
+# prereqs on the source side
+
+- block:
+    - name: Check if the directories already exist on {{source_hostname}}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{source_xtts_stage_dir}}"
+        - "{{ source_xtts_scripts_dir }}"
+        - "{{ source_xtts_scratch_dir }}"
+        - "{{ source_dp_dir }}"
+      register: dir_result
+
+    - name: display dir_result variable
+      debug: var=dir_result.stdout_lines
+
+    - name: display a message if the directories already present on {{source_hostname}}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{source_hostname}}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0775"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if {{rman_xttconvert}} already exists on {{ source_hostname }}
+      stat:
+        path: "{{ source_xtts_stage_dir }}/{{ rman_xttconvert }}"
+      register: rman_xttconvert_result
+
+      #copy rman_xttconvert_VER4.3.zip
+    - name: Copy {{ rman_xttconvert }} to the {{ source_xtts_stage_dir }} on {{ source_hostname }}
+      copy:
+        src: "{{ rman_xttconvert }}"
+        dest: "{{ source_xtts_stage_dir }}/"
+        owner: oracle
+        group: oinstall
+      when:
+        not rman_xttconvert_result.stat.exists
+
+        #unzip rman_xttconvert_VER4.3.zip
+    - name: check if {{ rman_xttconvert }} has already been unzipped into the  {{ source_xtts_scripts_dir }} on {{ source_hostname }}
+      find:
+        paths: "{{ source_xtts_scripts_dir }}"
+        file_type: any
+      register: xtts_out
+
+    # - name: display the grid_out
+    #   debug: var=grid_out
+    - block:
+        - name: unzip {{ rman_xttconvert }} into the  {{ source_xtts_scripts_dir }} on {{ source_hostname }}
+          become: true
+          become_user: oracle
+          unarchive: src="{{source_xtts_stage_dir}}/{{rman_xttconvert}}"
+            dest="{{ source_xtts_scripts_dir }}"
+            mode=0775
+            owner=oracle
+            group=oinstall
+            remote_src=true
+        - name: generate xtt.properties file for {{ source_hostname }}
+          template:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: oracle
+            group: oinstall
+            mode: "u=rw,g=r,o=r"
+          with_items:
+            - {
+                src: "xtt.properties.j2",
+                dest: "{{ source_xtts_scripts_dir }}/xtt.properties",
+              }
+      when: xtts_out.matched == 0
+
+    - name: generate meta data export par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rw,g=r,o=r"
+      with_items:
+        - {
+            src: "meta_export.par.j2",
+            dest: "{{ source_dp_dir }}/meta_export.par",
+          }
+
+  when: inventory_hostname in groups['onprem_vm']
+
+# prereqs on the target side
+- block:
+    - name: Check if the directories already exist on {{ target_hostname }}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{target_xtts_stage_dir}}"
+        - "{{ target_xtts_scripts_dir }}"
+        - "{{ target_xtts_scratch_dir }}"
+        - "{{ target_dp_dir }}"
+      register: dir_result
+
+    - name: display dir_result variable
+      debug: var=dir_result.stdout_lines
+
+    - name: display a message if the directories exist on {{ target_hostname }}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{ target_hostname }}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0775"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if {{rman_xttconvert}} already exists on {{ target_hostname }}
+      stat:
+        path: "{{ target_xtts_stage_dir }}/{{ rman_xttconvert }}"
+      register: rman_xttconvert_result
+
+      #copy rman_xttconvert_VER4.3.zip
+    - name: Copy {{ rman_xttconvert }} to {{ target_xtts_stage_dir }} on {{ target_hostname }}
+      copy:
+        src: "{{ rman_xttconvert }}"
+        dest: "{{ target_xtts_stage_dir }}/"
+        owner: oracle
+        group: oinstall
+      when:
+        not rman_xttconvert_result.stat.exists
+
+        #unzip rman_xttconvert_VER4.3.zip
+    - name: check if {{ rman_xttconvert }} has already been unzipped into the  {{ target_xtts_scripts_dir }} on {{ target_hostname }}
+      find:
+        paths: "{{ target_xtts_scripts_dir }}"
+        file_type: any
+      register: xtts_out
+
+    # - name: display the grid_out
+    #   debug: var=grid_out
+
+    - block:
+        - name: unzip {{ rman_xttconvert }} into the  {{ target_xtts_scripts_dir }} on {{ target_hostname }}
+          become: true
+          become_user: oracle
+          unarchive: src="{{target_xtts_stage_dir}}/{{rman_xttconvert}}"
+            dest="{{ target_xtts_scripts_dir }}"
+            mode=0775
+            owner=oracle
+            group=oinstall
+            remote_src=true
+        - name: generate xtt.properties file for {{ target_hostname }}
+          template:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: oracle
+            group: oinstall
+            mode: "u=rw,g=r,o=r"
+          with_items:
+            - {
+                src: "xtt.properties.j2",
+                dest: "{{ target_xtts_scripts_dir }}/xtt.properties",
+              }
+      when: xtts_out.matched == 0
+    
+    - name: generate meta data import par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rw,g=rw,o=r"
+      with_items:
+        - {
+            src: "meta_import.par.j2",
+            dest: "{{ target_dp_dir }}/meta_import.par",
+          }
+  when: inventory_hostname in groups['target_oci_vm']

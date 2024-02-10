@@ -1,0 +1,24 @@
+---
+# tasks file for full_import
+
+- name: do full import on {{target_pdb}} on {{target_hostname}}
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    cd {{target_dp_dir}}
+    {{target_oracle_home}}/bin/impdp system/{{target_system_passwd}}@{{target_srv}} parfile={{imp_par_file}}
+  ignore_errors: true
+
+- name:  validate if the full import has been successfully completed.
+  shell: grep "completed" {{target_dp_dir}}/{{imp_logfile}}
+  register: imp_out
+
+- fail: 
+   msg: "{{Errors on import. Fix the issue and re-run the import}}"
+  when: not imp_out.rc == 0
+  
+- debug:
+    msg: 
+     - "please review {{imp_logfile}} for the import errors."
+     - "{{imp_out.stdout_lines}}"
+  when:  imp_out.rc == 0

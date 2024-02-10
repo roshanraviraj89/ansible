@@ -1,0 +1,39 @@
+---
+# tasks file for check_dataguard
+
+- name: check data guard configuration
+  shell: | 
+      export ORACLE_SID={{target_oracle_sid}}
+      export ORACLE_HOME={{target_oracle_home}}
+      echo -e "show configuration" | {{ target_oracle_home }}/bin/dgmgrl /
+  register: dg_config
+
+- name: Validate the dg_config
+  assert:
+    that:
+      - "'SUCCESS' in dg_config.stdout"
+    success_msg: "Dataguard configuration status is success"
+    fail_msg: "Dataguard configuration status is not success. Investigate.."
+
+- name: display the dg_config
+  debug: var=dg_config.stdout_lines
+
+
+- name: check the standby database
+  shell: | 
+      export ORACLE_SID={{target_oracle_sid}}
+      export ORACLE_HOME={{target_oracle_home}}
+      echo -e "show database {{target_db_unique_name}}" | {{ target_oracle_home }}/bin/dgmgrl /
+  register: dg_stby
+
+- name: Validate the standby database
+  assert:
+    that:
+      - "'SUCCESS' in dg_stby.stdout"
+    success_msg: "Standby database status is success"
+    fail_msg: "Standby database status is not success. Investigate.."
+
+- name: display the dg_stby
+  debug: var=dg_stby.stdout_lines
+
+

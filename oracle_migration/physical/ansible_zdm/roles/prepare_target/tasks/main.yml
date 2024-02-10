@@ -1,0 +1,83 @@
+---
+# tasks file for prepare_target
+- name: check zdm os group exists
+  shell: grep zdm /etc/group
+  register: result
+  ignore_errors: True
+  changed_when: False
+
+- name: add zdm group if it doesnt exist
+  shell: /usr/sbin/groupadd zdm
+  changed_when: False
+  when: result.failed == true
+
+- name: check if zdmuser exists
+  shell: id zdmuser
+  register: result
+  changed_when: False
+  ignore_errors: True
+
+- name: print a message if zdmuser doesn't exists
+  debug:
+    var: result.stderr
+  when: result.failed == true
+
+- block:
+    - name: add zdmuser if it's not already exist
+      shell: /usr/sbin/useradd -g zdm zdmuser
+      changed_when: False
+  
+
+    - name: set a password for zdmuser
+      user: 
+        name: zdmuser
+        state: present
+        password: "{{ zdmuser_password | password_hash('sha512') }}"
+
+    - name: give sudo accessto zdmuser
+      blockinfile:
+        path: /etc/sudoers
+        insertafter: 'root    ALL=(ALL)       ALL'
+        block: |
+          # Gives sudo access to the dba group
+          zdmuser        ALL=(ALL)       NOPASSWD: ALL  
+
+    - name: Add hosts entry on node1
+      lineinfile:
+        state: present
+        dest: /etc/hosts
+        line: "{{ item }}"
+      with_items: 
+         - "{{ source_ip_address }} {{ source_hostname }} {{ source_short_hostname }}"
+         - "{{ source_ip_address }} {{ source_scanname }} {{ source_short_scanname }}"
+  when: result.failed == true
+
+# - name: Add hosts entry on target
+#   lineinfile:
+#     state: present
+#     dest: /etc/hosts
+#     line: "{{ item }}"
+#   with_items: 
+#          - "{{ source_ip_address }} {{ source_hostname }} {{ source_short_hostname }}"
+#          - "{{ source_ip_address }} {{ source_scanname }} {{ source_short_scanname }}"
+
+
+- name: check SQL*Net connectivity from target to source
+  become_user: oracle
+  shell: |
+      export ORACLE_SID={{target_oracle_sid}}
+      export ORACLE_HOME={{target_oracle_home}}
+      {{ target_oracle_home }}/bin/tnsping {{source_short_hostname}}:1521
+  register: tnsping_output
+  ignore_errors: true
+
+- name: display tnsping output
+  debug: var=tnsping_output.stdout_lines
+
+- name: validate the SQL connectivity from target to source
+  assert:
+    that:
+     - tnsping_output.rc == 0
+    success_msg: "SQL connectivity check is successful."
+    fail_msg: "SQL Connectivity check failed. Please investigate."
+  when: tnsping_output is defined

@@ -1,0 +1,71 @@
+---
+# tasks file for zdm_install
+
+- name: check if zdm has been already installed
+  shell: "{{zdm_home}}/bin/zdmcli -build"
+  ignore_errors: true
+  register: out
+
+- block:
+   - name: install zdm
+     shell: "{{zdm_unzipped_dir}}/zdminstall.sh setup oraclehome={{zdm_home}} oraclebase={{zdm_base}} ziploc={{zdm_unzipped_dir}}/zdm_home.zip"
+     register: zdm_install_out
+
+   - name: check if zdm has been installed successfully.
+     debug: var=zdm_install_out.stdout_lines
+     when: zdm_install_out.failed == false
+
+   - name: start the zdmservice
+     shell: |
+       {{zdm_home}}/bin/zdmservice start
+       {{zdm_home}}/bin/zdmservice status
+     register: zdmserv_out
+   
+   - name: verify if zdm is running
+     debug: var=zdmserv_out.stdout_lines
+     when: zdmserv_out.failed == false
+  
+   - name: verify the installed version 
+     shell: "{{zdm_home}}/bin/zdmcli -build" 
+     register: version_out
+
+   - name: display the zdm version
+     debug: var=version_out.stdout_lines
+     when: version_out.failed == false
+    
+   
+  when: out.failed == true
+
+- name: check if sys wallet has already been created.
+  find:
+    paths: "{{sys_wallet_dir}}"
+    file_type: any
+  register: sys_out
+
+- name: create a sys wallet and store source sys password
+  shell: |
+    {{zdm_home}}/bin/orapki wallet create -wallet {{sys_wallet_dir}} -auto_login_only
+    {{zdm_home}}/bin/mkstore -wrl {{sys_wallet_dir}} -createCredential store sysuser {{source_sys_passwd}}
+    ls -l {{sys_wallet_dir}}
+  register: sysWallet_out
+  when: sys_out.matched == 0
+  
+- debug: var=sysWallet_out
+
+- name: check if oss wallet has already been created.
+  find:
+    paths: "{{oss_wallet_dir}}"
+    file_type: any
+  register: oss_out  
+
+- name: create a oss wallet and store swift authentication token.
+  shell: |
+    {{zdm_home}}/bin/orapki wallet create -wallet {{oss_wallet_dir}} -auto_login_only
+    {{zdm_home}}/bin/mkstore -wrl {{oss_wallet_dir}} -createCredential store ossuser {{oss_auth_token}}
+    ls -l {{oss_wallet_dir}}
+  register: ossWallet_out
+  when: oss_out.matched == 0
+  
+- debug: var=ossWallet_out
+  
+  

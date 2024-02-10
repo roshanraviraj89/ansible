@@ -1,0 +1,46 @@
+- name: do the final incremental backup on {{source_hostname}}
+  hosts: onprem_vm
+  tags: final_backup
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - final_backup
+
+- name: do the final restore on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: final_restore
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - final_restore
+
+- name: do the  metadata export on {{source_hostname}}
+  hosts: onprem_vm
+  tags: meta_export
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - meta_export
+
+## find the datafiles  on ASM and add the datafile info to the meta_import.par
+
+- name: find the datafiles on ASM on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: find_datafiles
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - find_datafiles
+
+- name: do the metadata import on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: meta_import
+  vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - meta_import

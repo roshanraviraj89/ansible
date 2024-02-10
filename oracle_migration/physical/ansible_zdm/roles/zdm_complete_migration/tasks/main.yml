@@ -1,0 +1,44 @@
+---
+# tasks file for zdm_complete_migration
+- name: complete the zdm migration
+  shell:  |
+    {{zdm_scripts_dir}}/check_migration_job_status.sh > {{zdm_scripts_dir}}/migrate_job_status.log
+    {{zdm_scripts_dir}}/zdm_complete_migration.sh
+  register: out
+
+- name: display the out
+  debug: var=out.stdout_lines
+
+- name: wait for 60 seconds
+  pause: 
+    seconds: 60
+  
+  
+- name: Execute the task every minute until the task is failed
+  shell: |
+    . {{ zdm_scripts_dir }}/setEnv.sh
+    while true; do
+        zdmcli query job -status EXECUTING -latest
+        query_status=$?
+        if [ $query_status -ne 0 ]; then
+           break
+        fi
+        sleep 60
+    done
+  register: query_out
+    
+ 
+- name: check if the migration job status is  SUCCEEDED
+  shell: |
+    {{zdm_scripts_dir}}/check_migration_job_status.sh
+  register: out
+
+- name: validate the output
+  assert:
+    that: 
+     - "'Current status: SUCCEEDED' in out.stdout"
+    success_msg: "Migration Job has been successfully Completed"
+    fail_msg: "Migration job failed. Investigate"
+
+- debug:
+    msg: "{{ out.stdout_lines }}"

@@ -1,0 +1,71 @@
+- name: prepare source
+  hosts: source_vm
+  tags: prepare_source
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - prepare_source
+
+- name: prepare target
+  hosts: target_oci_vm
+  tags: prepare_target
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - prepare_target
+
+- name: do zdm prerequisites
+  hosts: zdm_vm
+  tags: zdm_prereqs
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: root
+  roles:
+    - zdm_prereqs
+
+- name: do zdm install
+  hosts: zdm_vm
+  tags: zdm_install
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: zdmuser
+  roles:
+    - zdm_install
+
+- name: perform migration evaluation
+  hosts: zdm_vm
+  tags: zdm_evaluation
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: zdmuser
+  roles:
+    - zdm_evaluation
+
+- name: start the ZDM migration
+  hosts: zdm_vm
+  tags: zdm_start_migration,never
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: zdmuser
+  roles:
+    - zdm_start_migration
+
+- name: check the data guard before the switchover
+  hosts: target_oci_vm
+  tags: check_dataguard,never
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - check_dataguard
+
+- name: complete the ZDM migration
+  hosts: zdm_vm
+  tags: zdm_complete_migration,never
+  vars_files: host_vars/zdm_vars.yml
+  become: true
+  become_user: zdmuser
+  roles:
+    - zdm_complete_migration

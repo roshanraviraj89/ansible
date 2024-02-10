@@ -1,0 +1,61 @@
+---
+# tasks file for pre_mig_check
+
+## do the pre migration checks
+
+- name: check  if all the tablespaces are self contained
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n EXECUTE DBMS_TTS.TRANSPORT_SET_CHECK('{{tablespaces}}', TRUE);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: out
+
+- name: display transport check out
+  debug: 
+    msg: "{{out.stdout_lines}}"
+
+- name: check if any violations are reported 
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SELECT * FROM TRANSPORT_SET_VIOLATIONS;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: violations_out
+
+- name: display transport   violations out
+  debug: 
+    msg: "{{violations_out.stdout_lines}}"
+  #when: violations_out.rc == 0 and violations_out.stdout_lines | length == 0
+
+- fail:
+    msg: "One or more tablespaces are not self contained. Violations have been reported" 
+  when: violations_out.rc == 0 and violations_out.stdout_lines | length > 0
+
+- name: check if the source database has already been set archivelog mode
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select log_mode from v\$database;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: archive_mode
+
+- name: display the archivelog mode
+  debug: 
+    msg: "{{archive_mode.stdout_lines}}"
+
+# fail if the source db is  on archivelog mode
+- fail:
+    msg: "Source Database is on NOARCHIVELOG mode. It must be on ARCHIVELOG mode"
+  when: archive_mode.rc == 0 and  "NOARCHIVELOG" in archive_mode.stdout_lines
+
+# - name: check database character set and national character set on the {{source_srv}}
+#   shell: |
+#     export ORACLE_SID={{source_oracle_sid}}
+#     export ORACLE_HOME={{source_oracle_home}}
+#     echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select property_name, property_value from database_properties where property_name in ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+#   register: source_cha_out
+
+# - name: display the character set output
+#   debug:
+#    msg: "{{source_cha_out.stdout_lines}}"
+
+
+    

@@ -1,0 +1,3 @@
+. {{ zdm_scripts_dir }}/setEnv.sh
+job_id=$(cat {{zdm_scripts_dir}}/zdm_migrate_eval.log | grep "job ID" | awk -F 'job ID' '{print $2}' | sed 's/["\.]//g')
+$ZDM_HOME/bin/zdmcli query job -jobid ${job_id};

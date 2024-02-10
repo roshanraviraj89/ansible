@@ -1,0 +1,35 @@
+. {{ zdm_scripts_dir }}/setEnv.sh
+
+zdm_status=$(zdmservice status | grep Running | awk -F ':' '{print $2}' | awk '{$1=$1};1')
+
+if [ "$zdm_status" != "true" ]; then
+    echo "zdm service is not running. Starting zdm service..."
+    zdmservice start
+else
+    echo "zdm service is already running."
+fi
+
+
+echo "******************************************************************************"
+echo "Do zdm migrate database evaluation." `date`
+echo "******************************************************************************"
+
+$ZDM_HOME/bin/zdmcli migrate database \
+   -rsp {{zdm_scripts_dir}}/physical_online.rsp \
+   -sourcenode {{source_short_hostname}} \
+   -sourcesid {{source_db_unique_name}} \
+   -srcauth zdmauth \
+   -srcarg1 user:zdmuser \
+   -srcarg2 identity_file:/home/zdmuser/.ssh/id_rsa \
+   -srcarg3 sudo_location:/usr/bin/sudo \
+   -targetnode {{target_short_hostname}} \
+   -tgtauth zdmauth \
+   -tgtarg1 user:zdmuser \
+   -tgtarg2 identity_file:/home/zdmuser/.ssh/id_rsa \
+   -tgtarg3 sudo_location:/usr/bin/sudo \
+   -targethome {{target_oracle_home}} \
+   -backupuser {{zdm_backupuser}} \
+   -sourcesyswallet {{sys_wallet_dir}} \
+   -osswallet {{oss_wallet_dir}} \
+   -eval 
+exit 0

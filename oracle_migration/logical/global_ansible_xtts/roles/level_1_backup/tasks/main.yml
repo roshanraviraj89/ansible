@@ -1,0 +1,46 @@
+---
+# tasks file for level_1_backup
+## make sure res.txt file exists. otherwise it means issues with the level 0 backup
+
+- name: first check if res.txt exists on {{source_xtts_scripts_dir}}
+  stat: 
+    path: "{{source_xtts_scripts_dir}}/res.txt"
+  register: res_out
+
+- fail: 
+   msg: "res.txt file not found. Investigate if level 0 backup has been taken successfully before"
+  when: not res_out.stat.exists
+
+- fail: 
+   msg: "res.txt file is empty. Investigate if level 0 backup has been taken successfully before"
+  when: res_out.stat.size == 0
+
+- shell: cat {{source_xtts_scripts_dir}}/res.txt
+  register: cat_out
+  when: res_out.stat.size > 0
+
+- debug: 
+   msg: "{{cat_out.stdout_lines}}"
+  when: res_out.stat.size > 0
+
+## do a level 1 backup
+
+- name: do a level 1 backup on {{source_hostname}}
+  shell: |
+    export TMPDIR={{source_xtts_scripts_dir}}
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{source_xtts_scripts_dir}}
+    {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+  register: backup_out
+
+- name: validate if the level 1 backup has been completed successfully
+  debug: 
+    msg: "{{backup_out.stdout_lines}}"
+  when: backup_out.rc == 0
+
+## scp the incrbackups.txt to the target. so we can validate the backups before we start the level_1 restore
+
+- name: send the incrbackups.txt to the target for validation.
+  shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scratch_dir}}
+  when: backup_out.rc == 0

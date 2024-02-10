@@ -1,0 +1,12 @@
+. {{ zdm_scripts_dir }}/setEnv.sh
+
+job_status=$(cat {{zdm_scripts_dir}}/migrate_job_status.log | grep "Current status:" | awk -F 'Current status:' '{print $2}' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+if [ "$job_status" == "PAUSED" ]; then
+      echo "Resume the job to complete the switchover"
+      job_id=$(cat {{zdm_scripts_dir}}/zdm_migrate.log | grep "job ID" | awk -F 'job ID' '{print $2}' | sed 's/["\.]//g')
+      $ZDM_HOME/bin/zdmcli resume job -jobid  ${job_id}
+else
+   echo "job status is not PAUSED. Hence exit. Investigate"
+fi
+
+

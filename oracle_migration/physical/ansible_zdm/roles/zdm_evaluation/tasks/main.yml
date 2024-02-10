@@ -1,0 +1,52 @@
+---
+# tasks file for zdm_evaluation
+- name: perform zdm evaluation for migration
+  shell: "{{zdm_scripts_dir}}/zdm_migrate_eval.sh > {{zdm_scripts_dir}}/zdm_migrate_eval.log"
+
+#- name: Execute the task every minute and display the output until it doesn't produce any output
+- name: wait for 60 seconds
+  pause: 
+    seconds: 60
+
+# - name: Monitor eval job until no output
+#   shell: |
+#     {{zdm_home}}/bin/zdmcli query job -status EXECUTING -latest
+#   register: query_out
+#   until: query_out.stdout != "" or query_out is failed
+#   retries: -1  # Adjust the number of retries according to your needs
+#   delay: 60    # Adjust the delay (in seconds) between retries
+#   ignore_errors: true
+
+- name: Execute the task every minute and display the output until it doesn't produce any output
+  shell: |
+    . {{ zdm_scripts_dir }}/setEnv.sh
+    while true; do
+        zdmcli query job -status EXECUTING -latest
+        query_status=$?
+        if [ $query_status -ne 0 ]; then
+           break
+        fi
+        sleep 60
+    done
+  register: query_out
+ 
+- name: check if the eval job is  succeeded
+  shell: |
+    {{zdm_scripts_dir}}/check_eval_job_status.sh
+  register: out
+
+- name: validate the output
+  assert:
+    that: 
+     - "'Current status: SUCCEEDED' in out.stdout"
+    success_msg: "Migration Evaluation job succeeded"
+    fail_msg: "Evaluation job failed. Investigate"
+
+- debug:
+    msg: "{{ out.stdout_lines }}"
+
+
+
+ 
+
+
