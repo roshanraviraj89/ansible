@@ -1,0 +1,17 @@
+- name: Autonomous Database usage example
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  environment: 
+    SAMPLE_COMPARTMENT_OCID: "ocid1.compartment.oc1..aaaaaaaawhxtoo66dn43ghc7cliyg5qe24obgkdnsjwepp6nuyh6z3k6thna"
+    SAMPLE_ADMIN_PASSWORD: "CloudDBA2023##"
+
+  tasks:
+   - name: Check pre-requisites
+     fail:
+        msg: "Environment variable {{item}} not set. Please declare an environment variable with an appropriate value for the sample to work."
+     when: item not in ansible_env
+     with_items:
+        - "{{ lookup('env', 'SAMPLE_COMPARTMENT_OCID') }}"
+        - "{{ lookup('env', 'SAMPLE_ADMIN_PASSWORD') }}"

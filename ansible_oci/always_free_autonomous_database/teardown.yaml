@@ -1,0 +1,28 @@
+---
+# Copyright (c) 2020, 2023 Oracle and/or its affiliates.
+# This software is made available to you under the terms of the GPL 3.0 license or the Apache 2.0 license.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Apache License v2.0
+# See LICENSE.TXT for details.
+
+# Delete Autonomous Database
+- name: Delete Autonomous Database
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  vars:
+   autonomous_database_id: "ocid1.autonomousdatabase.oc1.eu-frankfurt-1.antheljsfgtjjhaatba27bhabij3b6if6xpqycfurzzjkyi6bdh4ol2tdvha"
+
+  tasks: 
+    - name: drop the ADB
+      oci_database_autonomous_database:
+        autonomous_database_id: "{{ autonomous_database_id }}"
+        state: 'absent'
+      register: result
+
+    # - name: Assert that specified Autonomous Database is deleted
+    #   assert:
+    #     that:
+    #       - result.changed == True
+    #       - result.autonomous_database.display_name == display_name

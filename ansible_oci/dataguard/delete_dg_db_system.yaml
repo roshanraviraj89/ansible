@@ -1,0 +1,185 @@
+- name: delete db system
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  vars:
+   compartment_id: "ocid1.compartment.oc1..aaaaaaaawhxtoo66dn43ghc7cliyg5qe24obgkdnsjwepp6nuyh6z3k6thna"
+   pri_db_system_display_name: "primary-db"
+   stby_db_system_display_name: "standby-db"
+   subnet_display_name: "sample-public-subnet-name"
+   sl_display_name: "mysecuritylist"
+   rt_display_name: "myroutetable"
+   ig_display_name: "internetgatewayformytestvcn"
+   vcn_display_name: "sample-test-vcn"
+   vcn_id: "ocid1.vcn.oc1.eu-frankfurt-1.amaaaaaafgtjjhaa2ghmt74zajtbxainzmqarywa2qppesjyrzmju4njf44q"
+
+
+  tasks: 
+    # - name: get the correct database details.
+    #   oracle.oci.oci_database_db_system_facts:
+    #     compartment_id: "ocid1.compartment.oc1..aaaaaaaawhxtoo66dn43ghc7cliyg5qe24obgkdnsjwepp6nuyh6z3k6thna"
+    #     display_name: "sampledbdisplayname"
+    #   register: db_system_facts
+
+    # - name: Display DbSystem ID
+    #   debug:
+    #     msg: 
+    #     - "{{db_system_facts.db_systems[0].id}}"
+    #     #- "{{db_system_facts.db_systems.id}}"
+
+    # - set_fact:
+    #         db_system_id: "{{ db_system_facts.db_systems[0].id }}"
+
+    ######
+    - name: Delete standby DB system
+      oci_database_db_system:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{stby_db_system_display_name}}" 
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+
+    - name: Assert that specified Standby DB system is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.db_system.display_name == stby_db_system_display_name
+       fail_msg: "Standby DB system deletion is failed"
+       success_msg: "Standby DB system has been successfully deleted"
+
+    - name: Delete primary DB system
+      oci_database_db_system:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{pri_db_system_display_name}}" 
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+
+     
+      
+
+  
+
+    - name: Assert that specified DB system is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.db_system.display_name == pri_db_system_display_name
+       fail_msg: "Primary DB system deletion is failed"
+       success_msg: "Primary DB system has been successfully deleted"
+
+
+        ###
+     
+
+    - name: Delete the subnet
+      oci_network_subnet:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{subnet_display_name}}" 
+        vcn_id: "{{vcn_id}}"
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+      
+
+    - name: Assert that specified subnet is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.subnet.display_name == subnet_display_name
+       fail_msg: "subnet deletion is failed"
+       success_msg: "subnet has been successfully deleted"
+     
+
+    - name: Delete the security list
+      oci_network_security_list:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{sl_display_name}}" 
+        vcn_id: "{{vcn_id}}"
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+      
+
+    - name: Assert that specified security list is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.security_list.display_name == sl_display_name
+       fail_msg: "security list deletion is failed"
+       success_msg: "security list has been successfully deleted"
+     
+
+    - name: Delete the route table
+      oci_network_route_table:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{rt_display_name}}" 
+        vcn_id: "{{vcn_id}}"
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+    
+
+    - name: Assert that specified route table is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.route_table.display_name == rt_display_name
+       fail_msg: "route table deletion is failed"
+       success_msg: "route table has been successfully deleted"
+      
+      
+
+    - name: Delete the Internet Gateway
+      oci_network_internet_gateway:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{ig_display_name}}" 
+        vcn_id: "{{vcn_id}}"
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+      
+
+    - name: Assert that specified internet gateway is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.internet_gateway.display_name == ig_display_name
+       fail_msg: "internet gateway deletion is failed"
+       success_msg: "internet gateway has been successfully deleted"
+
+      
+
+    - name: Delete the VCN
+      oci_network_vcn:
+        compartment_id: "{{compartment_id}}"
+        display_name: "{{vcn_display_name}}" 
+        state: absent
+      environment:
+       OCI_USE_NAME_AS_IDENTIFIER: 1
+      register: result
+
+
+    - name: Assert that specified vcn is deleted
+      assert:
+       that:
+          - result.changed == True
+          - result.vcn.display_name == vcn_display_name
+       fail_msg: "vcn deletion is failed"
+       success_msg: "vcn has been successfully deleted"
+
+       
+  
+    
+    
+    
+
+  
+  
