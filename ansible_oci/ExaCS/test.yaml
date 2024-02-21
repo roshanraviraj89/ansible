@@ -1,3 +1,5 @@
+## prereq: have ready oci_config file with 2 profiles one default[primary_region] and  2nd one with the [standby_region]
+
 - name: Create a primary database and setup dataguard on ExaCS existing VM clusters
   hosts: localhost
   collections:
@@ -8,25 +10,61 @@
     stby_region: uk-cardiff-1
     pri_db_home_id:
     stby_db_home_id:
-    stby_vm_cluster:
+    stby_vm_cluster: "ocid1.vmcluster.oc1.uk-cardiff-1.xxxxxx"
+    db_name: cdbpoc
+    pri_db_unique_name: {{db_name}}_{{pri_region}}
+    stby_db_unique_name: {{db_name}}_{{stby_region}}
+    admin_password: POCDBA
 
   tasks: 
     - name: build primary database
       oci_database_database:
              # required
          db_home_id: "ocid1.dbhome.oc1..xxxxxxEXAMPLExxxxxx"
+         compartment_id: "ocid1.compartment.oc1..xxxxxxEXAMPLExxxxxx"
+         region: {{pri_region}}
          wait: yes
          wait_timeout: 14400
          database:
-      # required
            admin_password: example-password
-           db_name: cdbpoc 
-           db_unique_name: db_name_region1   
+           db_name: {{db_name}} 
+           db_unique_name: db_name_{{pri_region}}   
            pdb_name: pdb_name_example
            character_set: character_set_example
            ncharacter_set: ncharacter_set_example
            db_workload: OLTP
            freeform_tags: {'Department': 'Automation'}
            defined_tags: {'Operations': {'CostCenter': 'POC'}}
+      register: pri_out
+      check_mode: yes
+      
+   - name: display pri_out
+     debug: pri_out.database
+
+  - set_fact:
+    pri_database_id: {{pri_out.database.id}}
+    
+       
+
+  - name: build standby database
+    ##OCI_CONFIG_PROFILE: uk-cardiff-1
+    oci_database_data_guard_association:
+    # required
+      config_profile_name: uk-cardiff-1
+      creation_type: ExistingVmCluster
+      database_admin_password: primary-password
+      protection_mode: MAXIMUM_PERFORMANCE
+      transport_type: ASYNC
+      database_id: {{pri_database_id}}
+
+      peer_vm_cluster_id: "standby_vm_cluster_OCID"
+      peer_db_unique_name: peer_db_unique_name_example"
+      peer_db_home_id: "ocid1.peerdbhome.oc1..xxxxxxEXAMPLExxxxxx"
+      is_active_data_guard_enabled: true
+    register: stby_out
+    check_mode: yes
+
+
+
 
   
