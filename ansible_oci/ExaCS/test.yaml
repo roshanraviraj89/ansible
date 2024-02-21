@@ -1,1 +1,27 @@
+- name: Create a primary database and setup dataguard on ExaCS existing VM clusters
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  vars:
 
+  tasks: 
+    - name: build primary database
+      oci_database_database:
+             # required
+         db_home_id: "ocid1.dbhome.oc1..xxxxxxEXAMPLExxxxxx"
+         wait: yes
+         wait_timeout: 14400
+         database:
+      # required
+           admin_password: example-password
+           db_name: cdbpoc 
+           db_unique_name: db_name_region1   
+           pdb_name: pdb_name_example
+           character_set: character_set_example
+           ncharacter_set: ncharacter_set_example
+           db_workload: OLTP
+           freeform_tags: {'Department': 'Automation'}
+           defined_tags: {'Operations': {'CostCenter': 'POC'}}
+
+  
