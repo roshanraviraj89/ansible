@@ -4,6 +4,11 @@
     - oracle.oci
   connection: local
   vars:
+    pri_region: uk-london-1
+    stby_region: uk-cardiff-1
+    pri_db_home_id:
+    stby_db_home_id:
+    stby_vm_cluster:
 
   tasks: 
     - name: build primary database
