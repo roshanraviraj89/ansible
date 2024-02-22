@@ -48,6 +48,11 @@
 
     - set_fact:
       stby_vm_cluster_id: {{stby_cluster_out.vm_clusters.id}}
+
+  ## primary db_home_id details
+    - name: get the primary db_home_id 
+      oci_database_db_home_facts:
+          
     
          
          
