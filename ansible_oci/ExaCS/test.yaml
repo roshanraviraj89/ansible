@@ -8,15 +8,49 @@
   vars:
     pri_region: uk-london-1
     stby_region: uk-cardiff-1
-    pri_db_home_id:
-    stby_db_home_id:
-    stby_vm_cluster: "ocid1.vmcluster.oc1.uk-cardiff-1.xxxxxx"
+    pri_vm_cluster_display_name: pri_vmcluster1_example
+    stby_vm_cluster_display_name: stby_vmcluster1_example
+    #pri_db_home_id: 
+    #stby_db_home_id:
+    #stby_vm_cluster: "ocid1.vmcluster.oc1.uk-cardiff-1.xxxxxx"
     db_name: cdbpoc
     pri_db_unique_name: {{db_name}}_{{pri_region}}
     stby_db_unique_name: {{db_name}}_{{stby_region}}
     admin_password: POCDBA
 
   tasks: 
+  ## primary_vm_cluster
+    - name: get the primary vm_cluster_ocid from the cluster display name
+      oci_database_vm_cluster_facts:
+         lifecycle_state: AVAILABLE
+         display_name: {{pri_vm_cluster_display_name}}
+         region: {{pri_region}}
+      register: pri_cluster_out
+
+    - name: display pri_cluster_out
+      debug: var=pri_cluster_out.vm_clusters
+
+    - set_fact:
+      pri_vm_cluster_id: {{pri_cluster_out.vm_clusters.id}}
+
+  ## standby_vm_cluster
+
+    - name: get the standby vm_cluster_ocid from the cluster display name
+      oci_database_vm_cluster_facts:
+         lifecycle_state: AVAILABLE
+         display_name: {{stby_vm_cluster_display_name}}
+         region: {{stby_region}}
+         config_profile_name: uk-cardiff-1   
+      register: stby_cluster_out
+
+    - name: display stby_cluster_out
+      debug: var=stby_cluster_out.vm_clusters
+
+    - set_fact:
+      stby_vm_cluster_id: {{stby_cluster_out.vm_clusters.id}}
+    
+         
+         
     - name: build primary database
       oci_database_database:
              # required
