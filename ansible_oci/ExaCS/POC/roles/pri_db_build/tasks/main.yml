@@ -32,31 +32,28 @@
 
 - set_fact:
   pri_db_home_id: {{pri_db_home_out.db_homes.id}}
-    
-          
-    
+            
          
-         
-    - name: build primary database
-      oci_database_database:
+- name: build primary database
+  oci_database_database:
              # required
-         db_home_id: "ocid1.dbhome.oc1..xxxxxxEXAMPLExxxxxx"
-         compartment_id: "ocid1.compartment.oc1..xxxxxxEXAMPLExxxxxx"
-         region: {{pri_region}}
-         wait: yes
-         wait_timeout: 14400
-         database:
-           admin_password: example-password
-           db_name: {{db_name}} 
-           db_unique_name: db_name_{{pri_region}}   
-           pdb_name: pdb_name_example
-           character_set: character_set_example
-           ncharacter_set: ncharacter_set_example
-           db_workload: OLTP
-           freeform_tags: {'Department': 'Automation'}
-           defined_tags: {'Operations': {'CostCenter': 'POC'}}
-      register: pri_out
-      check_mode: yes
+    db_home_id: "ocid1.dbhome.oc1..xxxxxxEXAMPLExxxxxx"
+    compartment_id: "ocid1.compartment.oc1..xxxxxxEXAMPLExxxxxx"
+    region: {{pri_region}}
+    wait: yes
+    wait_timeout: 14400
+    database:
+       admin_password: example-password
+       db_name: {{db_name}} 
+       db_unique_name: db_name_{{pri_region}}   
+       pdb_name: pdb_name_example
+       character_set: character_set_example
+       ncharacter_set: ncharacter_set_example
+       db_workload: OLTP
+       freeform_tags: {'Department': 'Automation'}
+       defined_tags: {'Operations': {'CostCenter': 'POC'}}
+    register: pri_out
+    check_mode: yes
       
    - name: display pri_out
      debug: var=pri_out.database
