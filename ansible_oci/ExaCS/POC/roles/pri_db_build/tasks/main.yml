@@ -3,10 +3,6 @@
   register: stby_db_out
   ignore_errors: true
 
-
-
-
-
  
   ## primary_vm_cluster
 - name: get the primary vm_cluster_ocid from the cluster display name
@@ -22,25 +18,21 @@
 - set_fact:
   pri_vm_cluster_id: {{pri_cluster_out.vm_clusters.id}}
 
-  ## standby_vm_cluster
-
-    - name: get the standby vm_cluster_ocid from the cluster display name
-      oci_database_vm_cluster_facts:
-         lifecycle_state: AVAILABLE
-         display_name: {{stby_vm_cluster_display_name}}
-         region: {{stby_region}}
-         config_profile_name: uk-cardiff-1   
-      register: stby_cluster_out
-
-    - name: display stby_cluster_out
-      debug: var=stby_cluster_out.vm_clusters
-
-    - set_fact:
-      stby_vm_cluster_id: {{stby_cluster_out.vm_clusters.id}}
-
   ## primary db_home_id details
-    - name: get the primary db_home_id 
-      oci_database_db_home_facts:
+- name: get the primary db_home_id 
+  oci_database_db_home_facts:
+      vm_cluster_id: {{pri_vm_cluster_id}}
+      lifecycle_state: AVAILABLE
+      display_name: {{pri_db_home_display_name}}
+      region: {{pri_region}}
+  register: pri_db_home_out
+
+- name: display pri_db_home_out
+  debug: var=pri_db_home_out.db_homes
+
+- set_fact:
+  pri_db_home_id: {{pri_db_home_out.db_homes.id}}
+    
           
     
          
