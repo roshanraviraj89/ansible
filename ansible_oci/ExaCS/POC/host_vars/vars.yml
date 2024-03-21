@@ -1,1 +1,15 @@
-primary_region: A
+## primary database variables
+
+pri_region: uk-london-1
+pri_vm_cluster_display_name: pri_vmcluster1_example
+pri_vm_cluster_id: ocid1.vmcluster.oc1..xxxxxxEXAMPLExxxxxx
+db_name: cdbpoc
+pri_db_unique_name: {{db_name}}_{{pri_region}}
+stby_db_unique_name: {{db_name}}_{{stby_region}}
+admin_password: POCDBA
+
+
+## standby database variables
+stby_region: uk-cardiff-1
+stby_vm_cluster_display_name: stby_vmcluster1_example
+

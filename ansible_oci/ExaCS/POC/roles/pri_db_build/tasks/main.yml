@@ -1,35 +1,26 @@
-- name: Create a primary database and setup dataguard on ExaCS existing VM clusters
-  hosts: localhost
-  collections:
-    - oracle.oci
-  connection: local
-  vars:
-    pri_region: uk-london-1
-    stby_region: uk-cardiff-1
-    pri_vm_cluster_display_name: pri_vmcluster1_example
-    stby_vm_cluster_display_name: stby_vmcluster1_example
-    #pri_db_home_id: 
-    #stby_db_home_id:
-    #stby_vm_cluster: "ocid1.vmcluster.oc1.uk-cardiff-1.xxxxxx"
-    db_name: cdbpoc
-    pri_db_unique_name: {{db_name}}_{{pri_region}}
-    stby_db_unique_name: {{db_name}}_{{stby_region}}
-    admin_password: POCDBA
+- name: check if standby database is already configured
+  shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl config database -db {{ stby_oracle_unqname }}
+  register: stby_db_out
+  ignore_errors: true
 
-  tasks: 
+
+
+
+
+ 
   ## primary_vm_cluster
-    - name: get the primary vm_cluster_ocid from the cluster display name
-      oci_database_vm_cluster_facts:
-         lifecycle_state: AVAILABLE
-         display_name: {{pri_vm_cluster_display_name}}
-         region: {{pri_region}}
-      register: pri_cluster_out
+- name: get the primary vm_cluster_ocid from the cluster display name
+  oci_database_vm_cluster_facts:
+      lifecycle_state: AVAILABLE
+      display_name: {{pri_vm_cluster_display_name}}
+      region: {{pri_region}}
+  register: pri_cluster_out
 
-    - name: display pri_cluster_out
-      debug: var=pri_cluster_out.vm_clusters
+- name: display pri_cluster_out
+  debug: var=pri_cluster_out.vm_clusters
 
-    - set_fact:
-      pri_vm_cluster_id: {{pri_cluster_out.vm_clusters.id}}
+- set_fact:
+  pri_vm_cluster_id: {{pri_cluster_out.vm_clusters.id}}
 
   ## standby_vm_cluster
 

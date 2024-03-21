@@ -1,0 +1,16 @@
+
+  ## standby_vm_cluster
+
+- name: get the standby vm_cluster_ocid from the cluster display name
+  oci_database_vm_cluster_facts:
+     lifecycle_state: AVAILABLE
+     display_name: {{stby_vm_cluster_display_name}}
+     region: {{stby_region}}
+     config_profile_name: uk-cardiff-1   
+  register: stby_cluster_out
+
+- name: display stby_cluster_out
+  debug: var=stby_cluster_out.vm_clusters
+
+- set_fact:
+  stby_vm_cluster_id: {{stby_cluster_out.vm_clusters.id}}
