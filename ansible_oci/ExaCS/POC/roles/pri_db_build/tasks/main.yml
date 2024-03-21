@@ -1,9 +1,4 @@
-- name: check if standby database is already configured
-  shell: . {{oracle_scripts_dir }}/setEnv.sh; srvctl config database -db {{ stby_oracle_unqname }}
-  register: stby_db_out
-  ignore_errors: true
 
- 
   ## primary_vm_cluster
 - name: get the primary vm_cluster_ocid from the cluster display name
   oci_database_vm_cluster_facts:
@@ -58,7 +53,7 @@
    - name: display pri_out
      debug: var=pri_out.database
 
-  - set_fact:
-    pri_database_id: {{pri_out.database.id}}
+#  - set_fact:
+#    pri_database_id: {{pri_out.database.id}}
     
        
