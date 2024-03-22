@@ -11,11 +11,15 @@ pri_scan_port: 1521
 
 db_name: cdbpoc
 pri_db_unique_name: {{db_name}}_{{pri_region}}
-stby_db_unique_name: {{db_name}}_{{stby_region}}
 admin_password: POCDBA
+
+pri_oracle_sid1: cdbpoc1  #node1
+pri_oracle_sid2: cdbpoc2  #node2
 
 
 ## standby database variables
+
 stby_region: uk-cardiff-1
 stby_vm_cluster_display_name: stby_vmcluster1_example
+stby_db_unique_name: {{db_name}}_{{stby_region}}
 
