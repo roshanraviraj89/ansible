@@ -11,7 +11,7 @@
 # Post-build activities
 
 - name: create a RAC service for the database migration
-  hosts: ora
+  hosts: pri_rac_19c_node1
   tags: create_migration_service
   vars_files: host_vars/vars.yml
   become: true
