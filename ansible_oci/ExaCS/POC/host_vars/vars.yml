@@ -3,6 +3,12 @@
 pri_region: uk-london-1
 pri_vm_cluster_display_name: pri_vmcluster1_example
 pri_vm_cluster_id: ocid1.vmcluster.oc1..xxxxxxEXAMPLExxxxxx
+
+pri_cluster_name: cluster01
+pri_scan_name: "{{cluster_name}}-scan"
+pri_scan_fq_name: "{{ scan_name}}.{{ domain_name}}"
+pri_scan_port: 1521
+
 db_name: cdbpoc
 pri_db_unique_name: {{db_name}}_{{pri_region}}
 stby_db_unique_name: {{db_name}}_{{stby_region}}
