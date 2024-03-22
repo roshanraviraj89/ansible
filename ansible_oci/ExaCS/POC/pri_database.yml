@@ -18,3 +18,14 @@
   become_user: oracle
   roles:
     - create_migration_service
+
+- name: append the tns entries to tnsnames.ora
+  hosts: pri_rac_19c
+  tags: tns_update
+  vars_files: 
+   - host_vars/vars.yml
+   - host_vars/tns_entries.yml
+  become: true
+  become_user: oracle
+  roles:
+    - tns_update
