@@ -7,3 +7,14 @@
   vars_files: host_vars/vars.yml
   roles:
     - pri_db_build
+
+# Post-build activities
+
+- name: create a RAC service for the database migration
+  hosts: ora
+  tags: create_migration_service
+  vars_files: host_vars/vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - create_migration_service
