@@ -1,0 +1,26 @@
+---
+# tasks file for backup_transfer
+
+- name: rysnc source_backups directory to the target backup_directory
+  shell: rsync -rvzh --partial --progress --append {{source_xtts_scratch_dir}}/ {{dest_user}}@{{target_ip_address}}:{{target_xtts_scratch_dir}}/
+  register: transfer_out
+
+- name: validate if the backup has been transfered ok to the target {{target_xtts_scratch_dir}} directory
+  debug: 
+    msg: "{{transfer_out.stdout_lines}}"
+  when: transfer_out.rc == 0
+
+- name: Additionally transfer the incrbackups.txt to the {{target_xtts_scripts_dir}} directory for the validation.
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: transfer_out.rc == 0
+
+- name: finally copy the res.txt file to the {{target_xtts_scripts_dir}}
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh --partial --progress --append {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: transfer_out.rc == 0
+
+
+  
+  
+   

@@ -1,0 +1,72 @@
+- name: do the pre migration checks on {{source_hostname}}
+  hosts: onprem_vm
+  tags: pre_mig_check
+  # vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - pre_mig_check
+
+- name: check the database characterset and national character set are the same on both {{source_srv}} and the {{target_srv}}
+  hosts: migration_vms
+  tags: pre_character_set_check
+  gather_facts: true
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - pre_character_set_check
+
+- name: compare the character set output 
+  hosts: localhost
+  tags: pre_character_set_check 
+  tasks:
+    - name: generate diff
+      command: diff {{source_pdb}}_source_cha_set.txt {{target_pdb}}_target_cha_set.txt
+      register: diff_result
+    
+    - name: show diff result
+      debug: 
+        var: diff_result
+
+
+    - fail: 
+        msg: "the database character set and the national character sets are not the same between the source and the target" 
+      when: diff_result.stdout is defined and diff_result.stdout != ""
+
+ 
+- name: Configure Migration prerequisites
+  hosts: migration_vms
+  tags: mig_prereqs
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - mig_prereqs
+
+- name: do level 0 backup on {{source_hostname}}
+  hosts: onprem_vm
+  tags: level_0_backup
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - level_0_backup
+
+- name: transfer the level_0 backups to the {{target_xtts_scratch_dir}}
+  hosts: onprem_vm
+  tags: backup_transfer
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - backup_transfer
+
+- name: do level 0 restore on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: level_0_restore
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - level_0_restore

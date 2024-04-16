@@ -1,0 +1,11 @@
+---
+# tasks file for dump_transfer
+
+- name: rysnc source_datapump directory to the target datapump_directory
+  shell: rsync -rvzh --partial --progress --append {{source_dp_dir}}/ {{dest_user}}@{{target_ip_address}}:{{target_dp_dir}}/
+  register: transfer_out
+
+- name: validate if the dumps have been transfered ok to the target {{target_dp_dir}} directory
+  debug: 
+    msg: "{{transfer_out.stdout_lines}}"
+  when: transfer_out.rc == 0

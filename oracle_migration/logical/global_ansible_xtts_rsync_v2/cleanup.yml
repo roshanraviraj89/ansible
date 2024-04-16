@@ -1,0 +1,111 @@
+- name: do a cleanup on {{source_hostname}}
+  hosts: onprem_vm
+  tags: source_cleanup
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  tasks:
+    - name: set the tablespaces back to read write
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n alter tablespace {{item}} read write;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+      with_items: "{{tablespaces.split(',')}}"
+      register: tbs_out
+
+    - name: display tbs_out
+      debug:
+        msg: "{{item.stdout_lines}}"
+      with_items: "{{tbs_out.results}}"
+
+    - name: delete the xtts directories
+      shell: rm -rf {{item}}
+      with_items: 
+        - "{{source_xtts_stage_dir}}"
+        - "{{source_xtts_scripts_dir}}"
+        - "{{source_xtts_scratch_dir}}"
+        - "{{source_dp_dir}}"
+        - "{{source_verification_dir}}"
+
+
+
+- name: do a cleanup on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: target_cleanup
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  tasks: 
+    - name: drop sh schema indexes
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n drop index {{item}};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+      with_items: 
+        - "SH.SUP_TEXT_IDX"
+        - "SH.FW_PSC_S_MV_CHAN_BIX"
+        - "SH.FW_PSC_S_MV_PROMO_BIX"
+        - "SH.FW_PSC_S_MV_SUBCAT_BIX"
+        - "SH.FW_PSC_S_MV_WD_BIX"
+      register: index_out
+
+    - name: display index_out
+      debug:
+        msg: "{{item.stdout_lines}}"
+      with_items: "{{index_out.results}}"
+
+    - name: drop sh schema materialized view
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n drop materialized view {{item}};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+      with_items:
+        - "SH.CAL_MONTH_SALES_MV"
+        - "SH.FWEEK_PSCAT_SALES_MV"
+      register: mview_out
+
+    - name: display mview_out
+      debug:
+        msg: "{{item.stdout_lines}}"
+      with_items: "{{mview_out.results}}"
+
+    - name: drop all the specified tablespaces
+      shell: |
+        export ORACLE_SID={{target_oracle_sid}}
+        export ORACLE_HOME={{target_oracle_home}}
+        echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n drop tablespace {{item}} INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS;" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+      with_items: "{{tablespaces.split(',')}}" 
+      register: tbs_out
+
+    - name: display tbs_out
+      debug:
+        msg: "{{item.stdout_lines}}"
+      with_items: "{{tbs_out.results}}"
+
+    - name: drop the target xtts directories
+      shell: rm -rf {{item}}
+      with_items: 
+        - "{{target_xtts_stage_dir}}"
+        - "{{target_xtts_scripts_dir}}"
+        - "{{target_xtts_scratch_dir}}"
+        - "{{target_dp_dir}}"
+        - "{{target_verification_dir}}"
+
+- name: do a cleanup on the localhost
+  hosts: localhost
+  tags: localhost_cleanup
+  tasks:
+   - name: remove the generated characterset files from localhost
+     file: 
+       path: "{{item}}"
+       state: absent
+     with_items: 
+      - "{{source_pdb}}_source_cha_set.txt"
+      - "{{target_pdb}}_target_cha_set.txt"
+
+
+
+      
+
+      
+      

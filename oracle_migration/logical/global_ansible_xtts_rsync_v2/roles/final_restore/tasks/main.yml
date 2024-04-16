@@ -1,0 +1,67 @@
+---
+# tasks file for final_restore
+
+
+
+# do a validation first to check if all the final incremenatal backups have arrived to target
+
+- name: grep the incremental backups name from the incrbackups.txt
+  shell: cat {{target_xtts_scripts_dir}}/incrbackups.txt | awk -F '/' '{print $NF}'
+  register: incrbackups_out
+
+- name: display incrbackups_out
+  debug: 
+    msg: "{{incrbackups_out.stdout_lines}}"
+
+- name: check all the required incremental backups exist on target
+  shell: ls -al {{target_xtts_scratch_dir}}/{{item}} 
+  with_items:
+   - "{{incrbackups_out.stdout_lines}}"
+  register: validate_out
+  ignore_errors: true
+
+- fail:
+   msg: "not all the required incremental backups exist on Target"
+  with_items: "{{validate_out.results}}"
+  when: not item.rc == 0 
+
+- name: check res.txt file is available on  {{target_xtts_scripts_dir}}
+  stat: 
+    path: "{{target_xtts_scripts_dir}}/res.txt"
+  register: res_out
+
+- fail: 
+    msg: "res.txt file can not be found"
+  when: not res_out.stat.exists
+
+## check if the final incremental backups info have been written into res.txt file
+
+- name: check if the final incremental backups info hav been written into the res.txt file
+  shell: grep -w {{item}} {{target_xtts_scripts_dir}}/res.txt
+  with_items:
+   - "{{incrbackups_out.stdout_lines}}"
+  register: validate2_out
+  ignore_errors: true
+
+- fail:
+   msg: "res.txt file does not have all the final incremental backup info and maybe corrupted"
+  with_items: "{{validate2_out.results}}"
+  when: not item.rc == 0 
+
+## do a level 1 restore
+
+- name: do the final incremental resore on {{target_hostname}}
+  shell: |
+    export TMPDIR={{target_xtts_scripts_dir}}
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    cd {{target_xtts_scripts_dir}}
+    {{target_oracle_home}}/perl/bin/perl xttdriver.pl --restore
+  register: restore_out
+
+- name: validate if the final incremental restore has been completed.
+  debug: 
+    msg:
+    - "The final incremental restore has now been completed"
+    - "{{restore_out.stdout_lines}}"
+  when: restore_out.rc == 0  

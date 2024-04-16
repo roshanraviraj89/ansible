@@ -1,0 +1,25 @@
+---
+# tasks file for level_0_backup
+# Note: if you enable ssh passwordless authentication between source and target for Oracle user, then the backups will be copied automatically to the target
+
+- name: do a level 0 backup on {{source_hostname}}
+  shell: |
+    export TMPDIR={{source_xtts_scripts_dir}}
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{source_xtts_scripts_dir}}
+    {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+  register: backup_out
+  
+  # shell: export ORACLE_SID={{source_oracle_sid}}; export ORACLE_HOME={{source_oracle_home}};  export TMPDIR={{source_xtts_scripts_dir}}; cd {{source_xtts_scripts_dir}}; {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+  # register: backup_out
+
+- name: validate if the backup has been completed successfully
+  debug: 
+    msg: "{{backup_out.stdout_lines}}"
+  when: backup_out.rc == 0
+
+
+  
+
+   
