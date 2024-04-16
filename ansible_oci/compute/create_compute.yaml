@@ -1,0 +1,88 @@
+---
+# Copyright (c) 2020, 2023 Oracle and/or its affiliates.
+# This software is made available to you under the terms of the GPL 3.0 license or the Apache 2.0 license.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Apache License v2.0
+# See LICENSE.TXT for details.
+
+- name: Launch a compute instance for oracle zdm
+  hosts: localhost
+  collections:
+    - oracle.oci
+  vars:
+    subnet_id: "ocid1.subnet.oc1.eu-frankfurt-1.aaaaaaaahs2ljq6knlp6lgwxh6uffrhe7zycyq7oy3b5gl7ljpdigcpeav2a"
+    instance_shape: "VM.Standard.E5.Flex"
+    instance_hostname: "france"
+    instance_ad: 'LlWw:EU-FRANKFURT-1-AD-1'
+    instance_compartment: 'ocid1.compartment.oc1..aaaaaaaawhxtoo66dn43ghc7cliyg5qe24obgkdnsjwepp6nuyh6z3k6thna'
+    instance_image: "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaapd6aw4kb6s2xl5xonuhz7zrf3s7w6k4ovqdj2wdox42w7efcaabq"
+    ssh_public_key_path: '/home/roshan/ansible_oci/keys'
+    ssh_public_key_full_path: '{{ ssh_public_key_path }}/public_key.pem'
+    compute_defined_tags:
+       Account:
+         BillingOwner: 'Oracle_DB_Migration_POC'
+         StackName: 'Oracle_DB_Migration_POC'
+         StackOwner: 'Roshan'
+       Schedule:
+         Weekday: '0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0'
+         Weekend: '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0'
+
+
+
+
+  tasks:
+    - block:
+
+      - set_fact:
+          SSH_AUTHORIZED_KEYS: "{{ lookup('file', ssh_public_key_full_path) }}"    
+
+      
+      - name: Launch an instance
+        oci_compute_instance:
+          availability_domain: "{{ instance_ad }}"
+          compartment_id: "{{ instance_compartment }}"
+          name: "oracle-zdm1"
+          image_id: "{{ instance_image }}" 
+          shape: "{{ instance_shape }}"        
+          shape_config: 
+             ocpus: 1
+             memory_in_gbs: 6                 
+          create_vnic_details:
+              assign_public_ip: True
+              hostname_label: "{{ instance_hostname }}"
+              subnet_id: "{{ subnet_id }}"
+              
+          metadata:
+              ssh_authorized_keys: "{{ SSH_AUTHORIZED_KEYS  }}"
+ #         source_details:
+ #           source_type: image
+ #           image_id: "{{ instance_image }}"
+ #           boot_volume_size_in_gbs: 56
+          display_name: "Oracle-ZDM1"
+          defined_tags: "{{compute_defined_tags}}"
+        register: result
+
+      - name: Print instance details
+        debug:
+          msg: "Launched a new instance {{ result }}"
+      - set_fact:
+          instance_id: "{{result.instance.id }}"
+
+      - name: Get the VNIC attachment details of instance
+        oci_compute_vnic_attachment_facts:
+          compartment_id: "{{ instance_compartment }}"
+          instance_id: "{{ instance_id }}"
+        register: result
+
+      - name: Get details of the VNIC
+        oci_network_vnic_facts:
+          id: "{{ result.vnic_attachments[0].vnic_id }}"
+        register: result
+      - set_fact:
+          instance_public_ip: "{{result.vnic.public_ip}}"
+
+      - name: Print the public ip of the newly launched instance
+        debug:
+          msg: "Public IP of launched instance {{ instance_public_ip }}"
+
+

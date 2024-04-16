@@ -1,0 +1,174 @@
+---
+# Copyright (c) 2020, 2023 Oracle and/or its affiliates.
+# This software is made available to you under the terms of the GPL 3.0 license or the Apache 2.0 license.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Apache License v2.0
+# See LICENSE.TXT for details.
+
+- name: Acreate a sample vm db system example
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  vars:
+    # common networking definitions
+    quad_zero_route: "0.0.0.0/0"
+    TCP_protocol: "6"
+    SSH_port: "22"
+
+    vcn_name: "sample-test-vcn"
+    vcn_cidr_block: "172.30.0.0/16"
+    vcn_dns_label: "sampletestdns"
+
+    subnet_cidr: "172.30.1.0/24"
+    subnet_name: "sample-public-subnet-name"
+    subnet_dns_label: "subnetdns"
+    securitylist_name: "mysecuritylist"
+
+    ig_name: "internetgatewayformytestvcn"
+    route_table_name: "myroutetable"
+    # route all internet access to our Internet Gateway
+    route_table_rules:
+      - cidr_block: "{{ quad_zero_route }}"
+        network_entity_id: "{{ ig_id }}"
+    #########################################
+    # *Note* - Override the following variables based on your tenancy
+    # or set a valid value for the corresponding environment variable
+    # Please refer to module documentation for sample values for
+    # variables
+    #########################################
+    cpu_core_count: 1 # sample value, cpu_core_count: 1
+    data_storage_percentage: 80
+    database_edition: 'ENTERPRISE_EDITION_HIGH_PERFORMANCE'
+    disk_redundancy: 'NORMAL'
+    db_system_display_name: 'sampledbdisplayname'
+    hostname: 'db-system-hostname'
+    initial_data_storage_size_in_gb: 256
+    license_model: 'LICENSE_INCLUDED'
+    node_count: 1
+    shape: 'VM.Standard3.Flex'
+    ssh_public_key_path: '/home/roshan/ansible_oci/keys'
+    ssh_public_key_full_path: '{{ ssh_public_key_path }}/public_key.pem'
+    ssh_public_keys:
+      - "{{ lookup('file', ssh_public_key_full_path) }}"
+    db_system_freeform_tags:
+      system_license: 'trial'      
+    db_system_defined_tags:
+       Account: 
+         BillingOwner: 'Oracle_DB_Migration_POC'
+         StackName: 'Oracle_DB_Migration_POC'
+         StackOwner: 'Roshan'
+       Schedule: 
+         Weekday: '0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0'
+         Weekend: '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0'
+
+    db_home:
+      database:
+        admin_password: 'CloudDBA2023##'
+        character_set: 'AL32UTF8'
+        db_backup_config:
+          auto_backup_enabled: False
+        freeform_tags:
+          database_type: 'attendance'
+        db_name: 'sampledb'
+        pdb_name: 'pdb_oci'
+        db_workload: 'OLTP'
+        ncharacter_set: 'AL16UTF16'
+      db_version: '19.21.0.0'
+      display_name: 'dbdisplayname'
+    cluster_name: 'dbcluster'
+    backup_db_name: 'dbfrombkp'
+    database_admin_password: 'CloudDBA2023##'
+
+    compartment_ocid: 'ocid1.compartment.oc1..aaaaaaaawhxtoo66dn43ghc7cliyg5qe24obgkdnsjwepp6nuyh6z3k6thna'
+    availability_domain: 'LlWw:EU-FRANKFURT-1-AD-1'
+
+
+
+
+
+  tasks:
+    - block:
+
+        - import_tasks: setup.yaml
+
+        - name: Create DB System
+          oci_database_db_system:
+            compartment_id: "{{ compartment_ocid }}"
+            availability_domain: "{{ availability_domain }}"
+            cluster_name: "{{ cluster_name }}"
+            cpu_core_count: "{{ cpu_core_count }}"
+            data_storage_percentage: "{{ data_storage_percentage }}"
+            database_edition: "{{ database_edition }}"
+            db_home: "{{ db_home }}"
+            disk_redundancy: "{{ disk_redundancy }}"
+            display_name: "{{ db_system_display_name }}"
+            hostname: "{{ hostname }}"
+            data_storage_size_in_gbs: "{{ initial_data_storage_size_in_gb }}"
+            license_model: "{{ license_model }}"
+            node_count: "{{ node_count }}"
+            shape: "{{ shape }}"
+            ssh_public_keys: "{{ ssh_public_keys }}"
+            subnet_id: "{{ subnet_id }}"
+            freeform_tags: "{{ db_system_freeform_tags }}"
+            state: 'present'
+            wait: 'True'
+            wait_timeout: 7200
+            defined_tags: "{{db_system_defined_tags}}"
+          register: result
+
+        - set_fact:
+            db_system_id: "{{ result.db_system.id }}"
+
+        - name: List the specific Db System
+          oci_database_db_system_facts:
+            db_system_id: '{{ db_system_id }}'
+          register: result
+
+        - name: Assert that specified Db System was listed
+          assert:
+            that:
+              - result.db_systems[0].id == db_system_id
+
+        - name: Get the DB Home Id
+          oci_database_db_home_facts:
+            compartment_id: "{{ compartment_ocid }}"
+            db_system_id: "{{ db_system_id }}"
+          register: result
+
+        - set_fact:
+            db_home_id: "{{ result.db_homes[0].id }}"
+
+        - name: Get DB Node information of the DB System
+          oci_database_db_node_facts:
+            compartment_id: '{{ compartment_ocid }}'
+            db_system_id: '{{ db_system_id }}'
+          register: result
+
+        # Get the Vnic Id of DB Node filtered by hostname. hostname is same for DB System, which one can collect from oci_db_system_facts module
+        - set_fact:
+            db_node_vnic_id: "{{ item.vnic_id }}"
+          with_items: "{{ result.db_nodes }}"
+          when: item.hostname == hostname and item.vnic_id != None
+
+        - name: Get Vnic Details for DB Node of DB System
+          oci_network_vnic_facts:
+            id: '{{ db_node_vnic_id }}'
+          register: result
+          when: db_node_vnic_id is defined
+
+        # Printing Public and Private Ip. It could be used by storing in variables.
+        - debug:
+            msg: "DB Node Public Ip {{ result.vnic.public_ip }} and Private Ip {{ result.vnic.private_ip }}"
+          when: db_node_vnic_id is defined
+
+        - name: Get the intial database
+          oci_database_database_facts:
+            compartment_id: "{{ compartment_ocid }}"
+            db_home_id: "{{ db_home_id }}"
+          register: result
+
+        - set_fact:
+            database_id: "{{ result.databases[0].id }}"
+
+     

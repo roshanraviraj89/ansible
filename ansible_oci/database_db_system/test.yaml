@@ -1,0 +1,5 @@
+- name: Acreate a sample vm db system example
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
