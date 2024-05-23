@@ -1,0 +1,36 @@
+---
+# tasks file for meta_import
+
+- name: create data pump directory {{dump_dir}} and grant permission to system user on {{dump_dir}}
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{target_dp_dir}}';" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to {{ target_system_user }};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+  register: dir_out
+
+- debug: 
+    msg: "{{dir_out.stdout_lines}}"
+
+
+- name: do metadata import on {{target_pdb}}
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    cd {{target_dp_dir}}
+    {{target_oracle_home}}/bin/impdp {{ target_system_user }}/{{target_system_passwd}}@{{target_srv}} parfile={{imp_par_file}}
+  ignore_errors: true
+
+- name:  validate if the metadata import has been successfully completed.
+  shell: grep "completed" {{target_dp_dir}}/{{imp_logfile}}
+  register: imp_out
+
+- fail: 
+   msg: "{{Errors on import. Fix the issue and re-run the import}}"
+  when: not imp_out.rc == 0
+  
+- debug:
+    msg: 
+     - "please view {{imp_logfile}} for the import errors."
+     - "{{imp_out.stdout_lines}}"
+  when:  imp_out.rc == 0

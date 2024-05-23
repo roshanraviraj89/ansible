@@ -1,0 +1,90 @@
+---
+# tasks file for post_mig_check
+
+- name: validate target database tablespaces
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    export TNS_ADMIN={{target_tns_admin}}
+    echo -e "VALIDATE CHECK LOGICAL TABLESPACE {{item}};" | {{ target_oracle_home }}/bin/rman target {{target_conn_str}} 
+  with_items: "{{tablespaces.split(',')}}"
+  register: tbs_out
+
+- name: write the output to a file
+  lineinfile: 
+      path: "{{target_verification_dir}}/rman_validate.log"
+      line: "{{item.stdout}}"
+      create: yes
+  with_items: "{{tbs_out.results}}"
+  
+
+
+# - name: write the output to a file
+#   copy:
+#    content: "{{item.stdout_lines}}"
+#    dest: "{{target_verification_dir}}/rman_validate.log"
+#   with_items: "{{tbs_out.results}}"
+
+- name: display tbs_out
+  debug:
+    msg: "{{item.stdout_lines}}"
+  with_items: "{{tbs_out.results}}"
+
+
+- name: run utlrp.sql
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    export TNS_ADMIN={{target_tns_admin}}
+    cd {{target_oracle_home}}/rdbms/admin
+    echo -e '@utlrp.sql' |{{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba 
+  register: utl_out
+
+- name: display utlrp log
+  debug:
+    msg: "{{utl_out.stdout_lines}}"
+
+  
+
+
+- name: run the verification scripts capture the target db objects details 
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    export TNS_ADMIN={{target_tns_admin}}
+    cd {{target_verification_dir}}
+    echo -e '@{{ item }}' |{{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba 
+  with_items: 
+      - "{{target_verification_dir}}/Application_Objects_In_System_Sysaux.sql"
+      - "{{target_verification_dir}}/DB_Links_Details.sql"
+      - "{{target_verification_dir}}/Granted_Roles.sql"
+      - "{{target_verification_dir}}/Invalid_Objects.sql"
+      - "{{target_verification_dir}}/List_Schemas_And_Default_TBS.sql"
+      - "{{target_verification_dir}}/Object_Count_Per_Schema.sql"
+      - "{{target_verification_dir}}/Schedules_jobs.sql"
+  register: sql_out
+
+- name: display sql_out
+  debug: 
+     msg: "{{item.stdout_lines}}"
+  with_items: "{{sql_out.results}}"
+
+- name: recreate the stats after the migration
+  shell: |
+    export ORACLE_SID={{target_oracle_sid}}
+    export ORACLE_HOME={{target_oracle_home}}
+    export TNS_ADMIN={{target_tns_admin}}
+    echo -e "{{item}};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba
+  with_items: 
+      - "EXEC DBMS_STATS.gather_database_stats( method_opt => 'FOR ALL COLUMNS SIZE SKEWONLY',estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,cascade=>TRUE,degree => 8)"
+      - "EXEC DBMS_STATS.gather_dictionary_stats"
+      - "EXEC DBMS_STATS.gather_system_stats"
+      - "EXEC DBMS_STATS.gather_fixed_objects_stats"
+      - "EXEC DBMS_STATS.gather_database_stats( method_opt => 'FOR ALL COLUMNS SIZE AUTO',estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,cascade=>TRUE,degree => 8)"
+  register: stats_out
+
+- name: display stats_out
+  debug: 
+     msg: "{{item.stdout_lines}}"
+  with_items: "{{stats_out.results}}"
+

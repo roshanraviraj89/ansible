@@ -1,0 +1,119 @@
+---
+# tasks file for target_mig_prereqs
+- block:
+    - name: Check if the directories already exist on {{ target_hostname }}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{target_xtts_stage_dir}}"
+        - "{{ target_xtts_scripts_dir }}"
+        - "{{ target_xtts_scratch_dir }}"
+        - "{{ target_dp_dir }}"
+        - "{{ target_verification_dir }}"
+      register: dir_result
+
+    - name: display dir_result variable
+      debug: var=dir_result
+
+    - name: display a message if the directories exist on {{ target_hostname }}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{ target_hostname }}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0775"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if verification scripts are already present in the {{target_verification_dir}}
+      stat:
+        path: "{{target_verification_dir}}/{{item}}"
+      with_items: 
+         - Application_Objects_In_System_Sysaux.sql
+         - DB_Links_Details.sql
+         - Granted_Roles.sql
+         - Invalid_Objects.sql
+         - List_Schemas_And_Default_TBS.sql
+         - Object_Count_Per_Schema.sql
+         - Schedules_jobs.sql
+      register: sql_out
+
+    - name: copy the verification *.sql files to {{target_verification_dir}}
+      copy: 
+        src: "{{item.item}}"
+        dest: "{{target_verification_dir}}/"
+        owner: oracle
+        group: oinstall
+      with_items: "{{sql_out.results}}"
+      when: not item.stat.exists  
+
+
+    - name: check if {{rman_xttconvert}} already exists on {{ target_hostname }}
+      stat:
+        path: "{{ target_xtts_stage_dir }}/{{ rman_xttconvert }}"
+      register: rman_xttconvert_result
+
+      #copy rman_xttconvert_VER4.3.zip
+    - name: Copy {{ rman_xttconvert }} to {{ target_xtts_stage_dir }} on {{ target_hostname }}
+      copy:
+        src: "{{ rman_xttconvert }}"
+        dest: "{{ target_xtts_stage_dir }}/"
+        owner: oracle
+        group: oinstall
+      when:
+        not rman_xttconvert_result.stat.exists
+
+        #unzip rman_xttconvert_VER4.3.zip
+    - name: check if {{ rman_xttconvert }} has already been unzipped into the  {{ target_xtts_scripts_dir }} on {{ target_hostname }}
+      find:
+        paths: "{{ target_xtts_scripts_dir }}"
+        file_type: any
+      register: xtts_out
+
+    # - name: display the grid_out
+    #   debug: var=grid_out
+
+    - block:
+        - name: unzip {{ rman_xttconvert }} into the  {{ target_xtts_scripts_dir }} on {{ target_hostname }}
+          become: true
+          become_user: oracle
+          unarchive: src="{{target_xtts_stage_dir}}/{{rman_xttconvert}}"
+            dest="{{ target_xtts_scripts_dir }}"
+            mode=0775
+            owner=oracle
+            group=oinstall
+            remote_src=true
+        - name: generate xtt.properties file for {{ target_hostname }}
+          template:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: oracle
+            group: oinstall
+            mode: "u=rwx,g=rwx,o=rx"
+          with_items:
+            - {
+                src: "xtt.properties.j2",
+                dest: "{{ target_xtts_scripts_dir }}/xtt.properties",
+              }
+      when: xtts_out.matched == 0
+    
+    - name: generate meta data import par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - {
+            src: "meta_import.par.j2",
+            dest: "{{ target_dp_dir }}/meta_import.par",
+          }

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+while IFS= read -r file; do
+  if /bin/time /bin/rsync -vzh --partial --progress --append "$file" {{dest_user}}@{{ target_ip_address }}:{{ target_xtts_scratch_dir }} & then
+    echo "Rsync for $file completed successfully."
+  else
+    echo "Rsync for $file encountered an error."
+  fi
+  while (( $(jobs | wc -l) >= 4 )); do
+    sleep 1
+  done
+done < {{source_xtts_scripts_dir}}/incrbackups.txt
+
+/bin/wait
+echo
+echo "=================================="
+echo "Backups have been transferred now."
+echo "=================================="
+
+exit

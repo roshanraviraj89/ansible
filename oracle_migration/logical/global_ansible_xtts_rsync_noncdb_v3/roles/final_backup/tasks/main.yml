@@ -1,0 +1,95 @@
+---
+# tasks file for final_backup
+
+# Gather dictionary statistics to ensure the Data pump export runs as fast as possible
+
+- name: gather statistics on {{source_hostname}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n exec dbms_stats.gather_dictionary_stats;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: statistics_out
+
+- name: display statistics_out
+  debug: 
+    msg: "{{statistics_out.stdout_lines}}"
+
+- name: purge the recyclebin
+  shell:  |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n purge dba_recyclebin;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+  register: recyclebin_out
+
+- name: display recyclebin_out
+  debug: 
+    msg: "{{recyclebin_out.stdout_lines}}"
+
+- name: list tablespaces
+  debug:
+    msg:
+     - "{{tablespaces}}"
+
+- name: alter the provided user tablspaces to read only
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n alter tablespace {{item}} read only;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  with_items: "{{tablespaces.split(',')}}"
+  register: tbs_out
+
+- name: display tbs_out
+  debug:
+    msg: "{{item.stdout_lines}}"
+  with_items: "{{tbs_out.results}}"
+
+- name: run the verification scripts capture the source db objects details 
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{target_verification_dir}}
+    echo -e '@{{ item }}' | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+  with_items: 
+      - "{{source_verification_dir}}/Application_Objects_In_System_Sysaux.sql"
+      - "{{source_verification_dir}}/DB_Links_Details.sql"
+      - "{{source_verification_dir}}/Granted_Roles.sql"
+      - "{{source_verification_dir}}/Invalid_Objects.sql"
+      - "{{source_verification_dir}}/List_Schemas_And_Default_TBS.sql"
+      - "{{source_verification_dir}}/Object_Count_Per_Schema.sql"
+      - "{{source_verification_dir}}/Schedules_jobs.sql"
+  register: sql_out
+
+- name: display sql_out
+  debug: 
+     msg: "{{item.stdout_lines}}"
+  with_items: "{{sql_out.results}}" 
+
+## do the final incremental backup
+
+##Note: Tablespace read-only error is expected and it's ignorable 
+
+- name: do the final incremental backup on {{source_hostname}}
+  shell: |
+    export TMPDIR={{source_xtts_scripts_dir}}
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    export NLS_LANG={{ nls_lang }}
+    cd {{source_xtts_scripts_dir}}
+    {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+  register: backup_out
+ 
+
+
+
+- name: validate if the final incremental backup has been completed successfully
+  debug: 
+    msg: 
+     - "Final incremental backup has now been completed"
+     - "{{backup_out.stdout_lines}}"
+  when: backup_out.rc == 0
+
+# ## scp the incrbackups.txt to the target. so we can validate the backups before we start the level_1 restore
+
+# - name: send the incrbackups.txt to the target for validation.
+#   shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scratch_dir}}
+#   when: backup_out.rc == 0

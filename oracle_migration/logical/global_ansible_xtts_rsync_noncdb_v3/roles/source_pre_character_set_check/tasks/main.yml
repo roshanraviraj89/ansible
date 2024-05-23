@@ -1,0 +1,22 @@
+---
+# tasks file for source_pre_character_set_check
+
+- block:
+    - name: check database character set and national character set on the {{source_srv}}
+      shell: |
+        export ORACLE_SID={{source_oracle_sid}}
+        export ORACLE_HOME={{source_oracle_home}}
+        printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select property_name, property_value from database_properties where property_name in ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+      register: source_cha_out
+
+    - name: display the character set output
+      debug:
+       msg: "{{source_cha_out.stdout_lines}}"
+    
+    - name: store the source characterset value in a local file
+ ##     become: true
+      become_user: ansibleadmin
+      copy: 
+        content: "{{source_cha_out.stdout_lines}}"
+        dest: "{{source_db}}_source_cha_set.txt"
+      delegate_to: localhost

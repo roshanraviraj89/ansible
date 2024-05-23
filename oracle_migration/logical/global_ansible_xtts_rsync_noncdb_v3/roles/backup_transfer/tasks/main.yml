@@ -1,0 +1,69 @@
+---
+# tasks file for backup_transfer
+
+# - name: rysnc source_backups directory to the target backup_directory
+#   shell: rsync -rvzh --partial --progress --append {{source_xtts_scratch_dir}}/ {{dest_user}}@{{target_ip_address}}:{{target_xtts_scratch_dir}}/
+#   register: transfer_out
+
+# - name: validate if the backup has been transfered ok to the target {{target_xtts_scratch_dir}} directory
+#   debug: 
+#     msg: "{{transfer_out.stdout_lines}}"
+#   when: transfer_out.rc == 0
+
+
+- name: Execute the rsync_backup transfer script
+  shell: "{{ source_xtts_scripts_dir }}/rsync_backup_transfer.sh > {{ source_xtts_scripts_dir  }}/rsync_backup_transfer.log"
+  register: out
+
+##{{ source_xtts_scripts_dir  }}/rsync_backup_transfer.log"
+- name: display out
+  debug: var=out.stdout_lines
+
+- name: check rsync_backup_transfer.log
+  shell: grep "encountered an error" {{ source_xtts_scripts_dir }}/rsync_backup_transfer.log
+  ignore_errors: true
+  register: rsync_error_out
+
+- name: display the rsync errors
+  debug: 
+    msg: "{{rsync_error_out.stdout_lines}}"
+  when: rsync_error_out.rc == 0
+
+- fail: 
+   msg: "errors while transferring the backups"
+  when:  rsync_error_out.rc == 0
+
+- name: read the rsync_backup_transfer.log
+  slurp: 
+    src: "{{ source_xtts_scripts_dir }}/rsync_backup_transfer.log"
+  register: log_content
+
+- name: Decode the log file content
+  set_fact:
+    log_content_decoded: "{{ log_content.content | b64decode }}"
+
+- name: Display the log file content
+  debug:
+    msg: "{{ log_content_decoded }}"
+
+
+
+# - name: read the rsync_backup_transfer.log
+#   debug: 
+#    msg: "rsync_backup_transfer.log contents: {{lookup('ansible.builtin.file', 'source_xtts_scripts_dir/rsync_backup_transfer.log')}}"
+
+
+- name: Additionally transfer the incrbackups.txt to the {{target_xtts_scripts_dir}} directory for the validation.
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: not rsync_error_out.rc == 0
+
+- name: finally copy the res.txt file to the {{target_xtts_scripts_dir}}
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh --partial --progress --append {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: not rsync_error_out.rc == 0
+
+
+  
+  
+   
