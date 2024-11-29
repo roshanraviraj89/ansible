@@ -1,0 +1,35 @@
+---
+# tasks file for dump_transfer
+
+# - name: rysnc source_datapump directory to the target datapump_directory
+#   shell: rsync -rvzh --partial --progress --append {{source_dp_dir}}/ {{dest_user}}@{{target_ip_address}}:{{target_dp_dir}}/
+#   register: transfer_out
+
+# - name: validate if the dumps have been transfered ok to the target {{target_dp_dir}} directory
+#   debug: 
+#     msg: "{{transfer_out.stdout_lines}}"
+#   when: transfer_out.rc == 0
+
+- name: Rsync source_datapump directory to the target datapump_directory
+  async: 604800 # Maximum wait time for the task in seconds (1 week)
+  poll: 0       # Start the task and don't wait for it to finish
+  shell: rsync -rvzh --partial --progress --append {{ source_dp_dir }}/ {{ dest_user }}@{{ target_ip_address }}:{{ target_dp_dir }}/
+  register: rsync_async_job
+
+- name: Wait for the rsync job to finish
+  async_status:
+    jid: "{{ rsync_async_job.ansible_job_id }}"
+  register: transfer_out
+  until: transfer_out.finished
+  retries: 20160  # Retry up to 1 week (20160 retries with 30-second delay each)
+  delay: 30       # Delay between retries
+
+- name: Validate if the dumps have been transferred successfully to the target {{ target_dp_dir }} directory
+  debug:
+    msg: "{{ transfer_out.stdout_lines }}"
+  when: transfer_out.rc == 0
+
+- name: Fail if rsync transfer did not complete successfully
+  fail:
+    msg: "Rsync transfer failed. Check the output above for errors."
+  when: transfer_out.rc != 0

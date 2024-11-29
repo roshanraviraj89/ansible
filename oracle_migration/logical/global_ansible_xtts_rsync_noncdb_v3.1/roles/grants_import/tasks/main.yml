@@ -1,0 +1,61 @@
+---
+
+
+- name: do full grants import on {{target_pdb}}
+  shell: |
+    . /home/oracle/{{target_db}}.env
+    cd {{target_dp_dir}}
+    {{target_oracle_home}}/bin/impdp {{ target_system_user }}/{{target_system_passwd}}@{{target_srv}} parfile={{grants_imp_par_file}}
+  ignore_errors: true
+  tags: full_grants_import
+
+- name:  validate if the grants import has been successfully completed.
+  shell: grep "completed" {{target_dp_dir}}/{{grants_imp_logfile}}
+  register: grants_imp_out
+  tags: full_grants_import
+
+- fail: 
+   msg: "{{Errors on import. Fix the issue and re-run the import}}"
+  when: not grants_imp_out.rc == 0
+  tags: full_grants_import
+
+- debug:
+    msg: 
+     - "please view {{grants_imp_logfile}} for the import errors."
+     - "{{grants_imp_out.stdout_lines}}"
+  when:  grants_imp_out.rc == 0
+  tags: full_grants_import
+
+
+
+- name: Check if the adaptdomain1_sys_grants.sql file exists
+  stat:
+    path: "{{ target_dp_dir }}/adaptdomain1_sys_grants.sql"
+  register: file_stat
+  tags: adaptdomain1_sys_grants_import
+ 
+- name: Fail if the adaptdomain1_sys_grants.sql file does not exist
+  fail:
+    msg: "The file {{ target_dp_dir }}/adaptdomain1_sys_grants.sql  does not exist!"
+  when: not file_stat.stat.exists
+  tags: adaptdomain1_sys_grants_import
+
+- name: Display a message if the adaptdomain1_sys_grants.sql file exists
+  debug:
+    msg: "The {{ target_dp_dir }}/adaptdomain1_sys_grants.sql file exists!"
+  when: file_stat.stat.exists
+  tags: adaptdomain1_sys_grants_import
+
+
+- name: run adaptdomain1_sys_grants.sql
+  shell: |
+    . /home/oracle/{{ target_db }}.env
+    cd {{ target_dp_dir }}/
+    echo -e '@adaptdomain1_sys_grants.sql' |{{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba 
+  register: adaptdomain1_out
+  tags: adaptdomain1_sys_grants_import
+
+- name: display adaptdomain1_out
+  debug:
+    msg: "{{adaptdomain1_out.stdout_lines}}"
+  tags: adaptdomain1_sys_grants_import

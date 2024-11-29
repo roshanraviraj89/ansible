@@ -1,0 +1,67 @@
+---
+# tasks file for level_1_backup
+## make sure res.txt file exists. otherwise it means issues with the level 0 backup
+
+- name: first check if res.txt exists on {{source_xtts_scripts_dir}}
+  stat: 
+    path: "{{source_xtts_scripts_dir}}/res.txt"
+  register: res_out
+
+- fail: 
+   msg: "res.txt file not found. Investigate if level 0 backup has been taken successfully before"
+  when: not res_out.stat.exists
+
+- fail: 
+   msg: "res.txt file is empty. Investigate if level 0 backup has been taken successfully before"
+  when: res_out.stat.size == 0
+
+- shell: cat {{source_xtts_scripts_dir}}/res.txt
+  register: cat_out
+  when: res_out.stat.size > 0
+
+- debug: 
+   msg: "{{cat_out.stdout_lines}}"
+  when: res_out.stat.size > 0
+
+## do a level 1 backup
+
+# - name: do a level 1 backup on {{source_hostname}}
+#   shell: |
+#     export TMPDIR={{source_xtts_scripts_dir}}
+#     export ORACLE_SID={{source_oracle_sid}}
+#     export ORACLE_HOME={{source_oracle_home}}
+#     export NLS_LANG={{ nls_lang }}
+#     cd {{source_xtts_scripts_dir}}
+#     {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+#   register: backup_out
+
+# - name: validate if the level 1 backup has been completed successfully
+#   debug: 
+#     msg: "{{backup_out.stdout_lines}}"
+#   when: backup_out.rc == 0
+
+
+- name: Do a level 1 backup on {{ source_hostname }}
+  async: 604800 # Maximum wait time for the task in seconds (1 week)
+  poll: 0       # Start the task and don't wait for it to finish
+  shell: |
+    export TMPDIR={{ source_xtts_scripts_dir }}
+    export ORACLE_SID={{ source_oracle_sid }}
+    export ORACLE_HOME={{ source_oracle_home }}
+    export NLS_LANG={{ nls_lang }}
+    cd {{ source_xtts_scripts_dir }}
+    {{ source_oracle_home }}/perl/bin/perl xttdriver.pl --backup
+  register: backup_async_job
+
+- name: Wait for the level 1 backup job to finish
+  async_status:
+    jid: "{{ backup_async_job.ansible_job_id }}"
+  register: backup_out
+  until: backup_out.finished
+  retries: 20160  # Retry up to 1 week (20160 retries with 30-second delay each)
+  delay: 30       # Delay between retries
+
+- name: Validate if the level 1 backup has been completed successfully
+  debug:
+    msg: "{{ backup_out.stdout_lines }}"
+  when: backup_out.rc == 0

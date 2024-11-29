@@ -1,0 +1,55 @@
+#!/usr/bin/ksh
+
+# Capture the start time 
+NOW=`date +%d-%m-%Y_%H:%M:%S`
+echo "Start time: ${NOW}"
+start_time=$(date +%s)
+echo "Start time in seconds: ${start_time}"
+
+# Initialize an array to hold the background process IDs 
+
+pids=""
+
+while IFS= read -r file; do
+  # Run rsync in the background within a subshell 
+  (
+         RSYNC_START=`date +%d-%m-%Y_%H:%M:%S`
+         echo ${RSYNC_START}: " Rsync for $file transfer started."
+    /usr/bin/rsync -vzh --partial --progress --append -e "ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10080" "$file" {{dest_user}}@{{ target_ip_address }}:{{ target_xtts_scratch_dir }}/
+    rsync_status=$?
+    if [ $rsync_status -eq 0 ]; then
+      COMP=`date +%d-%m-%Y_%H:%M:%S`
+      echo ${COMP}: " Rsync for $file completed successfully."
+    else
+      INCOMP=`date +%d-%m-%Y_%H:%M:%S`
+      echo ${INCOMP}: " Rsync for $file encountered an error with status $rsync_status."
+    fi
+  ) &
+
+  # Get the PID of the last background process and store it in the array 
+  {% raw %}
+  pids[${#pids[*]}]=$!
+  {% endraw %}
+
+  # Limit the number of concurrent jobs to 5
+  while (( $(jobs -p | wc -l) >= {{ rsync_parallel }} )); do
+    /usr/bin/sleep 1
+  done
+done < {{source_xtts_scripts_dir}}/incrbackups.txt
+
+# Wait for all stored PIDs to complete 
+for pid in "${pids[@]}"; do
+  wait $pid
+done
+
+# Capture the end time 
+END=`date +%d-%m-%Y_%H:%M:%S`
+echo "End time: ${END}"
+end_time=$(date +%s)
+echo "End time in seconds: ${end_time}"
+
+# Calculate and display the elapsed time 
+elapsed_time=$(( end_time - start_time ))
+echo "Total transfer time: ${elapsed_time} seconds"
+
+exit

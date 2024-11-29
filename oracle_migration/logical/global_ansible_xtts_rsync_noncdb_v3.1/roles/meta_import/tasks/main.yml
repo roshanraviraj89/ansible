@@ -1,0 +1,70 @@
+---
+# tasks file for meta_import
+
+- name: create data pump directory {{dump_dir}} and grant permission to system user on {{dump_dir}}
+  shell: |
+    . /home/oracle/{{target_db}}.env
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{target_dp_dir}}';" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+    echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to {{ target_system_user }};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+  register: dir_out
+
+- debug: 
+    msg: "{{dir_out.stdout_lines}}"
+
+
+# - name: do metadata import on {{target_pdb}}
+#   shell: |
+#     . /home/oracle/{{target_db}}.env
+#     cd {{target_dp_dir}}
+#     {{target_oracle_home}}/bin/impdp {{ target_system_user }}/{{target_system_passwd}}@{{target_srv}} parfile={{imp_par_file}}
+#   ignore_errors: true
+
+# - name:  validate if the metadata import has been successfully completed.
+#   shell: grep "completed" {{target_dp_dir}}/{{imp_logfile}}
+#   register: imp_out
+
+# - fail: 
+#    msg: "{{Errors on import. Fix the issue and re-run the import}}"
+#   when: not imp_out.rc == 0
+  
+# - debug:
+#     msg: 
+#      - "please view {{imp_logfile}} for the import errors."
+#      - "{{imp_out.stdout_lines}}"
+#   when:  imp_out.rc == 0
+
+- name: Do metadata import on {{ target_pdb }}
+  async: 604800 # Maximum wait time for the task in seconds (1 week)
+  poll: 0       # Start the task and don't wait for it to finish
+  shell: |
+    . /home/oracle/{{ target_db }}.env
+    cd {{ target_dp_dir }}
+    {{ target_oracle_home }}/bin/impdp {{ target_system_user }}/{{ target_system_passwd }}@{{ target_srv }} parfile={{ imp_par_file }}
+  register: imp_async_job
+  ignore_errors: true
+
+- name: Wait for the metadata import job to finish
+  async_status:
+    jid: "{{ imp_async_job.ansible_job_id }}"
+  register: imp_out
+  until: imp_out.finished
+  retries: 20160  # Retry up to 1 week (20160 retries with 30-second delay each)
+  delay: 30       # Delay between retries
+  failed_when: false  # Ensure this task does not fail
+
+- name: Validate if the metadata import has been successfully completed
+  shell: grep "completed" {{ target_dp_dir }}/{{ imp_logfile }}
+  register: imp_validation
+
+- name: Fail if the metadata import was not successful
+  fail:
+    msg: "Errors on import. Fix the issue and re-run the import."
+  when: imp_validation.rc != 0
+
+- name: Display metadata import results
+  debug:
+    msg:
+      - "Please view {{ imp_logfile }} for the import errors."
+      - "{{ imp_validation.stdout_lines }}"
+  when: imp_validation.rc == 0
+

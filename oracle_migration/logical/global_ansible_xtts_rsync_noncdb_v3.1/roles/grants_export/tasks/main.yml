@@ -1,0 +1,47 @@
+---
+
+- name: do full grants export on {{source_db}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    cd {{source_dp_dir}}
+    {{source_oracle_home}}/bin/expdp {{ source_system_user }}/{{source_system_passwd}}@{{source_srv}} parfile={{grants_exp_par_file}}
+  tags: full_grants_export
+
+
+- name:  validate if the grants export has been successfully completed.
+  shell: grep "successfully completed" {{source_dp_dir}}/{{grants_exp_logfile}}
+  register: grants_exp_out
+  tags: full_grants_export
+
+
+- fail: 
+   msg: "{{Errors on export. Fix the issue and re-run the grants export}}"
+  when: not grants_exp_out.rc == 0
+  tags: full_grants_export
+  
+- debug:
+    msg: "{{grants_exp_out.stdout_lines}}"
+  when:  grants_exp_out.rc == 0
+  tags: full_grants_export
+
+
+  
+
+- name: Get the list of  the ADAPTDOMAIN1 users privileges on sys objects
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SPOOL {{ source_dp_dir }}/adaptdomain1_sys_grants.sql\n select 'GRANT ' || privilege || ' ON SYS.' || table_name || ' TO ' || GRANTEE || ';'  from dba_tab_privs where grantee = 'ADAPTDOMAIN1' and owner='SYS';
+    SPOOL OFF;
+    EXIT;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: grants_out
+  tags: adaptdomain1_sys_grants_export
+
+- name: display ADAPTDOMAIN1 users privileges on sys objects
+  debug: 
+    msg: "{{grants_out.stdout_lines}}"
+  tags: adaptdomain1_sys_grants_export
+
+
+ 
