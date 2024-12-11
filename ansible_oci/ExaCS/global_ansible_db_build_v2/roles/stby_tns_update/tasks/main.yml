@@ -1,0 +1,130 @@
+---
+# tasks file for tns_update
+# - name: check if TNS entries already exist in tnsnames.ora
+#   shell: grep -q "{{ item.name }}" {{ stby_tns_admin }}/tnsnames.ora
+#   ignore_errors: true
+#   register: grep_result
+#   loop: "{{ tns_entries }}"
+#   changed_when: false
+
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+
+
+- name: take a backup of the existing tnsnames.ora file
+  command: mv "{{ stby_tns_admin }}/tnsnames.ora" "{{ stby_tns_admin }}/tnsnames.ora_{{timestamp.stdout}}.bak"
+  register: tns_backup
+
+
+- name: display the tns_backup status
+  debug: 
+     msg: "{{ tns_backup }}" 
+
+  
+- name: create the new tnsnames.ora file from the template for {{ db_name }}
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rw,g=r"
+  with_items:
+     - {
+        src: "tnsnames.ora.j2",
+        dest: "{{ stby_tns_admin }}/tnsnames.ora",
+       }
+  register: tnsfile_out
+
+- name: display the new tnsnames.ora file status
+  debug: 
+    msg: "{{ tnsfile_out }}"
+
+## changes required for node 1(any node) only
+##update the acfs tnsnames.ora file
+- block:
+
+   - name: take a backup of the exisitng acfs tnsnames.ora file on the stby node1
+     command: mv "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora" "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora_{{timestamp.stdout}}.bak"
+     register: acfs_tns_backup
+  
+   - name: display the acfs_tns_backup status
+     debug: 
+      msg: "{{ acfs_tns_backup }}" 
+
+   - name: create the new tnsnames.ora file from the template for {{ db_name }}
+     template:
+       src: "{{ item.src }}"
+       dest: "{{ item.dest }}"
+       owner: oracle
+       group: oinstall
+       mode: "u=rw,g=r"
+     with_items:
+       - {
+         src: "acfs_tnsnames.ora.j2",
+         dest: "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora",
+        }
+     register: acfs_tnsfile_out  
+     
+   - name: display the new tnsnames.ora file status
+     debug: 
+      msg: "{{ acfs_tnsfile_out }}"
+
+  
+  when: inventory_hostname in groups['stby_rac_19c_node1']
+
+##
+
+- name: check tns entries already exists for {{ db_name }} in tnsnames.ora file
+  find: 
+    paths: "{{ stby_tns_admin }}"
+    patterns: tnsnames.ora
+    contains: "# Ansible managed tns entries for {{ db_name }}"
+  register: tns_out
+
+- name: out tns_out variable
+  debug: var=tns_out
+ 
+
+- name: Add the required TNS entries to tnsnames.ora
+  blockinfile:
+        path: "{{ stby_tns_admin }}/tnsnames.ora"  # Path to the tnsnames.ora file
+        block: |
+          {% for entry in tns_entries %}
+          {{ entry.name }} =
+            (DESCRIPTION =
+              (ADDRESS = (PROTOCOL = TCP)(HOST = {{ entry.host }})(PORT = {{ entry.port }}))
+              (CONNECT_DATA =
+                (SERVER = {{ entry.server }})
+                (SERVICE_NAME = {{ entry.service }})
+              )
+            )
+          {% endfor %}
+        marker: "# Ansible managed tns entries for {{ db_name }}"
+  when: tns_out.matched == 0
+  #when: grep_result.results | map(attribute='rc') | list == [1] * grep_result|length
+  #when: not (grep_result | selectattr('rc', 'eq', 0) | list | length == tns_entries | length)
+
+- name: check if ansible managed  sqlnet parameters already exists for {{ db_name }} in sqlnet.ora file
+  find: 
+    paths: "{{ stby_tns_admin }}"
+    patterns: sqlnet.ora
+    contains: "# Ansible managed sqlnet parameters for {{ db_name }}"
+  register: sqlnet_out
+
+- block: 
+   - name: add a comment  for ansible managed parameters
+     lineinfile:
+       path: "{{ stby_tns_admin }}/sqlnet.ora"
+       line: "# Ansible managed sqlnet parameters for {{db_name}}"
+       insertafter: EOF
+  
+   - name: append the sqlnet.ora file to add SQLNET.ALLOWED_LOGON_VERSION_SERVER
+     lineinfile:
+       path: "{{ stby_tns_admin }}/sqlnet.ora"
+       line: "SQLNET.ALLOWED_LOGON_VERSION_SERVER={{sqlnet_allowed_version}}"
+       insertafter: EOF
+   
+  when: sqlnet_out.matched == 0     
+      
+

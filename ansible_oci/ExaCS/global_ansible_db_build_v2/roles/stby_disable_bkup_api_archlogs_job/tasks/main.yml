@@ -1,0 +1,29 @@
+- name: generate a config file from the template for {{ db_name }}
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rw,g=r,o=r"
+  with_items:
+    - {
+      src: "arch_cfg.j2",
+      dest: "/tmp/{{db_name}}_arch_cfg",
+     }
+  register: arch_out
+
+- name: display the new {{db_name}}_arch_cfg file status
+  debug: 
+   msg: "{{ arch_out }}"
+
+- name: disable the bkup_archlogs using the config file
+  shell: |
+    /var/opt/oracle/bkup_api/bkup_api set config --file=/tmp/{{db_name}}_arch_cfg --dbname={{db_name}}
+    /var/opt/oracle/bkup_api/bkup_api configure_status --dbname={{db_name}}
+  register: status_out
+  failed_when: "'ERRORS' in status_out.stdout"
+
+- name: display the status of the configuration update
+  debug: 
+   msg: "{{ status_out.stdout_lines }}"
+

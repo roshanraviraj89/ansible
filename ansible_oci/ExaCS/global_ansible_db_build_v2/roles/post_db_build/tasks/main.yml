@@ -1,0 +1,168 @@
+---
+# tasks file for post_db_build
+
+- name: check if block change tracking has been enabled
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: block_out
+
+- name: enable block change tracking if it's not enabled 
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter database enable block change tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  when: block_out.rc == 0 and "DISABLED" in block_out.stdout
+  
+
+- name: check BCT status 
+  shell: | 
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: bct_out
+
+- name: dispplay the BCT status
+  debug: var=bct_out.stdout_lines
+  
+
+
+- name: update the cdb level database parameters to match the source 
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set cursor_sharing='{{cursor_sharing}}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_language='{{nls_language}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_territory='{{nls_territoty}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba   
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set pga_aggregate_target={{pga_aggregate_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set processes={{processes}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sessions={{sessions}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_max_size={{sga_max_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_target={{sga_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set db_recovery_file_dest_size={{db_recovery_file_dest_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set target_pdbs={{target_pdbs}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET ARCHIVE_LAG_TARGET ={{archive_lag_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET parallel_max_servers ={{parallel_max_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET open_cursors={{open_cursors}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_caching={{optimizer_index_caching}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_cost_adj={{optimizer_index_cost_adj}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET container_data={{container_data}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    
+## removed pga_aggregate_limit from the code. it's agreed to leave it with the default value 10GB
+## echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set pga_aggregate_limit={{pga_aggregate_limit}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+
+## removed nls_iso_currency from CDB level on primary. Because  it's been noticed that nls_iso_currency='UNITED KINGDOM' has caused issues while setting up standby 
+## echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_iso_currency='{{nls_iso_currency}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+
+- name: update the pdb level database parameters to match the source
+  shell: |
+    .  "/home/oracle/{{db_name}}.env" 
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_language='{{nls_language}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_territory='{{nls_territoty}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_iso_currency='{{nls_iso_currency}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_target={{sga_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set parallel_max_servers ={{parallel_max_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set open_cursors={{open_cursors}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_caching={{optimizer_index_caching}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_cost_adj={{optimizer_index_cost_adj}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET container_data={{container_data}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+
+- name: restart the database
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    {{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+  register: db_status_out
+
+
+- name: display the db_status_out
+  debug: var=db_status_out.stdout_lines
+
+- name: check the db_parameters at the cdb level
+  shell: |
+    .  "/home/oracle/{{db_name}}.env" 
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT name, value FROM v\$parameter WHERE name IN ('cursor_sharing','pga_aggregate_limit', 'pga_aggregate_target', 'processes', 'sessions', 'sga_max_size', 'sga_target', 'db_recovery_file_dest_size', 'target_pdbs', 'parallel_max_servers', 'open_cursors', 'optimizer_index_caching', 'optimizer_index_cost_adj','container_data') order by name;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT parameter, value FROM nls_instance_parameters WHERE parameter in ('NLS_LANGUAGE', 'NLS_TERRITORY', 'NLS_ISO_CURRENCY' );" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: cdb_out
+
+- name: display the cdb parameters
+  debug: var=cdb_out.stdout_lines
+
+- name: check the db_parameters at the pdb level
+  shell: |
+    .  "/home/oracle/{{db_name}}.env" 
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT name, value FROM v\$parameter WHERE name IN ('cursor_sharing','pga_aggregate_limit', 'pga_aggregate_target', 'processes', 'sessions', 'sga_max_size', 'sga_target', 'db_recovery_file_dest_size', 'target_pdbs', 'parallel_max_servers', 'open_cursors', 'optimizer_index_caching', 'optimizer_index_cost_adj','container_data') order by name;" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT parameter, value FROM nls_instance_parameters WHERE parameter in ('NLS_LANGUAGE', 'NLS_TERRITORY', 'NLS_ISO_CURRENCY' );" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+  register: pdb_out
+    
+- name: display the pdb parameters
+  debug: var=pdb_out.stdout_lines
+
+- name: change the segment policy to AUTO for  AUD$ & FGA_LOG$ in the pdb level
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING ON ECHO OFF\n  EXEC DBMS_AUDIT_MGMT.set_audit_trail_location (audit_trail_type => DBMS_AUDIT_MGMT.AUDIT_TRAIL_FGA_STD, audit_trail_location_value => 'SYSAUX');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING ON ECHO OFF\n  EXEC DBMS_AUDIT_MGMT.set_audit_trail_location (audit_trail_type => DBMS_AUDIT_MGMT.AUDIT_TRAIL_AUD_STD, audit_trail_location_value => 'SYSAUX');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba 
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n select t.table_name,ts.segment_space_management from dba_tables t, dba_tablespaces ts where ts.tablespace_name = t.tablespace_name and t.table_name in ('AUD\$','FGA_LOG\$');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+  
+  register: seg_out
+
+- name: display the segment policy for AUD$ & FGA_LOG$ in the pdb level now.
+  debug: var=seg_out.stdout_lines
+
+- name: do the global_names changes on CDB
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set global_names=false scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter database rename global_name to {{db_name}};" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+
+
+- name: do the global_names changes on PDB
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} close instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} open restricted instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter session set container={{pdb_name}}; alter pluggable database rename global_name to {{pdb_name}} instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} close instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} open instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+   
+
+- name: restart the database
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    {{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+  register: db_status_out
+
+
+- name: display the db_status_out
+  debug: var=db_status_out.stdout_lines
+
+
+- name: check the global_names parameter in cdb and pdb level
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter global_names" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter global_names" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+  register: global_out
+
+- name: display global_names parameter value in CDB and PDB
+  debug: var=global_out.stdout_lines
+
+
+
+# - name: grant the required permission to {{ db_mon_user }} at pdb level to enable OCI DB monitoring
+#   shell: |
+#     .  "/home/oracle/{{db_name}}.env"
+#     echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING OFF ECHO OFF\n {{item}};" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+#   with_items:
+#     - "GRANT CREATE PROCEDURE to {{ db_mon_user }}"
+#     - "GRANT SELECT ANY DICTIONARY, SELECT_CATALOG_ROLE to {{ db_mon_user }}"
+#     - "GRANT ALTER SYSTEM to {{ db_mon_user }}"
+#     - "GRANT ADVISOR to {{ db_mon_user }}"
+#     - "GRANT EXECUTE ON DBMS_WORKLOAD_REPOSITORY to {{ db_mon_user }}"
+#     - "GRANT SYSDG to {{ db_mon_user }}"
+#   register: pdb_per
+
+# - name: display pdb_per
+#   debug: var=pdb_per
+

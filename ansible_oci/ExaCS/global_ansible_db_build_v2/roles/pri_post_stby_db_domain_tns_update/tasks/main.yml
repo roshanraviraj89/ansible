@@ -1,0 +1,28 @@
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+
+- name: take a backup of the exisitng acfs tnsnames.ora file on the primary node1
+  command: mv "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora" "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora_{{timestamp.stdout}}.bak"
+  register: acfs_tns_backup
+
+- name: display the acfs_tns_backup status
+  debug: 
+   msg: "{{ acfs_tns_backup }}" 
+- name: create the new tnsnames.ora file from the template for {{ db_name }}
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rw,g=r"
+  with_items:
+    - {
+      src: "acfs_tnsnames.ora.j2",
+      dest: "/var/opt/oracle/dbaas_acfs/{{ db_name }}/tnsnames.ora",
+     }
+  register: acfs_tnsfile_out  
+  
+- name: display the new tnsnames.ora file status
+  debug: 
+   msg: "{{ acfs_tnsfile_out }}"

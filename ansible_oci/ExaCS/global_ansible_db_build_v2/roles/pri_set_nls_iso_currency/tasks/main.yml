@@ -1,0 +1,12 @@
+---
+
+- name: Set NLS_ISO_CURRENCY to UNITED KINGDOM
+  shell: |
+    /usr/bin/dbaascli database modifyParameters --dbname {{db_name }} --setParameters "nls_iso_currency={{ nls_iso_currency }}" --allowBounce
+  register: iso_curr_out
+
+
+
+- name: display the nls_iso_currency out
+  debug: var=iso_curr_out.stdout_lines
+  when: iso_curr_out.rc == 0 

@@ -1,0 +1,48 @@
+---
+# tasks file for create_service
+
+- name: Create database service/s
+  shell: |
+     .  "/home/oracle/{{db_name}}.env"
+     {{pri_oracle_home}}/bin/srvctl add service -db "{{ item.db_unique_name }}" -service "{{ item.service_name }}" -preferred "{{ item.preferred_instances | join(',') }}" -tafpolicy "{{ item.taf_policy }}" -policy "{{ item.policy }}" -failovertype "{{ item.failover_type }}" -failovermethod "{{ item.failover_method }}" -failoverretry "{{ item.failover_retry }}" -pdb "{{ item.pdb_name }}"
+  loop: "{{ pri_services }}"
+  register: service_creation_result
+
+- name: Start services
+  shell:  |
+    .  "/home/oracle/{{db_name}}.env"
+    srvctl start service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+  when: item.rc == 0
+  loop: "{{ service_creation_result.results }}"
+  register: service_start_result 
+
+- name: Check service status
+  shell:  |
+    .  "/home/oracle/{{db_name}}.env"
+    srvctl status service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+  when: item.rc == 0
+  loop: "{{ service_creation_result.results }}"
+  register: service_status_result 
+
+- name: Display service status
+  debug:
+    msg: "{{ item.stdout_lines }}"
+  when: item.rc == 0
+  loop: "{{ service_status_result.results }}"
+
+- name: config services
+  shell:  |
+    .  "/home/oracle/{{db_name}}.env"
+    srvctl config service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+  when: item.rc == 0
+  loop: "{{ service_creation_result.results }}"
+  register: service_config_result
+
+- name: display config service
+  debug:
+    msg: "{{ item.stdout_lines }}"
+  when: item.rc == 0
+  loop: "{{ service_config_result.results }}"
+
+
+

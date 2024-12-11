@@ -1,0 +1,82 @@
+#########################
+#RMAN Configs
+#########################
+bkup_filesperset_al=64
+rmanFraCleanupChannels=1
+bkup_rman_compression=low
+bkup_section_size=64G
+Compress_Archive_Logs=false
+bkup_type=NONE
+bkup_channels_node=default
+bkup_realtime_redotrans=
+rmanArchiveLogChannels=default
+bkup_disk_recovery_window=
+bkup_rman_retention=
+bkup_filesperset_regular=64
+rmanBackupOptimization=ON
+bkup_archlog_fra_retention=1
+bkup_nfs_recovery_window=
+bkup_oss_recovery_window=
+bkup_encryption=false
+rmanEncryptionAlgorithm=AES256
+
+
+#########################
+#Catalog Configs
+#########################
+bkup_rcat_user=
+bkup_use_rcat=false
+bkup_rcat_passwd=
+bkup_rcat_sid=
+bkup_rcat_conn=
+
+
+#########################
+#Schedule Configs
+#########################
+bkup_archlog_frequency=30
+bkup_cron_entry=no
+schedulesStartMode=SCHEDULE_TIME
+archivelogBackup=false
+bkup_l0_day=SUN
+bkup_archlog_cron_entry=no
+bkup_daily_time=
+
+
+#########################
+#DBRS Destination Configs
+#########################
+bkup_dbrs_user=
+
+
+#########################
+#DISK Destination Configs
+#########################
+
+
+#########################
+#ZDLRA Destination Configs
+#########################
+bkup_zdlra_user=
+bkup_zdlra_passwd=
+bkup_zdlra_url=
+
+
+#########################
+#NFS Destination Configs
+#########################
+bkup_nfs_loc=
+
+
+#########################
+#OSS Destination Configs
+#########################
+bucketName=
+tempBucketName=
+tenantName=
+bkup_oss_user=
+bkup_oss_proxy=
+oss_proxy_port=
+oss_proxy_host=
+bkup_oss_passwd=
+bkup_oss_url=

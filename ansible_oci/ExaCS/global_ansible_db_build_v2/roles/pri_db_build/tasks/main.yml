@@ -1,0 +1,64 @@
+---
+# tasks file for pri_db_build
+
+
+  ## primary_vm_cluster
+- name: get the primary vm_cluster_ocid from the cluster display name
+  oracle.oci.oci_database_cloud_vm_cluster_facts:
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ pri_compartment_id }}"
+      display_name: "{{ pri_vm_cluster_display_name }}"
+      region: "{{ pri_region }}"
+  register: pri_cluster_out
+
+- name: display pri_cluster_out
+  debug: var=pri_cluster_out.cloud_vm_clusters[0].id
+
+- name: set the vm cluster id
+  set_fact:
+    pri_vm_cluster_id: "{{ pri_cluster_out.cloud_vm_clusters[0].id }}"
+
+  ## primary db_home_id details
+- name: get the primary db_home_id 
+  oracle.oci.oci_database_db_home_facts:
+      vm_cluster_id: "{{ pri_vm_cluster_id }}"
+      compartment_id: "{{ pri_compartment_id }}"
+      lifecycle_state: AVAILABLE
+      display_name: "{{ pri_db_home_display_name }}"
+      region: "{{ pri_region }}"
+  register: pri_db_home_out
+
+- name: display pri_db_home_out
+  debug: var=pri_db_home_out.db_homes[0].id
+
+- name: set the db_home_id
+  set_fact:
+    pri_db_home_id: "{{ pri_db_home_out.db_homes[0].id }}"
+            
+         
+- name: build primary database
+  oracle.oci.oci_database_database:
+             # required
+    compartment_id: "{{ pri_compartment_id }}"
+    db_home_id: "{{ pri_db_home_id }}"
+    region: "{{ pri_region }}"
+    wait: yes
+    wait_timeout: 14400
+    database:
+       admin_password: "{{ admin_password }}"
+       db_name: "{{ db_name }}" 
+       db_unique_name: "{{ pri_db_unique_name }}"
+       pdb_name: "{{ pdb_name }}"
+       character_set: "{{ character_set }}"
+       ncharacter_set: "{{ ncharacter_set }}"
+       db_workload: "{{ db_workload }}"
+  register: pri_out
+  ##  check_mode: yes
+      
+- name: display pri_out
+  debug: var=pri_out.database
+
+#  - set_fact:
+#    pri_database_id: {{pri_out.database.id}}
+    
+       

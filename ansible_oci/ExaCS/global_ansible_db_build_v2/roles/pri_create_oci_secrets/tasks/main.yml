@@ -1,0 +1,82 @@
+---
+- name: retrieve the {{ db_mon_user }} user vault id
+  oracle.oci.oci_key_management_vault_facts:
+    compartment_id: "{{ pri_compartment_id }}"
+    display_name: "{{ pri_vault_display_name  }}"
+    region: "{{ pri_region }}"
+  register: pri_vault_out
+
+- name: display pri_vault_out
+  debug: var=pri_vault_out.vaults
+
+- name: display pri_vault_out id
+  debug: var=pri_vault_out.vaults[0].id
+
+- name: set the primary dbssnmp vault id
+  set_fact:
+    pri_vault_id: "{{ pri_vault_out.vaults[0].id }}"
+
+- name: set the admin plain text password
+  set_fact: 
+    pri_admin_password: "{{ admin_password }}"
+
+- name: convert the plain text password to BASE64
+  set_fact:
+     pri_admin_base64_password: "{{ pri_admin_password | b64encode }}"
+
+- name: display pri_vault_out management_endpoint
+  debug: var=pri_vault_out.vaults[0].management_endpoint
+
+- name: set the primary vault management_endpoint
+  set_fact:
+     pri_management_endpoint: "{{ pri_vault_out.vaults[0].management_endpoint }}"
+
+- name: retrieve the master encryption key
+  oracle.oci.oci_key_management_key_facts:
+      compartment_id: "{{ pri_compartment_id }}"
+      display_name: "{{ pri_master_encryption_key }}"
+      region: "{{ pri_region }}"
+      service_endpoint: "{{ pri_management_endpoint }}"
+  register: pri_mes_out
+
+- name: display pri_mes_out
+  debug: var=pri_mes_out
+
+- name: Display the type of pri_mes_out
+  debug:
+    msg: "{{ pri_mes_out | type_debug }}"
+
+- name: Display the type of pri_mes_out.keys
+  debug:
+    msg: "{{ pri_mes_out.keys | type_debug }}" 
+
+- name: Display the keys section
+  debug:
+    msg: "{{ pri_mes_out['keys'] }}"
+
+- name: Display the id from the keys section
+  debug:
+    msg: "{{ pri_mes_out['keys'][0]['id'] }}"
+
+- name: set master encryption key id
+  set_fact:
+     pri_mes_id: "{{ pri_mes_out['keys'][0]['id'] }}"
+    
+
+- name: Create secret
+  oracle.oci.oci_vault_secret:
+    # required
+    compartment_id: "{{ pri_compartment_id }}"
+    #secret_name: "auto_test_secret"
+    secret_name: "{{ pri_db_mon_user_secret_name }}"   
+    vault_id: "{{ pri_vault_id }}"
+    key_id: "{{ pri_mes_id }}"
+    secret_content:
+      # required
+      content_type: BASE64
+      content: "{{ pri_admin_base64_password }}"
+  register: created_secret
+
+- name: Display created secret details
+  debug:
+    var: created_secret 

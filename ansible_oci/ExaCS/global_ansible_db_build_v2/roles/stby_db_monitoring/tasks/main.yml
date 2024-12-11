@@ -1,0 +1,240 @@
+---
+
+- name: retrieve the {{ db_mon_user }} user vault id
+  oracle.oci.oci_key_management_vault_facts:
+    compartment_id: "{{ stby_compartment_id }}"
+    display_name: "{{ stby_vault_display_name  }}"
+    region: "{{ stby_region }}"
+  register: stby_vault_out
+
+- name: display stby_vault_out id
+  debug: var=stby_vault_out.vaults[0].id
+
+- name: set the standby dbssnmp vault id
+  set_fact:
+    stby_vault_id: "{{ stby_vault_out.vaults[0].id }}"
+
+- name: retrieve the {{ db_mon_user }} secret id
+  oracle.oci.oci_vault_secret_facts:
+    vault_id: "{{ stby_vault_id }}"
+    compartment_id: "{{ stby_compartment_id }}"
+    name: "{{ stby_db_mon_user_secret_name }}"
+    lifecycle_state: ACTIVE
+    region: "{{ stby_region }}"
+  register: stby_db_mon_user_secret_out
+
+
+- name: display stby_db_mon_user_secret_out id
+  debug: var=stby_db_mon_user_secret_out.secrets[0].id
+
+- name: set the standby db_mon_user secret id
+  set_fact:
+    stby_db_mon_user_secret_id: "{{ stby_db_mon_user_secret_out.secrets[0].id }}"
+
+- name: retrieve the standby database management  private_end_point_id
+  oracle.oci.oci_database_management_db_management_private_endpoint_facts:
+    name: "{{ stby_db_management_private_endpoint_name }}"
+    compartment_id: "{{ stby_compartment_id }}"
+    lifecycle_state: ACTIVE
+    region: "{{ stby_region }}"
+  register: stby_db_management_private_end_point_out
+ 
+
+- name: display stby_db_management_end_point
+  debug: var=stby_db_management_private_end_point_out.db_management_private_endpoints[0].id
+
+- name: set the standby dbssnmp secret id
+  set_fact:
+    stby_db_management_private_endpoint_id: "{{ stby_db_management_private_end_point_out.db_management_private_endpoints[0].id }}"
+
+  ## standby_vm_cluster
+- name: get the standby vm_cluster_ocid from the cluster display name
+  oracle.oci.oci_database_cloud_vm_cluster_facts:
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ stby_compartment_id }}"
+      display_name: "{{ stby_vm_cluster_display_name }}"
+      region: "{{ stby_region }}"
+  register: stby_cluster_out
+
+
+- name: display stby_cluster_out
+  debug: var=stby_cluster_out.cloud_vm_clusters[0].id
+
+- name: set the standby vm cluster id
+  set_fact:
+    stby_vm_cluster_id: "{{ stby_cluster_out.cloud_vm_clusters[0].id }}"
+
+  ## standby db_home_id details
+- name: get the standby db_home_id 
+  oracle.oci.oci_database_db_home_facts:
+      vm_cluster_id: "{{ stby_vm_cluster_id }}"
+      compartment_id: "{{ stby_compartment_id }}"
+      lifecycle_state: AVAILABLE
+      display_name: "{{ stby_db_home_display_name }}"
+      region: "{{ stby_region }}"
+  register: stby_db_home_out
+
+- name: display stby_db_home_out
+  debug: var=stby_db_home_out.db_homes[0].id
+
+- name: set the standby db_home_id
+  set_fact:
+    stby_db_home_id: "{{ stby_db_home_out.db_homes[0].id }}"
+
+- name: get the standby database ocid
+  oracle.oci.oci_database_database_facts:
+      db_home_id: "{{ stby_db_home_id }}"
+      db_name:    "{{ db_name }}"
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ stby_compartment_id }}"
+      region: "{{ stby_region }}"
+  register: stby_db_id_out
+
+- name: display stby_db_id
+  debug: var=stby_db_id_out.databases[0].id
+
+- name: set the stby_db_id
+  set_fact:
+    stby_db_id: "{{ stby_db_id_out.databases[0].id }}"
+
+
+- name: retrieve the {{ stby_dbmgmt_res_policy }} policy id
+  oracle.oci.oci_identity_policy_facts:
+    name: "{{ stby_dbmgmt_res_policy }}"
+    compartment_id: "{{ stby_compartment_id }}"
+    region: "{{ stby_region }}"
+  register: stby_dbmgmt_res_policy_out
+
+- name: set the {{ stby_dbmgmt_res_policy }} policy id
+  set_fact:
+    stby_dbmgmt_res_policy_id: "{{ stby_dbmgmt_res_policy_out.policies[0].id }}"
+    stby_dbmgmt_res_current_statements: "{{ stby_dbmgmt_res_policy_out.policies[0].statements }}"
+
+- name: define the new statement
+  set_fact:
+    stby_dbmgmt_res_new_statement: "Allow any-user to read secret-family in compartment '{{ stby_compartment_name }}' where ALL {target.secret.id = '{{ stby_db_mon_user_secret_id }}',request.principal.type = 'dbmgmtmanageddatabase'}"
+
+- name: add new statement to the exisitng statements
+  set_fact:
+     stby_dbmgmt_res_updated_statements: "{{ stby_dbmgmt_res_current_statements + [ stby_dbmgmt_res_new_statement ] }}"
+
+- name: display the exisiting policy statements for {{ stby_dbmgmt_res_policy }}
+  debug: var=stby_dbmgmt_res_current_statements
+
+- name: display the new policy statement for {{ stby_dbmgmt_res_policy }}
+  debug: var=stby_dbmgmt_res_new_statement
+
+- name: display the combined policy statements {{ stby_dbmgmt_res_policy }}
+  debug: var=stby_dbmgmt_res_updated_statements
+ 
+
+- name: update the {{ stby_dbmgmt_res_policy }} policy
+  oracle.oci.oci_identity_policy:
+    policy_id: "{{ stby_dbmgmt_res_policy_id }}"
+    statements: "{{ stby_dbmgmt_res_updated_statements }}"
+
+###
+- name: retrieve the {{ stby_dbmgmt_serv_policy }} policy id
+  oracle.oci.oci_identity_policy_facts:
+    name: "{{ stby_dbmgmt_serv_policy }}"
+    compartment_id: "{{ stby_compartment_id }}"
+    region: "{{ stby_region }}"
+  register: stby_dbmgmt_serv_policy_out
+
+- name: set the {{ stby_dbmgmt_serv_policy }} policy id
+  set_fact:
+    stby_dbmgmt_serv_policy_id: "{{ stby_dbmgmt_serv_policy_out.policies[0].id }}"
+    stby_dbmgmt_serv_current_statements: "{{ stby_dbmgmt_serv_policy_out.policies[0].statements }}"
+
+- name: define the new statement
+  set_fact:
+    stby_dbmgmt_serv_new_statement: "Allow service dpd to read secret-family in compartment '{{ stby_compartment_name }}' where any {target.secret.id = '{{ stby_db_mon_user_secret_id }}'}"
+
+- name: add new statement to the exisitng statements
+  set_fact:
+     stby_dbmgmt_serv_updated_statements: "{{ stby_dbmgmt_serv_current_statements + [ stby_dbmgmt_serv_new_statement ] }}"
+
+- name: display the exisiting policy statements for {{ stby_dbmgmt_serv_policy }}
+  debug: var=stby_dbmgmt_serv_current_statements
+
+- name: display the new policy statement for {{ stby_dbmgmt_serv_policy }}
+  debug: var=stby_dbmgmt_serv_new_statement
+
+- name: display the combined policy statements {{ stby_dbmgmt_serv_policy }}
+  debug: var=stby_dbmgmt_serv_updated_statements
+ 
+
+- name: update the {{ stby_dbmgmt_serv_policy }} policy
+  oracle.oci.oci_identity_policy:
+    policy_id: "{{ stby_dbmgmt_serv_policy_id }}"
+    statements: "{{ stby_dbmgmt_serv_updated_statements }}"
+
+
+
+
+##
+ 
+   
+- name: Perform action enable_database_management on "{{ db_name }}" database
+  oracle.oci.oci_database_database_actions:
+    # required
+    credential_details:
+      # required
+      user_name: "{{ db_mon_user }}"
+      password_secret_id: "{{ stby_db_mon_user_secret_id }}"
+    private_end_point_id: "{{ stby_db_management_private_endpoint_id }}"
+    #private_end_point_id: "ocid1.dbmgmtprivateendpoint.oc1.uk-cardiff-1.amaaaaaapgtet6qatcwaa44oofolackvcqo3bfta2ul2jx6vptxzdqkwun2a"
+    service_name: "{{ stby_cdb_mon_service_name }}"
+    database_id: "{{ stby_db_id }}"
+    action: enable_database_management
+    # optional
+    management_type: ADVANCED
+    protocol: TCP
+    port: 1521
+    role: SYSDBA
+    region: "{{ stby_region }}"
+  register: cdb_database_management_out
+
+- name: display cdb_database_management_out
+  debug: var=cdb_database_management_out.database
+
+
+# ## enable database management on pdb
+
+# - name: retrieve the pdb id
+#   oracle.oci.oci_database_pluggable_database_facts:
+#     database_id: "{{ stby_db_id }}"
+#     pdb_name: "{{ pdb_name }}"
+#     lifecycle_state: AVAILABLE
+#   register: pdb_id_out
+
+# - name: display pdb_id_out
+#   debug: var=pdb_id_out.pluggable_databases[0].id
+
+# - name: set the pdb_id
+#   set_fact:
+#     pdb_id: "{{ pdb_id_out.pluggable_databases[0].id }}"
+
+# - name: Perform action enable_pluggable_database_management on "{{ pdb_name }}" database
+#   oracle.oci.oci_database_pluggable_database_actions:
+#     # required
+#     credential_details:
+#       # required
+#       user_name: "{{ db_mon_user }}"
+#       password_secret_id: "{{ stby_db_mon_user_secret_id }}"
+#     private_end_point_id: "{{ stby_db_management_private_endpoint_id }}"
+#     service_name: "{{ stby_pdb_mon_service_name }}"
+#     pluggable_database_id: "{{ pdb_id }}"
+#     action: enable_pluggable_database_management
+
+#     # optional
+#     protocol: TCP
+#     port: 1521
+#     role: SYSDBA
+#   register: pdb_database_management_out
+
+# - name: display pdb_database_management_out
+#   debug: var=pdb_database_management_out.pluggable_database
+
+
+

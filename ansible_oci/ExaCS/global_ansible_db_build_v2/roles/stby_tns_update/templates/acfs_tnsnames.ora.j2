@@ -1,0 +1,97 @@
+{{ db_name }}_{{ pri_region_identifier }}=
+        (DESCRIPTION=
+          (ADDRESS_LIST=
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ pri_scan_ip1 }})
+
+              (PORT={{ pri_scan_port }})
+              )
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ pri_scan_ip2 }})
+
+              (PORT={{ pri_scan_port }})
+              )
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ pri_scan_ip3 }})
+
+              (PORT={{ pri_scan_port }})
+              )
+
+            (LOAD_BALANCE=yes)
+            )
+
+          (CONNECT_DATA=
+            (SERVER=DEDICATED)
+
+            (SERVICE_NAME={{ db_name }}_{{ pri_region_identifier }}.{{ hays_domain_name }})
+
+            (UR=A)
+
+            (FAILOVER_MODE=
+              (TYPE=select)
+
+              (METHOD=basic)
+              )
+            )
+
+          (CONNECT_TIMEOUT=120)
+
+          (RETRY_COUNT=3)
+
+          (TRANSPORT_CONNECT_TIMEOUT=90)
+          )
+
+{{ db_name }}_{{ stby_region_identifier }}=
+        (DESCRIPTION=
+          (ADDRESS_LIST=
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ stby_scan_ip1 }})
+
+              (PORT={{ stby_scan_port }})
+              )
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ stby_scan_ip2 }})
+
+              (PORT={{ stby_scan_port }})
+              )
+            (ADDRESS=
+              (PROTOCOL=TCP)
+
+              (HOST={{ stby_scan_ip3 }})
+
+              (PORT={{ stby_scan_port }})
+              )
+
+            (LOAD_BALANCE=yes)
+            )
+
+          (CONNECT_DATA=
+            (SERVER=DEDICATED)
+
+            (SERVICE_NAME={{ db_name }}_{{ stby_region_identifier }}.{{ hays_domain_name }})
+
+            (UR=A)
+
+            (FAILOVER_MODE=
+              (TYPE=select)
+
+              (METHOD=basic)
+              )
+            )
+
+          (CONNECT_TIMEOUT=120)
+
+          (RETRY_COUNT=3)
+
+          (TRANSPORT_CONNECT_TIMEOUT=90)
+          )

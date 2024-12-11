@@ -1,0 +1,120 @@
+- name: stby_db_build
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: stby_db_build
+  ##vars_files: host_vars/vars.yml
+  roles:
+    - stby_db_build
+
+- name: change db_domain parameter
+  hosts: stby_rac_19c_node1
+  tags: stby_change_db_domain
+  become: true
+  become_user: root
+  roles:
+    - stby_change_db_domain
+
+- name: update the tnsnames.ora & sqlnet.ora files
+  hosts: stby_rac_19c
+  tags: stby_tns_update
+  become: true
+  become_user: oracle
+  roles:
+    - stby_tns_update
+
+- name: update the acfs tnsnames.ora on primary side to reflect the standby new domain name
+  hosts: pri_rac_19c_node1
+  tags: pri_post_stby_db_domain_tns_update
+  become: true
+  become_user: oracle
+  roles:
+    - pri_post_stby_db_domain_tns_update
+
+- name: Bounce the primary database in a rolling fashion and check the dataguard status
+  hosts: pri_rac_19c_node1
+  tags: pri_db_bounce_after_stby_build
+  become: true
+  become_user: oracle
+  roles:
+    - pri_db_bounce_after_stby_build
+
+- name: do the stby_post_db_build tasks
+  hosts: stby_rac_19c_node1
+  tags: stby_post_db_build
+  become: true
+  become_user: oracle
+  roles:
+    - stby_post_db_build
+
+- name: create service on Standby
+  hosts: stby_rac_19c_node1
+  tags: stby_create_service
+  become: true
+  become_user: oracle
+  roles:
+    - stby_create_service
+
+- name: configure dispatchers on Standby
+  hosts: stby_rac_19c
+  tags: stby_configure_dispatcher
+  become: true
+  become_user: oracle
+  roles:
+    - stby_configure_dispatcher
+
+- name: create object storage buckets for RMAN backups
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: stby_create_buckets
+  roles:
+    - stby_create_buckets
+
+- name: do backup prereqs
+  hosts: stby_rac_19c
+  tags: stby_backup_prereqs
+  become: true
+  become_user: oracle
+  roles:
+    - stby_backup_prereqs
+
+- name: enable_RMAN_BACKUPS
+  hosts: stby_rac_19c_node1
+  tags: stby_enable_backup
+  become: true
+  become_user: oracle
+  roles:
+    - stby_enable_backup
+
+- name: create required OCI secrets in the vault
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: stby_create_oci_secrets
+  roles:
+    - stby_create_oci_secrets
+
+- name: enable OCI database monitoring 
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: stby_db_monitoring
+  ##vars_files: host_vars/vars.yml
+  roles:
+    - stby_db_monitoring
+
+- name: disable the bkup_api_archlogs_job 
+  hosts: stby_rac_19c_node1
+  tags: stby_disable_bkup_api_archlogs_job
+  become: true
+  become_user: root
+  roles:
+    - stby_disable_bkup_api_archlogs_job
+    
+
+

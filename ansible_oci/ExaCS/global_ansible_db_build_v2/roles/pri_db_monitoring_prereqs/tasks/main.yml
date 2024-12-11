@@ -1,0 +1,18 @@
+---
+
+## grant the required permission to db_mon_user to enable OCI db monitoring
+- name: grant the required permission to {{ db_mon_user }} at cdb level to enable OCI DB monitoring
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING OFF ECHO OFF\n {{item}};" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  with_items:
+    - "GRANT CREATE PROCEDURE to {{ db_mon_user }} container=all"
+    - "GRANT SELECT ANY DICTIONARY, SELECT_CATALOG_ROLE to {{ db_mon_user }} container=all"
+    - "GRANT ALTER SYSTEM to {{ db_mon_user }} container=all"
+    - "GRANT ADVISOR to {{ db_mon_user }} container=all"
+    - "GRANT EXECUTE ON DBMS_WORKLOAD_REPOSITORY to {{ db_mon_user }} container=all"
+    - "GRANT SYSDG, SYSDBA, SYSOPER to {{ db_mon_user }} container=all"  
+  register: cdb_per
+
+- name: display cdb_per
+  debug: var=cdb_per

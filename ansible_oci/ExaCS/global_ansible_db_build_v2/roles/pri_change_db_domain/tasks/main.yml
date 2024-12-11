@@ -1,0 +1,49 @@
+---
+
+# - name: change the db domain parameter to hays domain name
+#   shell: |
+#     /usr/bin/dbaascli database modifyParameters --dbname {{db_name }} --setParameters "db_domain={{ hays_domain_name }}" --allowBounce
+#   register: domain_out
+
+
+
+# - name: display the new db_domain change
+#   debug: var=domain_out.stdout_lines
+#   when: domain_out.rc == 0 
+
+
+- name: change the db_domain parameter to hays domain name
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET db_domain='{{ hays_domain_name }}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: domain_out
+
+- name: display domain_out 
+  debug: var=domain_out.stdout_lines
+
+- name: restart the database
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    {{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+    {{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+  register: db_status_out
+
+
+- name: display the db_status_out
+  debug: var=db_status_out.stdout_lines
+
+- name: verify the db_domain is set
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n  show parameter db_domain" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: db_domain_out
+
+- name: display db_domain_out 
+  debug: var=db_domain_out.stdout_lines
+
+- fail: 
+    msg: "DB domain is not set to {{ hays_domain_name }}"
+  when: db_domain_out.rc == 0 and hays_domain_name  not in db_domain_out.stdout
+
+

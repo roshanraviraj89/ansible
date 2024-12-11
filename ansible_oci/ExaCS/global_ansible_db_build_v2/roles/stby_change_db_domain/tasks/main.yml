@@ -1,0 +1,11 @@
+---
+
+- name: change the db domain parameter to hays domain name
+  shell: |
+    /usr/bin/dbaascli database modifyParameters --dbname {{db_name }} --setParameters "db_domain={{ hays_domain_name }}" --allowBounce
+  register: domain_out
+
+
+- name: display the new db_domain change
+  debug: var=domain_out.stdout_lines
+  when: domain_out.rc == 0 

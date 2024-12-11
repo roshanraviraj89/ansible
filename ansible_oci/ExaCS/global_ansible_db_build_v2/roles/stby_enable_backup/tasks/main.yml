@@ -1,0 +1,63 @@
+---
+## create a rman_user 
+
+# - name: create a common rman_user for the RMAN backups
+#   shell: |
+#     .  "/home/oracle/{{db_name}}.env"
+#     echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n CREATE USER {{rman_user}} IDENTIFIED BY {{rman_password}} DEFAULT TABLESPACE users TEMPORARY TABLESPACE TEMP PROFILE DEFAULT ACCOUNT UNLOCK;" | {{ stby_oracle_home }}/bin/sqlplus -s / as sysdba
+#     echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n grant sysbackup to {{rman_user}} container=all;" | {{ stby_oracle_home }}/bin/sqlplus -s / as sysdba
+#     echo -e "show all;" | {{ stby_oracle_home }}/bin/rman target '"{{ rman_user }}/{{rman_password}}@{{ db_name }}_{{ stby_region_identifier }} as sysbackup"'
+#   register: rman_out
+
+# - name: display rman_out
+#   debug: var=rman_out.stdout_lines
+
+
+
+- name: Connect with  {{ db_name }} and rmancatalog database
+  shell: |
+    .  "/home/oracle/{{ db_name }}.env"
+    echo -e "{{ item }};" | {{ stby_oracle_home }}/bin/rman target '"{{ rman_user }}/{{rman_password}}@{{ db_name }}_{{ stby_region_identifier }} as sysbackup"' catalog {{ rmancat_user }}/{{ rmancat_password }}@RMANCAT_RMPD  
+  loop:
+    - "list db_unique_name all"
+    - "show all"
+  register: rman_conf_out
+
+- name: display rman configuration settings
+  debug: var=rman_conf_out
+
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+ 
+- name: backup the existing crontab entries
+  shell: crontab -l
+  register: cron_entries
+
+- name: Save crontab entries to a file
+  copy:
+    content: "{{ cron_entries.stdout }}"
+    dest: /home/oracle/crontab_entries_{{timestamp.stdout}}.txt
+    mode: 0600
+
+- name: uncomment the cron jobs on node1
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day }}"
+    month: "{{ item.month }}"
+    weekday: "{{ item.weekday }}"
+    job: "{{ item.job }}"
+    user: oracle
+    state: present  
+  loop: "{{ stby_cron_jobs }}"
+
+
+- name: find the cronjobs for {{ db_name }}
+  shell: crontab -l | grep '{{ db_name }}' 
+  register: cron_out
+
+- name: display the cronjobs for {{ db_name }}
+  debug: 
+    msg: "{{cron_out.stdout_lines}}"

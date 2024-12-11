@@ -1,0 +1,76 @@
+---
+## create a rman_user 
+
+- name: create a common rman_user for the RMAN backups
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n CREATE USER {{rman_user}} IDENTIFIED BY {{rman_password}} DEFAULT TABLESPACE users TEMPORARY TABLESPACE TEMP PROFILE DEFAULT ACCOUNT UNLOCK;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n grant sysbackup to {{rman_user}} container=all;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+    echo -e "show all;" | {{ pri_oracle_home }}/bin/rman target '"{{ rman_user }}/{{rman_password}}@{{ db_name }}_{{ pri_region_identifier }} as sysbackup"'
+  register: rman_out
+
+- name: display rman_out
+  debug: var=rman_out.stdout_lines
+
+
+
+- name: register database {{ db_name }} with rmancatalog database
+  shell: |
+    .  "/home/oracle/{{ db_name }}.env"
+    echo -e "{{ item }};" | {{ pri_oracle_home }}/bin/rman target '"{{ rman_user }}/{{rman_password}}@{{ db_name }}_{{ pri_region_identifier }} as sysbackup"' catalog {{ rmancat_user }}/{{ rmancat_password }}@RMANCAT_RMPD  
+  loop:
+    - "REGISTER DATABASE"
+    - "list db_unique_name all"
+    - "CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 32 DAYS"
+    - "CONFIGURE BACKUP OPTIMIZATION ON"
+    - "CONFIGURE DEFAULT DEVICE TYPE TO 'SBT_TAPE'"
+    - "CONFIGURE CONTROLFILE AUTOBACKUP ON"
+    - "CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE SBT_TAPE TO '%F'"
+    - "CONFIGURE DEVICE TYPE 'SBT_TAPE' PARALLELISM 8 BACKUP TYPE TO COMPRESSED BACKUPSET"
+    - "CONFIGURE CHANNEL DEVICE TYPE 'SBT_TAPE' PARMS 'SBT_LIBRARY={{ pri_opc_dir }}/lib/libopc.so, ENV=(OPC_PFILE={{ pri_opc_dir }}/opc{{ db_name }}_STD.ora)'"
+    - "CONFIGURE ENCRYPTION FOR DATABASE ON"
+    - "CONFIGURE ENCRYPTION ALGORITHM 'AES256'"
+    - "CONFIGURE COMPRESSION ALGORITHM 'LOW' AS OF RELEASE 'DEFAULT' OPTIMIZE FOR LOAD TRUE"
+    - "CONFIGURE RMAN OUTPUT TO KEEP FOR 100 DAYS"
+    - "CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON ALL STANDBY BACKED UP 1 TIMES TO 'SBT_TAPE'"
+    - "show all"
+  register: rman_conf_out
+
+- name: display rman configuration settings
+  debug: var=rman_conf_out
+
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+ 
+- name: backup the existing crontab entries
+  shell: crontab -l
+  register: cron_entries
+
+- name: Save crontab entries to a file
+  copy:
+    content: "{{ cron_entries.stdout }}"
+    dest: /home/oracle/crontab_entries_{{timestamp.stdout}}.txt
+    mode: 0600
+
+- name: uncomment the cron jobs on node1
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day }}"
+    month: "{{ item.month }}"
+    weekday: "{{ item.weekday }}"
+    job: "{{ item.job }}"
+    user: oracle
+    state: present  
+  loop: "{{ cron_jobs }}"
+
+
+- name: find the cronjobs for {{ db_name }}
+  shell: crontab -l | grep '{{ db_name }}' 
+  register: cron_out
+
+- name: display the cronjobs for {{ db_name }}
+  debug: 
+    msg: "{{cron_out.stdout_lines}}"

@@ -1,0 +1,71 @@
+---
+
+- name: set NLS_ISO_CURRENCY parameter to UNITED KINGDOM in the primary database
+  shell: |
+     .  "/home/oracle/{{db_name}}.env"
+     echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING OFF ECHO ON\n alter system set nls_iso_currency='{{nls_iso_currency}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: iso_currency_change_out
+
+- name: display iso_currency change
+  debug: var=iso_currency_change_out.stdout_lines
+
+- name: bounce the primary database in a rolling fashion
+  shell: |
+     .  "/home/oracle/{{db_name}}.env"  
+     {{pri_oracle_home}}/bin/srvctl stop instance -db {{pri_db_unique_name}} -i {{db_name}}1 -f
+     {{pri_oracle_home}}/bin/srvctl start instance -db {{pri_db_unique_name}} -i {{db_name}}1
+     {{pri_oracle_home}}/bin/srvctl stop instance -db {{pri_db_unique_name}} -i {{db_name}}2 -f
+     {{pri_oracle_home}}/bin/srvctl start instance -db {{pri_db_unique_name}} -i {{db_name}}2
+     {{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+  register: db_status_out
+
+
+- name: display the db_status_out
+  debug: var=db_status_out.stdout_lines
+  
+- name: Pause for 3 minutes
+  pause:
+    minutes: 3
+
+
+- name: check the NLS_ISO_CURRENCY value in the Primary database
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SELECT parameter, value FROM nls_instance_parameters WHERE parameter='NLS_ISO_CURRENCY';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+  register: nls_currency_output  
+
+- name: 
+  debug:
+    var=nls_currency_output.stdout_lines
+  
+- name: Fail if NLS_ISO_CURRENCY is not "{{ nls_iso_currency }}"
+  fail:
+    msg: "NLS_ISO_CURRENCY is not set to {{ nls_iso_currency }}. It is set to '{{ nls_currency_output.stdout.strip() }}'."
+  when: "nls_iso_currency not in nls_currency_output.stdout"
+  #when: nls_currency_output.stdout.strip() != nls_iso_currency
+
+- name: check the data guard status
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"  
+    echo -e "SHOW CONFIGURATION;" | {{ pri_oracle_home }}/bin/dgmgrl /
+  register: dg_conf_out
+  failed_when: "'SUCCESS' not in dg_conf_out.stdout"
+
+- name: display the datagurd configuration
+  debug: 
+    var=dg_conf_out.stdout_lines
+
+
+
+- name: check the primary and standby database status
+  shell: |
+    .  "/home/oracle/{{db_name}}.env"
+    echo -e "{{ item }};" | {{ pri_oracle_home }}/bin/dgmgrl /
+  loop: 
+    - "SHOW DATABASE {{ pri_db_unique_name }}"
+    - "SHOW DATABASE {{ stby_db_unique_name }}"
+  register: dg_status_out
+
+- name: display the datagurd status
+  debug: 
+    var=dg_status_out.results

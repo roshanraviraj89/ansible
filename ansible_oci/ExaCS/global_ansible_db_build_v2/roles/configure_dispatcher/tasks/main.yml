@@ -1,0 +1,34 @@
+---
+# tasks file for configure_dispatcher
+
+- block:
+
+    - name: set the db_parameters for dispatchers
+      shell: |
+         .  "/home/oracle/{{db_name}}.env"
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set SHARED_SERVERS={{shared_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set MAX_SHARED_SERVERS={{max_shared_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set dispatchers='(address=(protocol=tcp)(host={{pri_node1_vip_fq}}))(dispatchers={{dispatchers}})(service={{pri_service_name}})' scope=both sid='{{pri_oracle_sid1}}';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system register;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter dispatchers;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+      register: dispatcher1_out     
+
+    - name: display the dispatcher out on node1
+      debug: var=dispatcher1_out.stdout_lines
+
+  when: inventory_hostname in groups['pri_rac_19c_node1']
+
+- block:
+
+    - name: set the db_parameters for dispatchers
+      shell: |
+         .  "/home/oracle/{{db_name}}.env"
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set dispatchers='(address=(protocol=tcp)(host={{pri_node2_vip_fq}}))(dispatchers={{dispatchers}})(service={{pri_service_name}})' scope=both sid='{{pri_oracle_sid2}}';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system register;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+         echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter dispatchers;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+      register: dispatcher2_out 
+
+    - name: display the dispatcher out on node2
+      debug: var=dispatcher2_out.stdout_lines    
+
+  when: inventory_hostname in groups['pri_rac_19c_node2']

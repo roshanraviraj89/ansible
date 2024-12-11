@@ -1,0 +1,34 @@
+---
+
+- name: create standard object storage bucket for {{ db_name }} backups
+  oracle.oci.oci_object_storage_bucket:
+    compartment_id: "{{ stby_compartment_id }}"
+    namespace_name: "{{ stby_namespace }}"
+    name: "{{ stby_std_backup_bucket }}"
+    storage_tier: Standard
+    public_access_type: NoPublicAccess
+    state: present
+    region: "{{ stby_region }}"
+  register: std_bucket_out
+
+- name: display the  standard bucket details
+  debug: 
+    msg: "{{ std_bucket_out }}"
+ 
+
+
+- name: create Archive object storage bucket for {{ db_name }} backups
+  oracle.oci.oci_object_storage_bucket:
+    compartment_id: "{{ stby_compartment_id }}"
+    namespace_name: "{{ stby_namespace }}"
+    name: "{{ stby_arc_backup_bucket }}"
+    storage_tier: Archive
+    public_access_type: NoPublicAccess
+    state: present
+    region: "{{ stby_region }}"
+  register: arc_bucket_out
+
+- name: display the archive bucket details
+  debug: 
+    msg: "{{ arc_bucket_out }}"
+ 

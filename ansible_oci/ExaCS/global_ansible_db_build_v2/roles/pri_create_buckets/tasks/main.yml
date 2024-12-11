@@ -1,0 +1,32 @@
+---
+
+- name: create standard object storage bucket for {{ db_name }} backups
+  oracle.oci.oci_object_storage_bucket:
+    compartment_id: "{{ pri_compartment_id }}"
+    namespace_name: "{{ pri_namespace }}"
+    name: "{{ pri_std_backup_bucket }}"
+    storage_tier: Standard
+    public_access_type: NoPublicAccess
+    state: present
+  register: std_bucket_out
+
+- name: display the  standard bucket details
+  debug: 
+    msg: "{{ std_bucket_out }}"
+ 
+
+
+- name: create Archive object storage bucket for {{ db_name }} backups
+  oracle.oci.oci_object_storage_bucket:
+    compartment_id: "{{ pri_compartment_id }}"
+    namespace_name: "{{ pri_namespace }}"
+    name: "{{ pri_arc_backup_bucket }}"
+    storage_tier: Archive
+    public_access_type: NoPublicAccess
+    state: present
+  register: arc_bucket_out
+
+- name: display the archive bucket details
+  debug: 
+    msg: "{{ arc_bucket_out }}"
+ 

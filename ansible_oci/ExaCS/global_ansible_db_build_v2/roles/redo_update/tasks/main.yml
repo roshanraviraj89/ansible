@@ -1,0 +1,21 @@
+---
+# tasks file for redo_update
+
+- name: resize the redo logs and groups --precheck
+  shell: |
+    /usr/bin/dbaascli database update --dbname {{db_name}} --redosize {{redo_size}} --groups {{redo_groups}} --precheck
+  register: precheck_out
+
+- name: display precheck_out
+  debug: var=precheck_out.stdout_lines
+  when: precheck_out.rc == 0 and  "Precheck completed" in precheck_out.stdout
+
+- name: resize the redo logs and groups if the precheck is successfully completed
+  shell: |
+    /usr/bin/dbaascli database update --dbname {{db_name}} --redosize {{redo_size}} --groups {{redo_groups}} 
+  register: redo_out
+
+- name: display the redo_out
+  debug: var=redo_out.stdout_lines
+
+

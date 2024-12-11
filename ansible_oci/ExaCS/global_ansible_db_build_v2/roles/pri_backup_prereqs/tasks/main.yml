@@ -1,0 +1,78 @@
+---
+
+- name: check RMANCAT_RMPD tns_entry already exists  in tnsnames.ora file
+  find: 
+    paths: "{{ pri_tns_admin }}"
+    patterns: tnsnames.ora
+    contains: "# Ansible managed block RMANCAT_RMPD"
+  register: rmancat_out
+
+# - name: out rmancat_out variable
+#   debug: var=rmancat_out
+
+
+- name: Add RMANCAT_RMPD tns entry with markers
+  blockinfile:
+      path: "{{ pri_tns_admin }}/tnsnames.ora" 
+      block: "{{ rmancat_tns_entry }}"
+      marker: "# Ansible managed block RMANCAT_RMPD"
+      insertafter: EOF
+      state: present
+  when: rmancat_out.matched == 0
+
+
+- name: create backup config files for {{ db_name }}
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: oracle
+    group: oinstall
+    mode: "u=rw,g=r,o=r"
+  with_items:
+     - {
+        src: "pri_opc_database_STD.ora.j2",
+        dest: "{{ pri_opc_dir }}/opc{{ db_name }}_STD.ora",
+       }
+     - {
+        src: "pri_opc_database_ARC.ora.j2",
+        dest: "{{ pri_opc_dir }}/opc{{ db_name }}_ARC.ora",
+       }
+  register: backup_conf_out
+
+- name: display backup config out
+  debug: 
+    msg: "{{ backup_conf_out }}"
+
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+ 
+- name: backup the existing crontab entries
+  shell: crontab -l
+  register: cron_entries
+
+- name: Save crontab entries to a file
+  copy:
+    content: "{{ cron_entries.stdout }}"
+    dest: /home/oracle/crontab_entries_{{timestamp.stdout}}.txt
+    mode: 0600
+
+
+- name: schedule backup cron jobs in crontab
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day }}"
+    month: "{{ item.month }}"
+    weekday: "{{ item.weekday }}"
+    job: "{{ item.job }}"
+    state: present
+    disabled: "{{ item.disabled }}"
+  loop: "{{ cron_jobs }}"
+  register: cron_out
+
+- name: display the scheduled cron jobs
+  debug: 
+   msg: "{{ cron_out }}"
+

@@ -1,0 +1,83 @@
+---
+- name: retrieve the {{ db_mon_user }} user vault id
+  oracle.oci.oci_key_management_vault_facts:
+    compartment_id: "{{ stby_compartment_id }}"
+    display_name: "{{ stby_vault_display_name  }}"
+    region: "{{ stby_region }}"
+  register: stby_vault_out
+
+- name: display stby_vault_out
+  debug: var=stby_vault_out.vaults
+
+- name: display stby_vault_out id
+  debug: var=stby_vault_out.vaults[0].id
+
+- name: set the stby dbssnmp vault id
+  set_fact:
+    stby_vault_id: "{{ stby_vault_out.vaults[0].id }}"
+
+- name: set the admin plain text password
+  set_fact: 
+    stby_admin_password: "{{ admin_password }}"
+
+- name: convert the plain text password to BASE64
+  set_fact:
+     stby_admin_base64_password: "{{ stby_admin_password | b64encode }}"
+
+- name: display stby_vault_out management_endpoint
+  debug: var=stby_vault_out.vaults[0].management_endpoint
+
+- name: set the stby vault management_endpoint
+  set_fact:
+     stby_management_endpoint: "{{ stby_vault_out.vaults[0].management_endpoint }}"
+
+- name: retrieve the master encryption key
+  oracle.oci.oci_key_management_key_facts:
+      compartment_id: "{{ stby_compartment_id }}"
+      display_name: "{{ stby_master_encryption_key }}"
+      region: "{{ stby_region }}"
+      service_endpoint: "{{ stby_management_endpoint }}"
+  register: stby_mes_out
+
+- name: display stby_mes_out
+  debug: var=stby_mes_out
+
+- name: Display the type of stby_mes_out
+  debug:
+    msg: "{{ stby_mes_out | type_debug }}"
+
+- name: Display the type of stby_mes_out.keys
+  debug:
+    msg: "{{ stby_mes_out.keys | type_debug }}" 
+
+- name: Display the keys section
+  debug:
+    msg: "{{ stby_mes_out['keys'] }}"
+
+- name: Display the id from the keys section
+  debug:
+    msg: "{{ stby_mes_out['keys'][0]['id'] }}"
+
+- name: set master encryption key id
+  set_fact:
+     stby_mes_id: "{{ stby_mes_out['keys'][0]['id'] }}"
+    
+
+- name: Create secret
+  oracle.oci.oci_vault_secret:
+    # required
+    compartment_id: "{{ stby_compartment_id }}"
+    #secret_name: "auto_test_secret"
+    secret_name: "{{ stby_db_mon_user_secret_name }}"   
+    vault_id: "{{ stby_vault_id }}"
+    key_id: "{{ stby_mes_id }}"
+    region: "{{ stby_region }}"
+    secret_content:
+      # required
+      content_type: BASE64
+      content: "{{ stby_admin_base64_password }}"
+  register: created_secret
+
+- name: Display created secret details
+  debug:
+    var: created_secret 

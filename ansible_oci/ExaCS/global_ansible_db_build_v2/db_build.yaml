@@ -1,0 +1,147 @@
+- name: primary_db_build
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: pri_db_build
+  ##vars_files: host_vars/vars.yml
+  roles:
+    - pri_db_build
+
+# - name: create a RAC service for the database migration
+#   hosts: pri_rac_19c_node1
+#   tags: create_migration_service
+#   vars_files: host_vars/vars.yml
+#   become: true
+#   become_user: oracle
+#   roles:
+#     - create_migration_service
+
+- name: change db_domain parameter
+  hosts: pri_rac_19c_node1
+  tags: pri_change_db_domain
+  become: true
+  become_user: oracle
+  roles:
+    - pri_change_db_domain
+
+- name: update the tnsnames.ora & sqlnet.ora files
+  hosts: pri_rac_19c
+  tags: pri_tns_update
+  become: true
+  become_user: oracle
+  roles:
+    - tns_update
+
+- name: do the post_db_build tasks
+  hosts: pri_rac_19c_node1
+  tags: pri_post_db_build
+  become: true
+  become_user: oracle
+  roles:
+    - post_db_build
+
+- name: do the redo resize
+  hosts: pri_rac_19c_node1
+  tags: pri_redo_update
+  become: true
+  become_user: root
+  roles:
+    - redo_update
+
+- name: create service
+  hosts: pri_rac_19c_node1
+  tags: pri_create_service
+  become: true
+  become_user: oracle
+  roles:
+    - create_service
+    
+# only applicable for non-prod
+- name: set NLS_ISO_CURRENCY parameter to UNITED KINGDOM
+  hosts: pri_rac_19c_node1
+  tags: pri_set_nls_iso_currency
+  become: true
+  become_user: root
+  roles:
+    - role: pri_set_nls_iso_currency
+      when: env == 'pre-prod'
+
+
+#only applicable for prod db build only
+- name: configure dispatcher
+  hosts: pri_rac_19c
+  tags: pri_configure_dispatcher
+  become: true
+  become_user: oracle
+  roles:
+    - role: configure_dispatcher
+      when: env == 'prod'
+
+- name: create object storage buckets for RMAN backups
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: pri_create_buckets
+  roles:
+    - role: pri_create_buckets
+      when: env == 'prod'
+
+- name: do backup prereqs
+  hosts: pri_rac_19c
+  tags: pri_backup_prereqs
+  become: true
+  become_user: oracle
+  roles:
+    - role: pri_backup_prereqs
+      when: env == 'prod'
+
+- name: enable_RMAN_BACKUPS
+  hosts: pri_rac_19c_node1
+  tags: pri_enable_backup
+  become: true
+  become_user: oracle
+  roles:
+    - role: pri_enable_backup
+      when: env == 'prod'
+
+- name: create required OCI secrets in the vault
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: pri_create_oci_secrets
+  roles:
+    - role: pri_create_oci_secrets
+      when: env == 'prod'
+
+- name: grant the required permission {{ db_mon_user }} to enable OCI database monitoring
+  hosts: pri_rac_19c_node1
+  tags: pri_db_monitoring_prereqs
+  become: true
+  become_user: oracle
+  roles:
+    - role: pri_db_monitoring_prereqs
+      when: env == 'prod'
+
+- name: enable OCI database monitoring 
+  hosts: localhost
+  collections:
+    - oracle.oci
+  connection: local
+  tags: pri_db_monitoring
+  roles:
+    - role: pri_db_monitoring
+      when: env == 'prod'
+
+
+- name: disable the bkup_api_archlogs_job 
+  hosts: pri_rac_19c_node1
+  tags: pri_disable_bkup_api_archlogs_job
+  become: true
+  become_user: root
+  roles:
+    - role: pri_disable_bkup_api_archlogs_job
+      when: env == 'prod'
+    

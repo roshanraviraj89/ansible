@@ -1,0 +1,127 @@
+---
+# tasks file for stby_db_build
+
+## first we need to get the primary database details
+
+  ## primary_vm_cluster
+- name: get the primary vm_cluster_ocid from the cluster display name
+  oracle.oci.oci_database_cloud_vm_cluster_facts:
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ pri_compartment_id }}"
+      display_name: "{{ pri_vm_cluster_display_name }}"
+      region: "{{ pri_region }}"
+  register: pri_cluster_out
+
+- name: pri_cluster_out
+  debug: var=pri_cluster_out.cloud_vm_clusters
+
+- name: display pri_cluster_out
+  debug: var=pri_cluster_out.cloud_vm_clusters[0].id
+
+- name: set the primary vm cluster id
+  set_fact:
+    pri_vm_cluster_id: "{{ pri_cluster_out.cloud_vm_clusters[0].id }}"
+
+  ## primary db_home_id details
+- name: get the primary db_home_id 
+  oracle.oci.oci_database_db_home_facts:
+      vm_cluster_id: "{{ pri_vm_cluster_id }}"
+      compartment_id: "{{ pri_compartment_id }}"
+      lifecycle_state: AVAILABLE
+      display_name: "{{ pri_db_home_display_name }}"
+      region: "{{ pri_region }}"
+  register: pri_db_home_out
+
+- name: display pri_db_home_out
+  debug: var=pri_db_home_out.db_homes[0].id
+
+- name: set the primary db_home_id
+  set_fact:
+    pri_db_home_id: "{{ pri_db_home_out.db_homes[0].id }}"
+
+- name: get the primary database ocid
+  oracle.oci.oci_database_database_facts:
+      db_home_id: "{{ pri_db_home_id }}"
+      db_name:    "{{ db_name }}"
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ pri_compartment_id }}"
+      region: "{{ pri_region }}"
+  register: pri_db_id_out
+
+- name: display pri_db_id
+  debug: var=pri_db_id_out.databases[0].id
+
+- name: set the pri_db_id
+  set_fact:
+    pri_db_id: "{{ pri_db_id_out.databases[0].id }}"
+
+
+
+
+## stby vm cluster details
+
+- name: get the stby vm_cluster_ocid from the cluster display name
+  oracle.oci.oci_database_cloud_vm_cluster_facts:
+      lifecycle_state: AVAILABLE
+      compartment_id: "{{ stby_compartment_id }}"
+      display_name: "{{ stby_vm_cluster_display_name }}"
+      region: "{{ stby_region }}"
+      #config_file_location: "/home/ansibleadmin/.oci/config"
+      #config_profile_name: "DEFAULT"
+      
+  register: stby_cluster_out
+
+- name: display stby_cluster_out
+  debug: var=stby_cluster_out.cloud_vm_clusters[0].id
+
+- name: set the stby vm cluster id
+  set_fact:
+    stby_vm_cluster_id: "{{ stby_cluster_out.cloud_vm_clusters[0].id }}"
+
+
+## retrieve the standby db_home_id
+
+- name: get the stby db_home_id 
+  oracle.oci.oci_database_db_home_facts:
+      vm_cluster_id: "{{ stby_vm_cluster_id }}"
+      compartment_id: "{{ stby_compartment_id }}"
+      lifecycle_state: AVAILABLE
+      display_name: "{{ stby_db_home_display_name }}"
+      region: "{{ stby_region }}"
+  register: stby_db_home_out
+
+- name: display stby_db_home_out
+  debug: var=stby_db_home_out.db_homes[0].id
+
+- name: set the stby db_home_id
+  set_fact:
+    stby_db_home_id: "{{ stby_db_home_out.db_homes[0].id }}"
+
+
+
+- name: Create data_guard_association with creation_type = ExistingVmCluster
+  oracle.oci.oci_database_data_guard_association:
+    # required
+    database_id: "{{ pri_db_id }}"
+    creation_type: "{{ stby_creation_type }}"
+    database_admin_password: "{{ admin_password }}"
+
+    protection_mode: "{{ stby_protection_mode }}"
+    transport_type: "{{ stby_transport_type }}"
+
+    # optional
+    peer_vm_cluster_id: "{{ stby_vm_cluster_id }}"
+    peer_db_unique_name: "{{  stby_db_unique_name }}"
+    peer_sid_prefix: "{{ db_name }}"
+    peer_db_home_id: "{{ stby_db_home_id }}"
+    is_active_data_guard_enabled: false
+    wait: yes
+    wait_timeout: 18000
+  register: dg_association_out
+
+- name: display dg_association_out
+  debug: var=dg_association_out.data_guard_association 
+
+
+
+    
