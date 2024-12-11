@@ -1,0 +1,34 @@
+tns_entries:
+  - name: ADRW1PD
+    description: UAE prod
+    host: hrmaxpduae-scan.emea.hays.loc
+    port: 1521
+    server: SHARED
+    service: UAEPROD_SERVICE.emea.hays.loc
+
+sqlnet_allowed_version: 11
+
+rmancat_tns_entry: |
+   RMANCAT_RMPD =
+    (DESCRIPTION =
+      (ADDRESS =
+        (PROTOCOL = TCP)
+        (HOST = foaukl1pddb-4kxck-scan.emea.hays.loc)
+        (PORT = 1521)
+      )
+      (ADDRESS =
+        (PROTOCOL = TCP)
+        (HOST = foaukc1drdb-achbh-scan.emea.hays.loc)
+        (PORT = 1521)
+      )
+      (FAILOVER = yes)
+      (CONNECT_DATA =
+        (SERVER = DEDICATED)
+        (SERVICE_NAME = RMANCAT_RMPD.paas.oracle.com)
+        (FAILOVER_MODE =
+          (TYPE = select)
+          (METHOD = basic)
+        )
+      )
+    )
+

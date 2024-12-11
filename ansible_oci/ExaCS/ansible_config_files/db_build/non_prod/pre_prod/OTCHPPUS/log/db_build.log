@@ -1,0 +1,102 @@
+
+PLAY [primary_db_build] ********************************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.16.29]
+
+TASK [pri_db_build : get the primary vm_cluster_ocid from the cluster display name lifecycle_state=AVAILABLE, compartment_id={{ pri_compartment_id }}, display_name={{ pri_vm_cluster_display_name }}, region={{ pri_region }}] ***
+ok: [10.100.16.29]
+
+TASK [pri_db_build : display pri_cluster_out var=pri_cluster_out.cloud_vm_clusters[0].id] ***
+ok: [10.100.16.29] => {
+    "pri_cluster_out.cloud_vm_clusters[0].id": "ocid1.cloudvmcluster.oc1.uk-london-1.anwgiljtpgtet6qa4i2xywinkn7zair7b6ekze3g3ahxxi5f326s7j7yguva"
+}
+
+TASK [pri_db_build : set the vm cluster id pri_vm_cluster_id={{ pri_cluster_out.cloud_vm_clusters[0].id }}] ***
+ok: [10.100.16.29]
+
+TASK [pri_db_build : get the primary db_home_id vm_cluster_id={{ pri_vm_cluster_id }}, compartment_id={{ pri_compartment_id }}, lifecycle_state=AVAILABLE, display_name={{ pri_db_home_display_name }}, region={{ pri_region }}] ***
+ok: [10.100.16.29]
+
+TASK [pri_db_build : display pri_db_home_out var=pri_db_home_out.db_homes[0].id] ***
+ok: [10.100.16.29] => {
+    "pri_db_home_out.db_homes[0].id": "ocid1.dbhome.oc1.uk-london-1.anwgiljtogidghaa6whqpsmwcn5s46kh5gf6refon5yworh66vo5a46iwkjq"
+}
+
+TASK [pri_db_build : set the db_home_id pri_db_home_id={{ pri_db_home_out.db_homes[0].id }}] ***
+ok: [10.100.16.29]
+
+TASK [pri_db_build : build primary database compartment_id={{ pri_compartment_id }}, db_home_id={{ pri_db_home_id }}, region={{ pri_region }}, wait=True, wait_timeout=14400, database={'admin_password': '{{ admin_password }}', 'db_name': '{{ db_name }}', 'db_unique_name': '{{ pri_db_unique_name }}', 'pdb_name': '{{ pdb_name }}', 'character_set': '{{ character_set }}', 'ncharacter_set': '{{ ncharacter_set }}', 'db_workload': '{{ db_workload }}'}] ***
+changed: [10.100.16.29]
+
+TASK [pri_db_build : display pri_out var=pri_out.database] *********************
+ok: [10.100.16.29] => {
+    "pri_out.database": {
+        "character_set": "AL32UTF8",
+        "compartment_id": "ocid1.compartment.oc1..aaaaaaaau53utdubj476ida676lfdn5eotjrg77vzwsycry2dw5jvfyoteaq",
+        "connection_strings": {
+            "all_connection_strings": {
+                "cdbDefault": "foaukl1npdb-swdo8-scan.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com:1521/OTCHPPUS_UKL.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com",
+                "cdbIpDefault": "(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=3)(RETRY_COUNT=3)(ADDRESS_LIST=(LOAD_BALANCE=on)(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.29)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.43)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=OTCHPPUS_UKL.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com)))"
+            },
+            "cdb_default": "foaukl1npdb-swdo8-scan.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com:1521/OTCHPPUS_UKL.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com",
+            "cdb_ip_default": "(DESCRIPTION=(CONNECT_TIMEOUT=5)(TRANSPORT_CONNECT_TIMEOUT=3)(RETRY_COUNT=3)(ADDRESS_LIST=(LOAD_BALANCE=on)(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.29)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.43)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=10.100.72.2)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=OTCHPPUS_UKL.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com)))"
+        },
+        "database_management_config": null,
+        "database_software_image_id": "ocid1.databasesoftwareimage.oc1.uk-london-1.anwgiljtpgtet6qayey5rkocdwcu6kujvauqsboemjk6d7njvye25vzuirva",
+        "db_backup_config": null,
+        "db_home_id": "ocid1.dbhome.oc1.uk-london-1.anwgiljtogidghaa6whqpsmwcn5s46kh5gf6refon5yworh66vo5a46iwkjq",
+        "db_name": "OTCHPPUS",
+        "db_system_id": null,
+        "db_unique_name": "OTCHPPUS_UKL",
+        "db_workload": "OLTP",
+        "defined_tags": {
+            "Hays-Tags": {
+                "AppName": "OneTouch Exa Non-Prod",
+                "AppOwner": "Front Office",
+                "BillableTo": "UK ITPS",
+                "Environment": "Non-Prod",
+                "TechnicalOwner": "Front Office"
+            },
+            "Oracle-Tags": {
+                "CreatedBy": "default/ansibleadmin",
+                "CreatedOn": "2024-12-05T11:44:42.525Z"
+            }
+        },
+        "freeform_tags": {},
+        "id": "ocid1.database.oc1.uk-london-1.anwgiljtpgtet6qape3b2ebunfnnmb4r6tkweuqpkrtnlt2su2lapngmadta",
+        "is_cdb": null,
+        "key_store_id": null,
+        "key_store_wallet_name": null,
+        "kms_key_id": null,
+        "kms_key_version_id": null,
+        "last_backup_duration_in_seconds": null,
+        "last_backup_timestamp": null,
+        "last_failed_backup_timestamp": null,
+        "lifecycle_details": null,
+        "lifecycle_state": "AVAILABLE",
+        "ncharacter_set": "UTF8",
+        "pdb_name": "USPP",
+        "sid_prefix": "OTCHPPUS",
+        "source_database_point_in_time_recovery_timestamp": null,
+        "time_created": "2024-12-05T11:44:42.551000+00:00",
+        "vault_id": null,
+        "vm_cluster_id": "ocid1.cloudvmcluster.oc1.uk-london-1.anwgiljtpgtet6qa4i2xywinkn7zair7b6ekze3g3ahxxi5f326s7j7yguva"
+    }
+}
+
+PLAY [change db_domain parameter] **********************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [pri_change_db_domain : change the db_domain parameter to hays domain name _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET db_domain='{{ hays_domain_name }}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+fatal: [10.100.72.47]: FAILED! => {"changed": true, "cmd": ".  \"/home/oracle/OTCHPPUS.env\"\necho -e \"SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\\n ALTER SYSTEM SET db_domain='emea.hays.loc' scope=spfile sid='*';\" | /u02/app/oracle/product/19.0.0.0/dbhome_2/bin/sqlplus -s / as sysdba\n", "delta": "0:00:01.392068", "end": "2024-12-05 12:14:28.596509", "msg": "non-zero return code", "rc": 1, "start": "2024-12-05 12:14:27.204441", "stderr": "", "stderr_lines": [], "stdout": "ERROR:\nORA-01017: invalid username/password; logon denied\n\n\nSP2-0306: Invalid option.\nUsage: CONN[ECT] [{logon|/|proxy} [AS {SYSDBA|SYSOPER|SYSASM|SYSBACKUP|SYSDG|SYSKM|SYSRAC}] [edition=value]]\nwhere <logon> ::= <username>[/<password>][@<connect_identifier>]\n      <proxy> ::= <proxyuser>[<username>][/<password>][@<connect_identifier>]\nSP2-0306: Invalid option.\nUsage: CONN[ECT] [{logon|/|proxy} [AS {SYSDBA|SYSOPER|SYSASM|SYSBACKUP|SYSDG|SYSKM|SYSRAC}] [edition=value]]\nwhere <logon> ::= <username>[/<password>][@<connect_identifier>]\n      <proxy> ::= <proxyuser>[<username>][/<password>][@<connect_identifier>]\nSP2-0157: unable to CONNECT to ORACLE after 3 attempts, exiting SQL*Plus", "stdout_lines": ["ERROR:", "ORA-01017: invalid username/password; logon denied", "", "", "SP2-0306: Invalid option.", "Usage: CONN[ECT] [{logon|/|proxy} [AS {SYSDBA|SYSOPER|SYSASM|SYSBACKUP|SYSDG|SYSKM|SYSRAC}] [edition=value]]", "where <logon> ::= <username>[/<password>][@<connect_identifier>]", "      <proxy> ::= <proxyuser>[<username>][/<password>][@<connect_identifier>]", "SP2-0306: Invalid option.", "Usage: CONN[ECT] [{logon|/|proxy} [AS {SYSDBA|SYSOPER|SYSASM|SYSBACKUP|SYSDG|SYSKM|SYSRAC}] [edition=value]]", "where <logon> ::= <username>[/<password>][@<connect_identifier>]", "      <proxy> ::= <proxyuser>[<username>][/<password>][@<connect_identifier>]", "SP2-0157: unable to CONNECT to ORACLE after 3 attempts, exiting SQL*Plus"]}
+
+PLAY RECAP *********************************************************************
+10.100.16.29               : ok=9    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+10.100.72.47               : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 29 minutes, 56 seconds

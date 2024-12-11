@@ -1,0 +1,34 @@
+[localhost]
+10.100.16.29    #Ansible_controller_node
+
+[pri_rac_19c]
+10.100.36.15    # ExaCS VM cluster node 1
+10.100.36.33    #ExaCS VM cluster node 2
+
+[pri_rac_19c_node1]
+10.100.36.15
+
+[pri_rac_19c_node2]
+10.100.36.33
+
+[stby_rac_19c]
+10.102.36.60
+10.102.36.7
+
+[stby_rac_19c_node1]
+10.102.36.60
+
+[stby_rac_19c_node2]
+10.102.36.7
+
+[pri_rac_19c:vars]
+env=prod
+
+[pri_rac_19c_node1:vars]
+env=prod
+
+[pri_rac_19c_node2:vars]
+env=prod
+
+[localhost:vars]
+env=prod

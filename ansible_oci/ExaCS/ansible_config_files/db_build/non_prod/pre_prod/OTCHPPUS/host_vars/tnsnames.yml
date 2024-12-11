@@ -1,0 +1,9 @@
+tns_entries:
+  - name: IN23SUP
+    description: UAE pre-prod
+    host: hrraxdv2028.emea.hays.loc
+    port: 1521
+    server: DEDICATED
+    service: IN23SUP.emea.hays.loc
+
+sqlnet_allowed_version: 11

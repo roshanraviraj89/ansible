@@ -1,0 +1,74 @@
+## primary database variables
+pri_compartment_id: ocid1.compartment.oc1..aaaaaaaau53utdubj476ida676lfdn5eotjrg77vzwsycry2dw5jvfyoteaq
+pri_region: uk-london-1
+pri_region_identifier: UKL
+pri_vm_cluster_display_name: foa-ukl1-np-exavmcl-01
+
+
+
+
+pri_db_home_display_name: otch-np-exavmcl-cmp-01-dbhome-1923
+db_name: OTCHPPUS
+pri_db_unique_name: "{{db_name}}_{{pri_region_identifier}}"
+pdb_name: USPP
+character_set: AL32UTF8
+ncharacter_set: UTF8
+db_workload: OLTP
+admin_password: LeicesterSquare_2024#
+
+
+
+pri_domain_name: otchukl1npexcl.otchukl1npvcn01.oraclevcn.com
+pri_scan_name: foaukl1npdb-swdo8-scan
+pri_scan_fq_name: "{{ pri_scan_name}}.{{ pri_domain_name}}"
+pri_scan_port: 1521
+hays_domain_name: emea.hays.loc
+
+oracle_base: /u02/app/oracle
+pri_oracle_home: "{{ oracle_base }}/product/19.0.0.0/dbhome_2"
+pri_tns_admin: "{{ pri_oracle_home }}/network/admin/{{ db_name }}"
+archive_lag_target: 900
+
+#pri_oracle_sid1: OTCHPPFR1  #node1
+#pri_oracle_sid2: OTCHPPFR2  #node2
+
+
+## post db_build parameters values
+
+cursor_sharing: "FORCE"
+nls_language: "ENGLISH"
+nls_territoty: "UNITED KINGDOM"
+nls_iso_currency: "UNITED KINGDOM"
+#pga_aggregate_limit: 0
+pga_aggregate_target: 1G
+open_cursors: 1000
+parallel_max_servers: 640
+optimizer_index_caching: 90
+optimizer_index_cost_adj: 10
+container_data: current_dictionary
+processes: 900
+sessions: 1376
+sga_max_size: 3G
+sga_target: 3G
+db_recovery_file_dest_size: 100G
+target_pdbs: 3
+
+## redo logs update
+
+redo_size: 1024M
+redo_groups: 4
+
+## create rac service
+
+pri_services:
+  - service_name: USPP_SERVICE
+    db_unique_name: OTCHPPUS_UKL
+    preferred_instances: ["OTCHPPUS1", "OTCHPPUS2"]
+    taf_policy: BASIC
+    policy: AUTOMATIC
+    failover_type: SELECT
+    failover_method: BASIC
+    failover_retry: 5
+    pdb_name: USPP
+
+

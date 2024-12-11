@@ -1,0 +1,321 @@
+
+PLAY [primary_db_build] ********************************************************
+
+PLAY [change db_domain parameter] **********************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [pri_change_db_domain : change the db_domain parameter to hays domain name _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET db_domain='{{ hays_domain_name }}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [pri_change_db_domain : display domain_out var=domain_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "domain_out.stdout_lines": []
+}
+
+TASK [pri_change_db_domain : restart the database _raw_params=.  "/home/oracle/{{db_name}}.env"
+{{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+] ***
+changed: [10.100.72.47]
+
+TASK [pri_change_db_domain : display the db_status_out var=db_status_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "db_status_out.stdout_lines": [
+        "Instance OTCHPPUS1 is running on node foaukl1npdb-swdo81",
+        "Instance OTCHPPUS2 is running on node foaukl1npdb-swdo82"
+    ]
+}
+
+TASK [pri_change_db_domain : verify the db_domain is set _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n  show parameter db_domain" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [pri_change_db_domain : display db_domain_out var=db_domain_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "db_domain_out.stdout_lines": [
+        "db_domain\t\t\t     string\t emea.hays.loc"
+    ]
+}
+
+TASK [pri_change_db_domain : fail msg=DB domain is not set to {{ hays_domain_name }}] ***
+skipping: [10.100.72.47]
+
+PLAY [update the tnsnames.ora & sqlnet.ora files] ******************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+ok: [10.100.72.40]
+
+TASK [tns_update : Get current timestamp _raw_params=date +%Y%m%d%H%M%S] *******
+changed: [10.100.72.47]
+changed: [10.100.72.40]
+
+TASK [tns_update : take a backup of the existing tnsnames.ora file _raw_params=mv "{{ pri_tns_admin }}/tnsnames.ora" "{{ pri_tns_admin }}/tnsnames.ora_{{timestamp.stdout}}.bak"] ***
+changed: [10.100.72.47]
+changed: [10.100.72.40]
+
+TASK [tns_update : display the tns_backup status msg={{ tns_backup }}] *********
+ok: [10.100.72.47] => {
+    "msg": {
+        "changed": true,
+        "cmd": [
+            "mv",
+            "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+            "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora_20241205124103.bak"
+        ],
+        "delta": "0:00:00.006904",
+        "end": "2024-12-05 12:41:07.165337",
+        "failed": false,
+        "rc": 0,
+        "start": "2024-12-05 12:41:07.158433",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "",
+        "stdout_lines": []
+    }
+}
+ok: [10.100.72.40] => {
+    "msg": {
+        "changed": true,
+        "cmd": [
+            "mv",
+            "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+            "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora_20241205124105.bak"
+        ],
+        "delta": "0:00:00.020038",
+        "end": "2024-12-05 12:41:08.593814",
+        "failed": false,
+        "rc": 0,
+        "start": "2024-12-05 12:41:08.573776",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "",
+        "stdout_lines": []
+    }
+}
+
+TASK [tns_update : create the new tns_names.ora file from the template for OTCHPPUS src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rw,g=r] ***
+changed: [10.100.72.47] => (item={'src': 'tnsnames.ora.j2', 'dest': '/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora'})
+changed: [10.100.72.40] => (item={'src': 'tnsnames.ora.j2', 'dest': '/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora'})
+
+TASK [tns_update : display the new tnsnames.ora file status msg={{ tnsfile_out }}] ***
+ok: [10.100.72.47] => {
+    "msg": {
+        "changed": true,
+        "msg": "All items completed",
+        "results": [
+            {
+                "ansible_loop_var": "item",
+                "changed": true,
+                "checksum": "32fedcd7731b58ab02be67c0fa99c9b70551d11d",
+                "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                "diff": [],
+                "failed": false,
+                "gid": 1001,
+                "group": "oinstall",
+                "invocation": {
+                    "module_args": {
+                        "_original_basename": "tnsnames.ora.j2",
+                        "attributes": null,
+                        "backup": false,
+                        "checksum": "32fedcd7731b58ab02be67c0fa99c9b70551d11d",
+                        "content": null,
+                        "delimiter": null,
+                        "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                        "directory_mode": null,
+                        "follow": false,
+                        "force": true,
+                        "group": "oinstall",
+                        "local_follow": null,
+                        "mode": "u=rw,g=r",
+                        "owner": "oracle",
+                        "regexp": null,
+                        "remote_src": null,
+                        "selevel": null,
+                        "serole": null,
+                        "setype": null,
+                        "seuser": null,
+                        "src": "/var/tmp/ansible-tmp-1733402469.419018-763496-206073159931337/source",
+                        "unsafe_writes": false,
+                        "validate": null
+                    }
+                },
+                "item": {
+                    "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                    "src": "tnsnames.ora.j2"
+                },
+                "md5sum": "c15d3b8324e2a0d3dca36c440fa296c8",
+                "mode": "0644",
+                "owner": "oracle",
+                "size": 1186,
+                "src": "/var/tmp/ansible-tmp-1733402469.419018-763496-206073159931337/source",
+                "state": "file",
+                "uid": 1001
+            }
+        ]
+    }
+}
+ok: [10.100.72.40] => {
+    "msg": {
+        "changed": true,
+        "msg": "All items completed",
+        "results": [
+            {
+                "ansible_loop_var": "item",
+                "changed": true,
+                "checksum": "32fedcd7731b58ab02be67c0fa99c9b70551d11d",
+                "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                "diff": [],
+                "failed": false,
+                "gid": 1001,
+                "group": "oinstall",
+                "invocation": {
+                    "module_args": {
+                        "_original_basename": "tnsnames.ora.j2",
+                        "attributes": null,
+                        "backup": false,
+                        "checksum": "32fedcd7731b58ab02be67c0fa99c9b70551d11d",
+                        "content": null,
+                        "delimiter": null,
+                        "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                        "directory_mode": null,
+                        "follow": false,
+                        "force": true,
+                        "group": "oinstall",
+                        "local_follow": null,
+                        "mode": "u=rw,g=r",
+                        "owner": "oracle",
+                        "regexp": null,
+                        "remote_src": null,
+                        "selevel": null,
+                        "serole": null,
+                        "setype": null,
+                        "seuser": null,
+                        "src": "/var/tmp/ansible-tmp-1733402469.7079897-763498-101176583954433/source",
+                        "unsafe_writes": false,
+                        "validate": null
+                    }
+                },
+                "item": {
+                    "dest": "/u02/app/oracle/product/19.0.0.0/dbhome_2/network/admin/OTCHPPUS/tnsnames.ora",
+                    "src": "tnsnames.ora.j2"
+                },
+                "md5sum": "c15d3b8324e2a0d3dca36c440fa296c8",
+                "mode": "0644",
+                "owner": "oracle",
+                "size": 1186,
+                "src": "/var/tmp/ansible-tmp-1733402469.7079897-763498-101176583954433/source",
+                "state": "file",
+                "uid": 1001
+            }
+        ]
+    }
+}
+
+TASK [tns_update : check tns entries already exists for OTCHPPUS in tnsnames.ora file paths={{ pri_tns_admin }}, patterns=tnsnames.ora, contains=# Ansible managed tns entries for {{ db_name }}] ***
+ok: [10.100.72.47]
+ok: [10.100.72.40]
+
+TASK [tns_update : out tns_out variable var=tns_out] ***************************
+ok: [10.100.72.47] => {
+    "tns_out": {
+        "changed": false,
+        "examined": 4,
+        "failed": false,
+        "files": [],
+        "matched": 0,
+        "msg": ""
+    }
+}
+ok: [10.100.72.40] => {
+    "tns_out": {
+        "changed": false,
+        "examined": 4,
+        "failed": false,
+        "files": [],
+        "matched": 0,
+        "msg": ""
+    }
+}
+
+TASK [tns_update : Add the required TNS entries to tnsnames.ora path={{ pri_tns_admin }}/tnsnames.ora, block={% for entry in tns_entries %}
+{{ entry.name }} =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = {{ entry.host }})(PORT = {{ entry.port }}))
+    (CONNECT_DATA =
+      (SERVER = {{ entry.server }})
+      (SERVICE_NAME = {{ entry.service }})
+    )
+  )
+{% endfor %}
+, marker=# Ansible managed tns entries for {{ db_name }}] ***
+changed: [10.100.72.47]
+changed: [10.100.72.40]
+
+TASK [tns_update : check if ansible managed  sqlnet parameters already exists for OTCHPPUS in sqlnet.ora file paths={{ pri_tns_admin }}, patterns=sqlnet.ora, contains=# Ansible managed sqlnet parameters for {{ db_name }}] ***
+ok: [10.100.72.47]
+ok: [10.100.72.40]
+
+TASK [tns_update : add a comment  for ansible managed parameters path={{ pri_tns_admin }}/sqlnet.ora, line=# Ansible managed sqlnet parameters for {{db_name}}, insertafter=EOF] ***
+changed: [10.100.72.47]
+changed: [10.100.72.40]
+
+TASK [tns_update : append the sqlnet.ora file to add SQLNET.ALLOWED_LOGON_VERSION_SERVER path={{ pri_tns_admin }}/sqlnet.ora, line=SQLNET.ALLOWED_LOGON_VERSION_SERVER={{sqlnet_allowed_version}}, insertafter=EOF] ***
+changed: [10.100.72.47]
+changed: [10.100.72.40]
+
+PLAY [do the post_db_build tasks] **********************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [post_db_build : check if block change tracking has been enabled _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : enable block change tracking if it's not enabled _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter database enable block change tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : check BCT status _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : dispplay the BCT status var=bct_out.stdout_lines] ********
+ok: [10.100.72.47] => {
+    "bct_out.stdout_lines": [
+        "ENABLED"
+    ]
+}
+
+TASK [post_db_build : update the cdb level database parameters to match the source _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set cursor_sharing='{{cursor_sharing}}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_language='{{nls_language}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_territory='{{nls_territoty}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba   
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set pga_aggregate_target={{pga_aggregate_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set processes={{processes}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sessions={{sessions}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_max_size={{sga_max_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_target={{sga_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set db_recovery_file_dest_size={{db_recovery_file_dest_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set target_pdbs={{target_pdbs}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET ARCHIVE_LAG_TARGET ={{archive_lag_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET parallel_max_servers ={{parallel_max_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET open_cursors={{open_cursors}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+fatal: [10.100.72.47]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'parallel_max_servers' is undefined\n\nThe error appears to be in '/home/ansibleadmin/global_ansible_db_build_v2/roles/post_db_build/tasks/main.yml': line 28, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: update the cdb level database parameters to match the source\n  ^ here\n"}
+
+PLAY RECAP *********************************************************************
+10.100.72.40               : ok=12   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+10.100.72.47               : ok=24   changed=12   unreachable=0    failed=1    skipped=1    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 2 minutes, 36 seconds

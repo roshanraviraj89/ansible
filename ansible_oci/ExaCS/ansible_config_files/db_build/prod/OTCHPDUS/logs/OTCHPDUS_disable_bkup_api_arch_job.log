@@ -1,0 +1,132 @@
+
+PLAY [primary_db_build] ********************************************************
+
+PLAY [change db_domain parameter] **********************************************
+
+PLAY [update the tnsnames.ora & sqlnet.ora files] ******************************
+
+PLAY [do the post_db_build tasks] **********************************************
+
+PLAY [do the redo resize] ******************************************************
+
+PLAY [create service] **********************************************************
+
+PLAY [set NLS_ISO_CURRENCY parameter to UNITED KINGDOM] ************************
+
+PLAY [configure dispatcher] ****************************************************
+
+PLAY [create object storage buckets for RMAN backups] **************************
+
+PLAY [do backup prereqs] *******************************************************
+
+PLAY [enable_RMAN_BACKUPS] *****************************************************
+
+PLAY [create required OCI secrets in the vault] ********************************
+
+PLAY [grant the required permission dbsnmp to enable OCI database monitoring] ***
+
+PLAY [enable OCI database monitoring] ******************************************
+
+PLAY [disable the bkup_api_archlogs_job] ***************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.36.15]
+
+TASK [pri_disable_bkup_api_archlogs_job : generate a config file from the template for OTCHPDUS src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rw,g=r,o=r] ***
+changed: [10.100.36.15] => (item={'src': 'arch_cfg.j2', 'dest': '/tmp/OTCHPDUS_arch_cfg'})
+
+TASK [pri_disable_bkup_api_archlogs_job : display the new OTCHPDUS_arch_cfg file status msg={{ arch_out }}] ***
+ok: [10.100.36.15] => {
+    "msg": {
+        "changed": true,
+        "msg": "All items completed",
+        "results": [
+            {
+                "ansible_loop_var": "item",
+                "changed": true,
+                "checksum": "9286d8af3b330a4ac361bdf0abcc14a32890d7da",
+                "dest": "/tmp/OTCHPDUS_arch_cfg",
+                "diff": [],
+                "failed": false,
+                "gid": 1001,
+                "group": "oinstall",
+                "invocation": {
+                    "module_args": {
+                        "_original_basename": "arch_cfg.j2",
+                        "attributes": null,
+                        "backup": false,
+                        "checksum": "9286d8af3b330a4ac361bdf0abcc14a32890d7da",
+                        "content": null,
+                        "delimiter": null,
+                        "dest": "/tmp/OTCHPDUS_arch_cfg",
+                        "directory_mode": null,
+                        "follow": false,
+                        "force": true,
+                        "group": "oinstall",
+                        "local_follow": null,
+                        "mode": "u=rw,g=r,o=r",
+                        "owner": "oracle",
+                        "regexp": null,
+                        "remote_src": null,
+                        "selevel": null,
+                        "serole": null,
+                        "setype": null,
+                        "seuser": null,
+                        "src": "/home/ansibleadmin/.ansible/tmp/ansible-tmp-1729694704.46683-81805-243662126439791/source",
+                        "unsafe_writes": false,
+                        "validate": null
+                    }
+                },
+                "item": {
+                    "dest": "/tmp/OTCHPDUS_arch_cfg",
+                    "src": "arch_cfg.j2"
+                },
+                "md5sum": "41e9419368b56cc2eb56d2c1815ea84a",
+                "mode": "0644",
+                "owner": "oracle",
+                "size": 1528,
+                "src": "/home/ansibleadmin/.ansible/tmp/ansible-tmp-1729694704.46683-81805-243662126439791/source",
+                "state": "file",
+                "uid": 1001
+            }
+        ]
+    }
+}
+
+TASK [pri_disable_bkup_api_archlogs_job : disable the bkup_archlogs using the config file _raw_params=/var/opt/oracle/bkup_api/bkup_api set config --file=/tmp/{{db_name}}_arch_cfg --dbname={{db_name}}
+/var/opt/oracle/bkup_api/bkup_api configure_status --dbname={{db_name}}
+] ***
+changed: [10.100.36.15]
+
+TASK [pri_disable_bkup_api_archlogs_job : display the status of the configuration update msg={{ status_out.stdout_lines }}] ***
+ok: [10.100.36.15] => {
+    "msg": [
+        "DBaaS Backup API V1.5 @2024 Multi-Oracle home",
+        "-> Action : set_config",
+        "-> WARNING: bkup_api set_config is deprecated! Use 'dbaascli' to perform this operation. Check \"dbaascli database backup --help\" for more details.",
+        "-> logfile: /var/opt/oracle/log/OTCHPDUS/bkup_api_log/bkup_api_6b385ef9_20241023154507.834900.log",
+        "DBAAS CLI version 24.3.2.0.0",
+        "Executing command database backup --configure --dbname OTCHPDUS --configFile /tmp/OTCHPDUS_arch_cfg",
+        "Session log: /var/opt/oracle/log/OTCHPDUS/database/backup/dbaastools_2024-10-23_03-45-12-PM_234923.log",
+        "logfile:/var/opt/oracle/log/dtrs/dcs-dtrs.0.*.log",
+        "UUID 0916c267-b095-4d09-ac1d-79b8653008d9 for this backup configuration",
+        "",
+        "",
+        "dbaascli execution completed",
+        "",
+        "DBaaS Backup API V1.5 @2024 Multi-Oracle home",
+        "WARNING: Option will be decommisioned.",
+        "-> Action : configure_status",
+        "-> logfile: /var/opt/oracle/log/OTCHPDUS/bkup_api_log/bkup_api_f8331b70_20241023154517.130702.log",
+        "*Last configure-backup: This system has not registered configure-backup, it is clean",
+        "*****",
+        "",
+        "* RETURN CODE:0",
+        "##################################################"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+10.100.36.15               : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 0 minutes, 18 seconds

@@ -1,0 +1,438 @@
+
+PLAY [primary_db_build] ********************************************************
+
+PLAY [change db_domain parameter] **********************************************
+
+PLAY [update the tnsnames.ora & sqlnet.ora files] ******************************
+
+PLAY [do the post_db_build tasks] **********************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [post_db_build : check if block change tracking has been enabled _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : enable block change tracking if it's not enabled _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter database enable block change tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+skipping: [10.100.72.47]
+
+TASK [post_db_build : check BCT status _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n select status from v\$block_change_tracking;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : dispplay the BCT status var=bct_out.stdout_lines] ********
+ok: [10.100.72.47] => {
+    "bct_out.stdout_lines": [
+        "ENABLED"
+    ]
+}
+
+TASK [post_db_build : update the cdb level database parameters to match the source _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set cursor_sharing='{{cursor_sharing}}' scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_language='{{nls_language}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_territory='{{nls_territoty}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba   
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set pga_aggregate_target={{pga_aggregate_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set processes={{processes}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sessions={{sessions}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_max_size={{sga_max_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_target={{sga_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set db_recovery_file_dest_size={{db_recovery_file_dest_size}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set target_pdbs={{target_pdbs}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET ARCHIVE_LAG_TARGET ={{archive_lag_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET parallel_max_servers ={{parallel_max_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET open_cursors={{open_cursors}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_caching={{optimizer_index_caching}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_cost_adj={{optimizer_index_cost_adj}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET container_data={{container_data}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : update the pdb level database parameters to match the source _raw_params=.  "/home/oracle/{{db_name}}.env" 
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_language='{{nls_language}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_territory='{{nls_territoty}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set nls_iso_currency='{{nls_iso_currency}}'  scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set sga_target={{sga_target}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set parallel_max_servers ={{parallel_max_servers}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set open_cursors={{open_cursors}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_caching={{optimizer_index_caching}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET optimizer_index_cost_adj={{optimizer_index_cost_adj}} scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n ALTER SYSTEM SET container_data={{container_data}} scope=spfile sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : restart the database _raw_params=.  "/home/oracle/{{db_name}}.env"
+{{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display the db_status_out var=db_status_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "db_status_out.stdout_lines": [
+        "Instance OTCHPPUS1 is running on node foaukl1npdb-swdo81",
+        "Instance OTCHPPUS2 is running on node foaukl1npdb-swdo82"
+    ]
+}
+
+TASK [post_db_build : check the db_parameters at the cdb level _raw_params=.  "/home/oracle/{{db_name}}.env" 
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT name, value FROM v\$parameter WHERE name IN ('cursor_sharing','pga_aggregate_limit', 'pga_aggregate_target', 'processes', 'sessions', 'sga_max_size', 'sga_target', 'db_recovery_file_dest_size', 'target_pdbs', 'parallel_max_servers', 'open_cursors', 'optimizer_index_caching', 'optimizer_index_cost_adj','container_data') order by name;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT parameter, value FROM nls_instance_parameters WHERE parameter in ('NLS_LANGUAGE', 'NLS_TERRITORY', 'NLS_ISO_CURRENCY' );" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display the cdb parameters var=cdb_out.stdout_lines] *****
+ok: [10.100.72.47] => {
+    "cdb_out.stdout_lines": [
+        "container_data",
+        "CURRENT_DICTIONARY",
+        "",
+        "cursor_sharing",
+        "FORCE",
+        "",
+        "db_recovery_file_dest_size",
+        "107374182400",
+        "",
+        "open_cursors",
+        "1000",
+        "",
+        "optimizer_index_caching",
+        "90",
+        "",
+        "optimizer_index_cost_adj",
+        "10",
+        "",
+        "parallel_max_servers",
+        "640",
+        "",
+        "pga_aggregate_limit",
+        "4718592000",
+        "",
+        "pga_aggregate_target",
+        "1073741824",
+        "",
+        "processes",
+        "900",
+        "",
+        "sessions",
+        "1380",
+        "",
+        "sga_max_size",
+        "3221225472",
+        "",
+        "sga_target",
+        "3221225472",
+        "",
+        "target_pdbs",
+        "3",
+        "",
+        "NLS_LANGUAGE",
+        "ENGLISH",
+        "",
+        "NLS_TERRITORY",
+        "UNITED KINGDOM",
+        "",
+        "NLS_ISO_CURRENCY"
+    ]
+}
+
+TASK [post_db_build : check the db_parameters at the pdb level _raw_params=.  "/home/oracle/{{db_name}}.env" 
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT name, value FROM v\$parameter WHERE name IN ('cursor_sharing','pga_aggregate_limit', 'pga_aggregate_target', 'processes', 'sessions', 'sga_max_size', 'sga_target', 'db_recovery_file_dest_size', 'target_pdbs', 'parallel_max_servers', 'open_cursors', 'optimizer_index_caching', 'optimizer_index_cost_adj','container_data') order by name;" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n SELECT parameter, value FROM nls_instance_parameters WHERE parameter in ('NLS_LANGUAGE', 'NLS_TERRITORY', 'NLS_ISO_CURRENCY' );" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display the pdb parameters var=pdb_out.stdout_lines] *****
+ok: [10.100.72.47] => {
+    "pdb_out.stdout_lines": [
+        "container_data",
+        "CURRENT_DICTIONARY",
+        "",
+        "cursor_sharing",
+        "FORCE",
+        "",
+        "db_recovery_file_dest_size",
+        "107374182400",
+        "",
+        "open_cursors",
+        "1000",
+        "",
+        "optimizer_index_caching",
+        "90",
+        "",
+        "optimizer_index_cost_adj",
+        "10",
+        "",
+        "parallel_max_servers",
+        "640",
+        "",
+        "pga_aggregate_limit",
+        "4718592000",
+        "",
+        "pga_aggregate_target",
+        "1073741824",
+        "",
+        "processes",
+        "900",
+        "",
+        "sessions",
+        "1380",
+        "",
+        "sga_max_size",
+        "3221225472",
+        "",
+        "sga_target",
+        "3221225472",
+        "",
+        "target_pdbs",
+        "3",
+        "",
+        "NLS_LANGUAGE",
+        "ENGLISH",
+        "",
+        "NLS_TERRITORY",
+        "UNITED KINGDOM",
+        "",
+        "NLS_ISO_CURRENCY",
+        "UNITED KINGDOM"
+    ]
+}
+
+TASK [post_db_build : change the segment policy to AUTO for  AUD$ & FGA_LOG$ in the pdb level _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING ON ECHO OFF\n  EXEC DBMS_AUDIT_MGMT.set_audit_trail_location (audit_trail_type => DBMS_AUDIT_MGMT.AUDIT_TRAIL_FGA_STD, audit_trail_location_value => 'SYSAUX');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK ON VERIFY OFF HEADING ON ECHO OFF\n  EXEC DBMS_AUDIT_MGMT.set_audit_trail_location (audit_trail_type => DBMS_AUDIT_MGMT.AUDIT_TRAIL_AUD_STD, audit_trail_location_value => 'SYSAUX');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba 
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n select t.table_name,ts.segment_space_management from dba_tables t, dba_tablespaces ts where ts.tablespace_name = t.tablespace_name and t.table_name in ('AUD\$','FGA_LOG\$');" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display the segment policy for AUD$ & FGA_LOG$ in the pdb level now. var=seg_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "seg_out.stdout_lines": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "AUD$",
+        "AUTO",
+        "",
+        "FGA_LOG$",
+        "AUTO"
+    ]
+}
+
+TASK [post_db_build : do the global_names changes on CDB _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter system set global_names=false scope=both sid='*';" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter database rename global_name to {{db_name}};" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : do the global_names changes on PDB _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} close instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} open restricted instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter session set container={{pdb_name}}; alter pluggable database rename global_name to {{pdb_name}} instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} close instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n alter pluggable database {{pdb_name}} open instances=ALL;" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : restart the database _raw_params=.  "/home/oracle/{{db_name}}.env"
+{{pri_oracle_home}}/bin/srvctl stop database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl start database -db {{pri_db_unique_name}}
+{{pri_oracle_home}}/bin/srvctl status database -db {{pri_db_unique_name}}
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display the db_status_out var=db_status_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "db_status_out.stdout_lines": [
+        "Instance OTCHPPUS1 is running on node foaukl1npdb-swdo81",
+        "Instance OTCHPPUS2 is running on node foaukl1npdb-swdo82"
+    ]
+}
+
+TASK [post_db_build : check the global_names parameter in cdb and pdb level _raw_params=.  "/home/oracle/{{db_name}}.env"
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter global_names" | {{ pri_oracle_home }}/bin/sqlplus -s / as sysdba
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING ON ECHO OFF\n show parameter global_names" | {{ pri_oracle_home }}/bin/sqlplus -s sys/{{admin_password}}@{{db_name}}_{{pdb_name}} as sysdba
+] ***
+changed: [10.100.72.47]
+
+TASK [post_db_build : display global_names parameter value in CDB and PDB var=global_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "global_out.stdout_lines": [
+        "global_names\t\t\t     boolean",
+        "FALSE",
+        "global_names\t\t\t     boolean",
+        "FALSE"
+    ]
+}
+
+PLAY [do the redo resize] ******************************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [redo_update : resize the redo logs and groups --precheck _raw_params=/usr/bin/dbaascli database update --dbname {{db_name}} --redosize {{redo_size}} --groups {{redo_groups}} --precheck
+] ***
+changed: [10.100.72.47]
+
+TASK [redo_update : display precheck_out var=precheck_out.stdout_lines] ********
+ok: [10.100.72.47] => {
+    "precheck_out.stdout_lines": [
+        "DBAAS CLI version 24.4.1.0.0",
+        "Executing command database update --dbname OTCHPPUS --redosize 1024M --groups 4 --precheck",
+        "INFO: Update log - /var/opt/oracle/log/OTCHPPUS/update/update_2024-12-05_13:12:44.290965300977.log",
+        "INFO : Running Pre-Checks",
+        "INFO : Precheck completed"
+    ]
+}
+
+TASK [redo_update : resize the redo logs and groups if the precheck is successfully completed _raw_params=/usr/bin/dbaascli database update --dbname {{db_name}} --redosize {{redo_size}} --groups {{redo_groups}} 
+] ***
+changed: [10.100.72.47]
+
+TASK [redo_update : display the redo_out var=redo_out.stdout_lines] ************
+ok: [10.100.72.47] => {
+    "redo_out.stdout_lines": [
+        "DBAAS CLI version 24.4.1.0.0",
+        "Executing command database update --dbname OTCHPPUS --redosize 1024M --groups 4",
+        "INFO: Update log - /var/opt/oracle/log/OTCHPPUS/update/update_2024-12-05_13:12:56.291419302209.log",
+        "INFO : Running Pre-Checks",
+        "INFO : Resizing online redolog, this might take some time , please a take look at log /var/opt/oracle/log/OTCHPPUS/update/update_2024-12-05_13:12:56.291419302209.log",
+        "INFO : Completed online redolog resize"
+    ]
+}
+
+PLAY [create service] **********************************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [create_service : Create database service/s _raw_params=.  "/home/oracle/{{db_name}}.env"
+{{pri_oracle_home}}/bin/srvctl add service -db "{{ item.db_unique_name }}" -service "{{ item.service_name }}" -preferred "{{ item.preferred_instances | join(',') }}" -tafpolicy "{{ item.taf_policy }}" -policy "{{ item.policy }}" -failovertype "{{ item.failover_type }}" -failovermethod "{{ item.failover_method }}" -failoverretry "{{ item.failover_retry }}" -pdb "{{ item.pdb_name }}"
+] ***
+changed: [10.100.72.47] => (item={'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'})
+
+TASK [create_service : Start services _raw_params=.  "/home/oracle/{{db_name}}.env"
+srvctl start service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+] ***
+changed: [10.100.72.47] => (item={'cmd': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:41.806786', 'end': '2024-12-05 13:13:42.874572', 'delta': '0:00:01.067786', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'}, 'ansible_loop_var': 'item'})
+
+TASK [create_service : Check service status _raw_params=.  "/home/oracle/{{db_name}}.env"
+srvctl status service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+] ***
+changed: [10.100.72.47] => (item={'cmd': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:41.806786', 'end': '2024-12-05 13:13:42.874572', 'delta': '0:00:01.067786', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'}, 'ansible_loop_var': 'item'})
+
+TASK [create_service : Display service status msg={{ item.stdout_lines }}] *****
+ok: [10.100.72.47] => (item={'cmd': '.  "/home/oracle/OTCHPPUS.env"\nsrvctl status service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" \n', 'stdout': 'Service USPP_SERVICE is running on instance(s) OTCHPPUS1,OTCHPPUS2', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:46.286252', 'end': '2024-12-05 13:13:46.890969', 'delta': '0:00:00.604717', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\nsrvctl status service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['Service USPP_SERVICE is running on instance(s) OTCHPPUS1,OTCHPPUS2'], 'stderr_lines': [], 'failed': False, 'item': {'cmd': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:41.806786', 'end': '2024-12-05 13:13:42.874572', 'delta': '0:00:01.067786', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'}, 'ansible_loop_var': 'item'}, 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "Service USPP_SERVICE is running on instance(s) OTCHPPUS1,OTCHPPUS2"
+    ]
+}
+
+TASK [create_service : config services _raw_params=.  "/home/oracle/{{db_name}}.env"
+srvctl config service -db "{{ item.item.db_unique_name }}" -service "{{ item.item.service_name }}" 
+] ***
+changed: [10.100.72.47] => (item={'cmd': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:41.806786', 'end': '2024-12-05 13:13:42.874572', 'delta': '0:00:01.067786', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'}, 'ansible_loop_var': 'item'})
+
+TASK [create_service : display config service msg={{ item.stdout_lines }}] *****
+ok: [10.100.72.47] => (item={'cmd': '.  "/home/oracle/OTCHPPUS.env"\nsrvctl config service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" \n', 'stdout': 'Service name: USPP_SERVICE\nServer pool: \nCardinality: 2\nService role: PRIMARY\nManagement policy: AUTOMATIC\nDTP transaction: false\nAQ HA notifications: false\nGlobal: false\nCommit Outcome: false\nFailover type: SELECT\nFailover method: BASIC\nFailover retries: 5\nFailover delay: \nFailover restore: NONE\nConnection Load Balancing Goal: LONG\nRuntime Load Balancing Goal: NONE\nTAF policy specification: BASIC\nEdition: \nPluggable database name: USPP\nHub service: \nMaximum lag time: ANY\nSQL Translation Profile: \nRetention: 86400 seconds\nReplay Initiation Time: 300 seconds\nDrain timeout: \nStop option: \nSession State Consistency: DYNAMIC\nGSM Flags: 0\nService is enabled\nPreferred instances: OTCHPPUS1,OTCHPPUS2\nAvailable instances: \nCSS critical: no\nService uses Java: false', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:48.012348', 'end': '2024-12-05 13:13:48.671730', 'delta': '0:00:00.659382', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\nsrvctl config service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['Service name: USPP_SERVICE', 'Server pool: ', 'Cardinality: 2', 'Service role: PRIMARY', 'Management policy: AUTOMATIC', 'DTP transaction: false', 'AQ HA notifications: false', 'Global: false', 'Commit Outcome: false', 'Failover type: SELECT', 'Failover method: BASIC', 'Failover retries: 5', 'Failover delay: ', 'Failover restore: NONE', 'Connection Load Balancing Goal: LONG', 'Runtime Load Balancing Goal: NONE', 'TAF policy specification: BASIC', 'Edition: ', 'Pluggable database name: USPP', 'Hub service: ', 'Maximum lag time: ANY', 'SQL Translation Profile: ', 'Retention: 86400 seconds', 'Replay Initiation Time: 300 seconds', 'Drain timeout: ', 'Stop option: ', 'Session State Consistency: DYNAMIC', 'GSM Flags: 0', 'Service is enabled', 'Preferred instances: OTCHPPUS1,OTCHPPUS2', 'Available instances: ', 'CSS critical: no', 'Service uses Java: false'], 'stderr_lines': [], 'failed': False, 'item': {'cmd': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-12-05 13:13:41.806786', 'end': '2024-12-05 13:13:42.874572', 'delta': '0:00:01.067786', 'changed': True, 'invocation': {'module_args': {'_raw_params': '.  "/home/oracle/OTCHPPUS.env"\n/u02/app/oracle/product/19.0.0.0/dbhome_2/bin/srvctl add service -db "OTCHPPUS_UKL" -service "USPP_SERVICE" -preferred "OTCHPPUS1,OTCHPPUS2" -tafpolicy "BASIC" -policy "AUTOMATIC" -failovertype "SELECT" -failovermethod "BASIC" -failoverretry "5" -pdb "USPP"\n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': {'service_name': 'USPP_SERVICE', 'db_unique_name': 'OTCHPPUS_UKL', 'preferred_instances': ['OTCHPPUS1', 'OTCHPPUS2'], 'taf_policy': 'BASIC', 'policy': 'AUTOMATIC', 'failover_type': 'SELECT', 'failover_method': 'BASIC', 'failover_retry': 5, 'pdb_name': 'USPP'}, 'ansible_loop_var': 'item'}, 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "Service name: USPP_SERVICE",
+        "Server pool: ",
+        "Cardinality: 2",
+        "Service role: PRIMARY",
+        "Management policy: AUTOMATIC",
+        "DTP transaction: false",
+        "AQ HA notifications: false",
+        "Global: false",
+        "Commit Outcome: false",
+        "Failover type: SELECT",
+        "Failover method: BASIC",
+        "Failover retries: 5",
+        "Failover delay: ",
+        "Failover restore: NONE",
+        "Connection Load Balancing Goal: LONG",
+        "Runtime Load Balancing Goal: NONE",
+        "TAF policy specification: BASIC",
+        "Edition: ",
+        "Pluggable database name: USPP",
+        "Hub service: ",
+        "Maximum lag time: ANY",
+        "SQL Translation Profile: ",
+        "Retention: 86400 seconds",
+        "Replay Initiation Time: 300 seconds",
+        "Drain timeout: ",
+        "Stop option: ",
+        "Session State Consistency: DYNAMIC",
+        "GSM Flags: 0",
+        "Service is enabled",
+        "Preferred instances: OTCHPPUS1,OTCHPPUS2",
+        "Available instances: ",
+        "CSS critical: no",
+        "Service uses Java: false"
+    ]
+}
+
+PLAY [set NLS_ISO_CURRENCY parameter to UNITED KINGDOM] ************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+ok: [10.100.72.47]
+
+TASK [pri_set_nls_iso_currency : Set NLS_ISO_CURRENCY to UNITED KINGDOM _raw_params=/usr/bin/dbaascli database modifyParameters --dbname {{db_name }} --setParameters "nls_iso_currency={{ nls_iso_currency }}" --allowBounce
+] ***
+changed: [10.100.72.47]
+
+TASK [pri_set_nls_iso_currency : display the nls_iso_currency out var=iso_curr_out.stdout_lines] ***
+ok: [10.100.72.47] => {
+    "iso_curr_out.stdout_lines": [
+        "DBAAS CLI version 24.4.1.0.0",
+        "Executing command database modifyParameters --dbname OTCHPPUS --setParameters nls_iso_currency=UNITED KINGDOM --allowBounce",
+        "Job id: bb4183d9-2ae4-4f21-8b00-aecd60bf8a09",
+        "Session log: /var/opt/oracle/log/OTCHPPUS/database/modifyParameters/dbaastools_2024-12-05_01-13-55-PM_308632.log",
+        "Loading PILOT...",
+        "Session ID of the current execution is: 13240",
+        "Log file location: /var/opt/oracle/log/OTCHPPUS/database/modifyParameters/pilot_2024-12-05_01-13-59-PM_308966",
+        "-----------------",
+        "Running Plugin_Initialize job",
+        "Completed Plugin_Initialize job",
+        "-----------------",
+        "Running Validate_Parameters job",
+        "Completed Validate_Parameters job",
+        "-----------------",
+        "Running Apply_Dynamic_Parameters_Changes job",
+        "Completed Apply_Dynamic_Parameters_Changes job",
+        "-----------------",
+        "Running Apply_Static_Parameters_Changes job",
+        "Completed Apply_Static_Parameters_Changes job",
+        "",
+        "dbaascli execution completed"
+    ]
+}
+
+PLAY [configure dispatcher] ****************************************************
+
+PLAY [create object storage buckets for RMAN backups] **************************
+
+PLAY [do backup prereqs] *******************************************************
+
+PLAY [enable_RMAN_BACKUPS] *****************************************************
+
+PLAY [create required OCI secrets in the vault] ********************************
+
+PLAY [grant the required permission {{ db_mon_user }} to enable OCI database monitoring] ***
+
+PLAY [enable OCI database monitoring] ******************************************
+
+PLAY [disable the bkup_api_archlogs_job] ***************************************
+
+PLAY RECAP *********************************************************************
+10.100.72.47               : ok=35   changed=19   unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 9 minutes, 29 seconds

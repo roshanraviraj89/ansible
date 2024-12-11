@@ -1,0 +1,237 @@
+### Primary db_build ####
+#
+## primary database variables
+pri_compartment_name: otch-pd-exavmcl-cmp-01
+pri_compartment_id: ocid1.compartment.oc1..aaaaaaaalj2ziyzctjkbhcdszxnkhvf3ijaagfwzmrf7ffi5hvwejazyr2wq
+pri_region: uk-london-1
+pri_region_identifier: UKL
+pri_vm_cluster_display_name: foa-ukl1-pd-exavmcl-01
+
+
+
+
+pri_db_home_display_name: dbhome_1923
+db_name: OTCHPDUS
+pri_db_unique_name: "{{db_name}}_{{pri_region_identifier}}"
+pdb_name: USPD
+character_set: AL32UTF8
+ncharacter_set: UTF8
+db_workload: OLTP
+admin_password: Miami_Florida2024#
+
+
+pri_domain_name: otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com
+pri_scan_name: foaukl1pddb-4kxck-scan
+pri_scan_fq_name: "{{ pri_scan_name}}.{{ pri_domain_name}}"
+pri_scan_port: 1521
+pri_scan_ip1: 10.100.36.56
+pri_scan_ip2: 10.100.36.57
+pri_scan_ip3: 10.100.36.19
+hays_domain_name: emea.hays.loc
+
+oracle_base: /u02/app/oracle
+pri_oracle_home: "{{ oracle_base }}/product/19.0.0.0/dbhome_2"
+pri_tns_admin: "{{ pri_oracle_home }}/network/admin/{{ db_name }}"
+
+archive_lag_target: 900
+
+
+## post db_build parameters values on the Primary database
+
+cursor_sharing: "FORCE"
+nls_language: "ENGLISH"
+nls_territoty: "UNITED KINGDOM"
+nls_iso_currency: "UNITED KINGDOM"
+#pga_aggregate_limit: 10G
+pga_aggregate_target: 3G
+open_cursors: 2000
+parallel_max_servers: 773
+optimizer_index_caching: 90
+optimizer_index_cost_adj: 10
+container_data: current_dictionary
+processes: 1000
+sessions: 1536
+sga_max_size: 12G
+sga_target: 12G
+db_recovery_file_dest_size: 500G
+target_pdbs: 3
+
+## redo logs update need to recheck with FAWAD for UK
+
+redo_size: 1024M
+redo_groups: 4
+
+## create rac service on Primary
+#
+#pri_service_name: CANADAPROD_SERVICE
+pri_service_name: VEREDUSPROD_SERVICE
+
+pri_services:
+  - service_name: "{{ pri_service_name }}"
+    db_unique_name: "{{ pri_db_unique_name }}"
+    preferred_instances: ["OTCHPDUS1", "OTCHPDUS2"]
+    taf_policy: BASIC
+    policy: AUTOMATIC
+    failover_type: SELECT
+    failover_method: BASIC
+    failover_retry: 30
+    pdb_name: USPD
+
+## configure dispatchers on Primary
+
+shared_servers: 20
+max_shared_servers: 75
+pri_node1_vip: foaukl1pddb-4kxck1-vip
+pri_node1_vip_fq: "{{pri_node1_vip}}.{{pri_domain_name}}"
+pri_node2_vip: foaukl1pddb-4kxck2-vip
+pri_node2_vip_fq: "{{pri_node2_vip}}.{{pri_domain_name}}"
+pri_oracle_sid1: OTCHPDUS1  #node1
+pri_oracle_sid2: OTCHPDUS2  #node2
+dispatchers: 5
+
+##enable rman_backups
+
+rman_user: c##rman_user
+rman_password: PassRMAN_2024#
+rmancat_user: c##rmanrco
+rmancat_password: Pk#3jvbds
+pri_namespace: lraob35idcqp
+pri_rman_scripts_dir: /home/oracle/version1/RMANscripts
+pri_opc_dir: "{{ pri_rman_scripts_dir }}/OPC"
+pri_opc_wallet_dir: "{{ pri_opc_dir }}/opc_wallet"
+pri_opc_host: "https://objectstorage.{{ pri_region }}.oraclecloud.com/n/{{ pri_namespace }}"
+pri_std_backup_bucket: foa-ukl1-pd-otchpdus-std-backup
+pri_arc_backup_bucket: foa-ukl1-pd-otchpdus-arch-backup
+pri_opc_auth_scheme: BMC
+
+cron_jobs: 
+  - name: "Level 0 backup for {{db_name}}"
+    minute: "00"
+    hour: "03"
+    day:  "*"
+    month: "*"
+    weekday: "0"
+    job: "flock -w 300 -x {{ pri_rman_scripts_dir }}/{{ db_name }}_backup.lock -c '{{ pri_rman_scripts_dir }}/RMANBackupScript.sh {{ db_name }} 0 8 >> {{ pri_rman_scripts_dir }}/log/full_{{ db_name }}.log'"
+    disabled: yes
+
+  - name: "Level 1 backup for {{db_name}}"
+    minute: "00"
+    hour: "03"
+    day:  "*"
+    month: "*"
+    weekday: "1-6"
+    job: "flock -w 300 -x {{ pri_rman_scripts_dir }}/{{ db_name }}_backup.lock -c '{{ pri_rman_scripts_dir }}/RMANBackupScript.sh {{ db_name }} 1 8 >> {{ pri_rman_scripts_dir }}/log/incr_{{ db_name }}.log'"
+    disabled: yes
+
+
+
+## create a secret in the admin vault for admin password
+pri_master_encryption_key: otch-pd-exavmcl-admin-mes-01
+pri_vault_display_name: otch-pd-exavmcl-admin-vault-01
+pri_db_mon_user_secret_name: foa-ukl1-pd-exavmcl-01-us-dbsnmp
+
+##enable OCI db monitoring
+
+pri_dbmgmt_res_policy: DBMgmt_Resource_Policy
+pri_dbmgmt_serv_policy: DBMgmt_Service_Policy
+db_mon_user: dbsnmp
+
+pri_db_management_private_endpoint_name: otch_pd_exa_vmcl_pri_ep_01
+pri_cdb_mon_service_name: "{{ db_name }}_{{ pri_region_identifier }}.{{hays_domain_name}}"
+pri_pdb_mon_service_name: "{{ db_name }}_{{ pdb_name }}.paas.oracle.com"
+
+
+### Standby db build#####
+
+# stby variables
+stby_compartment_name: otch-dr-exavmcl-cmp-01
+stby_compartment_id: ocid1.compartment.oc1..aaaaaaaad3jhk5ezmbsazi6ktshp57ow7xbkhgyl7roq5u7nynogrns2mgza
+stby_region: uk-cardiff-1
+stby_region_identifier: UKC
+stby_vm_cluster_display_name: foa-ukc1-dr-exavmcl-01
+stby_db_home_display_name: dbhome_1923
+stby_db_unique_name: "{{db_name}}_{{stby_region_identifier}}"
+
+stby_creation_type: ExistingVmCluster
+stby_protection_mode: MAXIMUM_PERFORMANCE
+stby_transport_type: ASYNC
+
+stby_oracle_home: "{{ oracle_base }}/product/19.0.0.0/dbhome_3"
+stby_tns_admin: "{{ stby_oracle_home }}/network/admin/{{ db_name }}"
+
+stby_domain_name: otchukc1drexcl.otchukc1drvcn01.oraclevcn.com
+stby_scan_name: foaukc1drdb-achbh-scan
+stby_scan_fq_name: "{{ stby_scan_name}}.{{ stby_domain_name}}"
+stby_scan_port: 1521
+stby_scan_ip1: 10.102.36.55
+stby_scan_ip2: 10.102.36.43
+stby_scan_ip3: 10.102.36.18
+
+### create rac services on Standby
+#
+stby_service_name: "{{ pri_service_name }}"
+
+
+stby_services:
+  - service_name: "{{  stby_service_name }}"
+    db_unique_name: "{{ stby_db_unique_name }}"
+    preferred_instances: ["OTCHPDUS1", "OTCHPDUS2"]
+    taf_policy: BASIC
+    policy: AUTOMATIC
+    failover_type: SELECT
+    failover_method: BASIC
+    failover_retry: 30
+    pdb_name: USPD
+    
+# configure dispatchers on Standby 
+#
+stby_node1_vip: foaukc1drdb-achbh1-vip
+stby_node1_vip_fq: "{{stby_node1_vip}}.{{stby_domain_name}}"
+stby_node2_vip: foaukc1drdb-achbh2-vip
+stby_node2_vip_fq: "{{stby_node2_vip}}.{{stby_domain_name}}"
+stby_oracle_sid1: OTCHPDUS1  #node1
+stby_oracle_sid2: OTCHPDUS2  #node2
+
+##enable rman_backups
+
+stby_namespace: lraob35idcqp
+stby_rman_scripts_dir: /home/oracle/version1/RMANscripts
+stby_opc_dir: "{{ stby_rman_scripts_dir }}/OPC"
+stby_opc_wallet_dir: "{{ stby_opc_dir }}/opc_wallet"
+stby_opc_host: "https://objectstorage.{{ stby_region }}.oraclecloud.com/n/{{ stby_namespace }}"
+stby_std_backup_bucket: foa-ukc1-dr-otchdrus-std-backup
+stby_arc_backup_bucket: foa-ukc1-dr-otchdrus-arch-backup
+stby_opc_auth_scheme: BMC
+
+stby_cron_jobs:
+  - name: "Level 0 backup for {{db_name}}"
+    minute: "00"
+    hour: "03"
+    day:  "*"
+    month: "*"
+    weekday: "0"
+    job: "flock -w 300 -x {{ stby_rman_scripts_dir }}/{{ db_name }}_backup.lock -c '{{ stby_rman_scripts_dir }}/RMANBackupScript.sh {{ db_name }} 0 8 >> {{ stby_rman_scripts_dir }}/log/full_{{ db_name }}.log'"
+    disabled: yes
+
+  - name: "Level 1 backup for {{db_name}}"
+    minute: "00"
+    hour: "03"
+    day:  "*"
+    month: "*"
+    weekday: "1-6"
+    job: "flock -w 300 -x {{ stby_rman_scripts_dir }}/{{ db_name }}_backup.lock -c '{{ stby_rman_scripts_dir }}/RMANBackupScript.sh {{ db_name }} 1 8 >> {{ stby_rman_scripts_dir }}/log/incr_{{ db_name }}.log'"
+    disabled: yes
+
+
+## create a secret in the admin vault for admin password
+stby_master_encryption_key: otch-dr-exavmcl-admin-mes-01
+stby_vault_display_name: otch-dr-exavmcl-admin-vault-01
+stby_db_mon_user_secret_name: foa-ukc1-dr-exavmcl-01-us-dbsnmp
+
+##enable OCI db monitoring
+
+stby_dbmgmt_res_policy: DBMgmt_Resource_Policy
+stby_dbmgmt_serv_policy: DBMgmt_Service_Policy
+
+stby_db_management_private_endpoint_name: otch_dr_exa_vmcl_stby_ep_01
+stby_cdb_mon_service_name: "{{ db_name }}_{{ stby_region_identifier }}.{{hays_domain_name}}"
