@@ -1,0 +1,154 @@
+nohup: ignoring input
+
+PLAY [check the privilege escalation on hrmaxpd2035.emea.hays.loc] *************
+
+PLAY [do the pre migration checks on hrmaxpd2035.emea.hays.loc] ****************
+
+PLAY [check the database characterset and national character on the ADRW9PD] ***
+
+PLAY [check the database characterset and national character on the OTCHPDBR] ***
+
+PLAY [compare the character set output] ****************************************
+
+PLAY [Configure Migration prerequisites on the source vm] **********************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.190.17.156 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.190.17.156]
+
+TASK [source_mig_prereqs : Check if the directories already exist on hrmaxpd2035.emea.hays.loc path={{ item }}] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.156] => (item=/home/oracle/version1/ADRW9PD_xtts_stage)
+ok: [10.190.17.156] => (item=/home/oracle/version1/ADRW9PD_xtts)
+ok: [10.190.17.156] => (item=/xtts/backup/version1/ADRW9PD_xtts_scratch)
+ok: [10.190.17.156] => (item=/xtts/backup/version1/ADRW9PD_dump)
+ok: [10.190.17.156] => (item=/home/oracle/version1/ADRW9PD_verification)
+
+TASK [source_mig_prereqs : display dir_result variable var=dir_result.stdout_lines] ***
+ok: [10.190.17.156] => {
+    "dir_result.stdout_lines": "VARIABLE IS NOT DEFINED!"
+}
+
+TASK [source_mig_prereqs : display a message if the directories already present on hrmaxpd2035.emea.hays.loc msg=directory {{ item.item }} exists] ***
+skipping: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_xtts_stage', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_xtts_stage', 'ansible_loop_var': 'item'}) 
+skipping: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_xtts', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_xtts', 'ansible_loop_var': 'item'}) 
+skipping: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/xtts/backup/version1/ADRW9PD_xtts_scratch', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/xtts/backup/version1/ADRW9PD_xtts_scratch', 'ansible_loop_var': 'item'}) 
+skipping: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/xtts/backup/version1/ADRW9PD_dump', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/xtts/backup/version1/ADRW9PD_dump', 'ansible_loop_var': 'item'}) 
+skipping: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_verification', 'ansible_loop_var': 'item'}) 
+skipping: [10.190.17.156]
+
+TASK [source_mig_prereqs : create directories on hrmaxpd2035.emea.hays.loc path={{ item.item }}, state=directory, owner=oracle, group=oinstall, recurse=True, mode=0755] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_xtts_stage', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_xtts_stage', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_xtts', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_xtts', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/xtts/backup/version1/ADRW9PD_xtts_scratch', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/xtts/backup/version1/ADRW9PD_xtts_scratch', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/xtts/backup/version1/ADRW9PD_dump', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/xtts/backup/version1/ADRW9PD_dump', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/ADRW9PD_verification', 'ansible_loop_var': 'item'})
+
+TASK [source_mig_prereqs : check if verification scripts are already present in the /home/oracle/version1/ADRW9PD_verification path={{source_verification_dir}}/{{item}}] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.156] => (item=Application_Objects_In_System_Sysaux.sql)
+ok: [10.190.17.156] => (item=DB_Links_Details.sql)
+ok: [10.190.17.156] => (item=Granted_Roles.sql)
+ok: [10.190.17.156] => (item=Invalid_Objects.sql)
+ok: [10.190.17.156] => (item=List_Schemas_And_Default_TBS.sql)
+ok: [10.190.17.156] => (item=Object_Count_Per_Schema.sql)
+ok: [10.190.17.156] => (item=Schedules_jobs.sql)
+
+TASK [source_mig_prereqs : copy the verification *.sql files to /home/oracle/version1/ADRW9PD_verification src={{item.item}}, dest={{source_verification_dir}}/, owner=oracle, group=oinstall] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/Application_Objects_In_System_Sysaux.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Application_Objects_In_System_Sysaux.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/DB_Links_Details.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'DB_Links_Details.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/Granted_Roles.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Granted_Roles.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/Invalid_Objects.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Invalid_Objects.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/List_Schemas_And_Default_TBS.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'List_Schemas_And_Default_TBS.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/Object_Count_Per_Schema.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Object_Count_Per_Schema.sql', 'ansible_loop_var': 'item'})
+changed: [10.190.17.156] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/ADRW9PD_verification/Schedules_jobs.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Schedules_jobs.sql', 'ansible_loop_var': 'item'})
+
+TASK [source_mig_prereqs : check if rman_xttconvert_VER4.3.zip already exists on hrmaxpd2035.emea.hays.loc path={{ source_xtts_stage_dir }}/{{ rman_xttconvert }}] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.156]
+
+TASK [source_mig_prereqs : Copy rman_xttconvert_VER4.3.zip to the /home/oracle/version1/ADRW9PD_xtts_stage on hrmaxpd2035.emea.hays.loc src={{ rman_xttconvert }}, dest={{ source_xtts_stage_dir }}/, owner=oracle, group=oinstall] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [source_mig_prereqs : check if rman_xttconvert_VER4.3.zip has already been unzipped into the  /home/oracle/version1/ADRW9PD_xtts on hrmaxpd2035.emea.hays.loc paths={{ source_xtts_scripts_dir }}, file_type=any] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.156]
+
+TASK [source_mig_prereqs : unzip rman_xttconvert_VER4.3.zip into the  /home/oracle/version1/ADRW9PD_xtts on hrmaxpd2035.emea.hays.loc src={{source_xtts_stage_dir}}/{{rman_xttconvert}}, dest={{ source_xtts_scripts_dir }}, mode=0775, owner=oracle, group=oinstall, remote_src=true] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [source_mig_prereqs : generate xtt.properties file for hrmaxpd2035.emea.hays.loc src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=rx] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'src': 'xtt.properties.j2', 'dest': '/home/oracle/version1/ADRW9PD_xtts/xtt.properties'})
+
+TASK [source_mig_prereqs : generate meta data export par file src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=r] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'src': 'meta_export.par.j2', 'dest': '/xtts/backup/version1/ADRW9PD_dump/meta_export.par'})
+
+TASK [source_mig_prereqs : generate grants export par file src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=r] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'src': 'grants_export.par.j2', 'dest': '/xtts/backup/version1/ADRW9PD_dump/grants_export.par'})
+
+TASK [source_mig_prereqs : generate rysnc_transfer.sh src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=r] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156] => (item={'src': 'rsync_parallel_backup_transfer_v4.sh.j2', 'dest': '/home/oracle/version1/ADRW9PD_xtts/rsync_parallel_backup_transfer_v4.sh'})
+
+PLAY [Configure Migration prerequisites on the target vm] **********************
+
+PLAY [do level 0 backup on hrmaxpd2035.emea.hays.loc] **************************
+
+PLAY [transfer the level_0 backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/BRPD_xtts_scratch] ***
+
+PLAY [do level 0 restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.190.17.156              : ok=14   changed=8    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 5 minutes, 2 seconds

@@ -1,0 +1,302 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrmaxpd2035.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrmaxpd2035.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrmaxpd2035.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/BRPD_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/BRPD_dump] ***
+
+PLAY [do the final incremental restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Saturday 23 November 2024  07:02:09 +0000 (0:00:00.097)       0:00:00.097 ***** 
+[WARNING]: Platform linux on host 10.100.36.15 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.100.36.15]
+
+TASK [meta_import : create data pump directory XTTS_DUMP and grant permission to system user on XTTS_DUMP _raw_params=. /home/oracle/{{target_db}}.env
+echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{target_dp_dir}}';" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+echo -e "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to {{ target_system_user }};" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba  
+] ***
+Saturday 23 November 2024  07:02:12 +0000 (0:00:02.792)       0:00:02.890 ***** 
+changed: [10.100.36.15]
+
+TASK [meta_import : debug msg={{dir_out.stdout_lines}}] ************************
+Saturday 23 November 2024  07:02:16 +0000 (0:00:03.263)       0:00:06.153 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "Directory created.",
+        "",
+        "",
+        "Grant succeeded."
+    ]
+}
+
+TASK [meta_import : Do metadata import on BRPD _raw_params=. /home/oracle/{{ target_db }}.env
+cd {{ target_dp_dir }}
+{{ target_oracle_home }}/bin/impdp {{ target_system_user }}/{{ target_system_passwd }}@{{ target_srv }} parfile={{ imp_par_file }}
+] ***
+Saturday 23 November 2024  07:02:16 +0000 (0:00:00.036)       0:00:06.190 ***** 
+changed: [10.100.36.15]
+
+TASK [meta_import : Wait for the metadata import job to finish jid={{ imp_async_job.ansible_job_id }}] ***
+Saturday 23 November 2024  07:02:17 +0000 (0:00:01.161)       0:00:07.351 ***** 
+FAILED - RETRYING: Wait for the metadata import job to finish (20160 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20159 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20158 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20157 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20156 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20155 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20154 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20153 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20152 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20151 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20150 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20149 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20148 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20147 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20146 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20145 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20144 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20143 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20142 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20141 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20140 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20139 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20138 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20137 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20136 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20135 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20134 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20133 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20132 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20131 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20130 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20129 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20128 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20127 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20126 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20125 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20124 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20123 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20122 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20121 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20120 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20119 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20118 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20117 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20116 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20115 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20114 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20113 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20112 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20111 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20110 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20109 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20108 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20107 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20106 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20105 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20104 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20103 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20102 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20101 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20100 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20099 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20098 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20097 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20096 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20095 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20094 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20093 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20092 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20091 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20090 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20089 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20088 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20087 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20086 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20085 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20084 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20083 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20082 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20081 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20080 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20079 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20078 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20077 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20076 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20075 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20074 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20073 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20072 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20071 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20070 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20069 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20068 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20067 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20066 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20065 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20064 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20063 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20062 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20061 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20060 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20059 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20058 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20057 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20056 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20055 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20054 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20053 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20052 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20051 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20050 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20049 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20048 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20047 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20046 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20045 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20044 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20043 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20042 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20041 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20040 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20039 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20038 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20037 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20036 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20035 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20034 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20033 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20032 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20031 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20030 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20029 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20028 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20027 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20026 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20025 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20024 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20023 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20022 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20021 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20020 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20019 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20018 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20017 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20016 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20015 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20014 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20013 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20012 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20011 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20010 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20009 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20008 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20007 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20006 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20005 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20004 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20003 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20002 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20001 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (20000 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19999 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19998 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19997 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19996 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19995 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19994 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19993 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19992 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19991 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19990 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19989 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19988 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19987 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19986 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19985 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19984 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19983 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19982 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19981 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19980 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19979 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19978 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19977 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19976 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19975 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19974 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19973 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19972 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19971 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19970 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19969 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19968 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19967 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19966 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19965 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19964 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19963 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19962 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19961 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19960 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19959 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19958 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19957 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19956 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19955 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19954 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19953 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19952 retries left).
+FAILED - RETRYING: Wait for the metadata import job to finish (19951 retries left).
+changed: [10.100.36.15]
+
+TASK [meta_import : Validate if the metadata import has been successfully completed _raw_params=grep "completed" {{ target_dp_dir }}/{{ imp_logfile }}] ***
+Saturday 23 November 2024  08:51:06 +0000 (1:48:49.492)       1:48:56.844 ***** 
+changed: [10.100.36.15]
+
+TASK [meta_import : Fail if the metadata import was not successful msg=Errors on import. Fix the issue and re-run the import.] ***
+Saturday 23 November 2024  08:51:07 +0000 (0:00:01.090)       1:48:57.934 ***** 
+skipping: [10.100.36.15]
+
+TASK [meta_import : Display metadata import results msg=['Please view {{ imp_logfile }} for the import errors.', '{{ imp_validation.stdout_lines }}']] ***
+Saturday 23 November 2024  08:51:07 +0000 (0:00:00.034)       1:48:57.968 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "Please view meta_imp.log for the import errors.",
+        [
+            "23-NOV-24 08:50:57.843: Job \"SYSTEM\".\"SYS_IMPORT_FULL_01\" completed with 6983 error(s) at Sat Nov 23 08:50:57 2024 elapsed 0 01:48:35"
+        ]
+    ]
+}
+
+PLAY [do the grants import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.100.36.15               : ok=7    changed=4    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Saturday 23 November 2024  08:51:07 +0000 (0:00:00.032)       1:48:58.001 ***** 
+=============================================================================== 
+meta_import : Wait for the metadata import job to finish ------------- 6529.49s
+meta_import : create data pump directory XTTS_DUMP and grant permission to system user on XTTS_DUMP --- 3.26s
+Gathering Facts --------------------------------------------------------- 2.79s
+meta_import : Do metadata import on BRPD -------------------------------- 1.16s
+meta_import : Validate if the metadata import has been successfully completed --- 1.09s
+meta_import : debug ----------------------------------------------------- 0.04s
+meta_import : Fail if the metadata import was not successful ------------ 0.03s
+meta_import : Display metadata import results --------------------------- 0.03s

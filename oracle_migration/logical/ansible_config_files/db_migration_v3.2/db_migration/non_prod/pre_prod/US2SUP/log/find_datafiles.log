@@ -1,0 +1,160 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrraxdv2028.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrraxdv2028.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrraxdv2028.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_dump] ***
+
+PLAY [do the final incremental restore on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Thursday 05 December 2024  20:07:53 +0000 (0:00:00.101)       0:00:00.101 ***** 
+[WARNING]: Platform linux on host 10.100.72.47 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.100.72.47]
+
+TASK [find_datafiles : create the dbfiles.sh src={{ item.src }}, dest={{ item.dest }}, owner=grid, group=oinstall, mode=u=rwx,g=rw,o=r] ***
+Thursday 05 December 2024  20:07:57 +0000 (0:00:03.388)       0:00:03.489 ***** 
+changed: [10.100.72.47] => (item={'src': 'dbfiles.sh.j2', 'dest': '/mnt/otchukl1npfss01/xtts_backup/version1/USPP_dump/dbfiles.sh'})
+
+TASK [find_datafiles : execute the script _raw_params={{ target_dp_dir }}/dbfiles.sh > {{ target_dp_dir }}/dbfiles.log] ***
+Thursday 05 December 2024  20:07:59 +0000 (0:00:02.119)       0:00:05.609 ***** 
+changed: [10.100.72.47]
+
+TASK [find_datafiles : check the dbfiles.log _raw_params=grep "successfully" {{ target_dp_dir }}/dbfiles.log] ***
+Thursday 05 December 2024  20:08:02 +0000 (0:00:03.339)       0:00:08.948 ***** 
+changed: [10.100.72.47]
+
+TASK [find_datafiles : display log_out msg={{log_out.stdout_lines}}] ***********
+Thursday 05 December 2024  20:08:03 +0000 (0:00:01.122)       0:00:10.071 ***** 
+ok: [10.100.72.47] => {
+    "msg": [
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPTINTOUCH.757.1186947125 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.602.1186947123 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.745.1186947125 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.756.1186947125 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.758.1186947125 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.759.1186947125 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.760.1186947127 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.761.1186947127 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.762.1186947127 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.763.1186947127 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.764.1186947149 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.765.1186947167 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.766.1186947169 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.767.1186947175 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.768.1186947177 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.769.1186947177 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.770.1186947181 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.771.1186947181 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.772.1186947183 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.773.1186947189 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.774.1186947201 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.775.1186947215 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.777.1186947219 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.778.1186947223 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.779.1186947227 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.780.1186947227 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.781.1186947233 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.782.1186947233 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.783.1186947235 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.785.1186947249 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.786.1186947261 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.787.1186947263 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.788.1186947269 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.790.1186947277 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.791.1186947279 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.792.1186947283 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.793.1186947285 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.794.1186947285 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_DATA.795.1186947293 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_USERS.776.1186947217 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/ADAPT_USERS.784.1186947243 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/BOISJMSDB.789.1186947269 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.796.1186947295 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.797.1186947297 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.798.1186947331 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.799.1186947331 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.800.1186947343 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.801.1186947343 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.802.1186947345 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.803.1186947347 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.804.1186947357 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.805.1186947357 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.806.1186947359 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.807.1186947361 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.808.1186947363 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.809.1186947365 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.810.1186947365 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.811.1186947367 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.812.1186947367 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.813.1186947367 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.815.1186947375 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/DHC_ROLLBACK_TRANSIENT.816.1186947377 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/FUZZY_SEARCH.814.1186947375 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/FUZZY_SEARCH.817.1186947377 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/OT_SCHD_DATA.819.1186947387 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/SPMSGBRK_DATA.818.1186947387 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.820.1186947395 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.821.1186947403 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.822.1186947407 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.823.1186947409 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.824.1186947409 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.825.1186947411 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.826.1186947413 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.827.1186947423 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.828.1186947427 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.829.1186947427 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.830.1186947429 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.831.1186947431 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.832.1186947439 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.833.1186947441 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.834.1186947443 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.835.1186947445 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.836.1186947455 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.837.1186947469 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.838.1186947473 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.839.1186947475 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.840.1186947477 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.841.1186947477 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.842.1186947477 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.843.1186947485 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.844.1186947485 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.845.1186947489 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.846.1186947501 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.847.1186947501 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/VEREDUS_DATA.848.1186947505 has been successfully added to the meta_import.par",
+        "+DATAC2/OTCHPPUS_UKL/2885BA585CE811F1E0632F48640AD901/DATAFILE/WEBINT_DATA.849.1186947513 has been successfully added to the meta_import.par"
+    ]
+}
+
+TASK [find_datafiles : fail msg=errors while getting the data file locations from asm.] ***
+Thursday 05 December 2024  20:08:03 +0000 (0:00:00.037)       0:00:10.109 ***** 
+skipping: [10.100.72.47]
+
+PLAY [do the metadata import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.100.72.47               : ok=5    changed=3    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Thursday 05 December 2024  20:08:03 +0000 (0:00:00.033)       0:00:10.142 ***** 
+=============================================================================== 
+Gathering Facts --------------------------------------------------------- 3.39s
+find_datafiles : execute the script ------------------------------------- 3.34s
+find_datafiles : create the dbfiles.sh ---------------------------------- 2.12s
+find_datafiles : check the dbfiles.log ---------------------------------- 1.12s
+find_datafiles : display log_out ---------------------------------------- 0.04s
+find_datafiles : fail --------------------------------------------------- 0.03s

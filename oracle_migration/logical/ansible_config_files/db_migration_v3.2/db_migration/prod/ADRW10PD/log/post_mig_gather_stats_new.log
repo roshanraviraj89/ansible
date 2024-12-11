@@ -1,0 +1,356 @@
+
+PLAY [do the final incremental backup on hrmaxpd2035.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrmaxpd2035.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrmaxpd2035.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_dump] ***
+
+PLAY [do the final incremental restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+TASK [post_mig_check : Execute DBMS_STATS.gather_database_stats with SKEWONLY _raw_params=. /home/oracle/{{ target_db }}.env
+echo -e "SET TIME ON TIMING ON\n EXEC DBMS_STATS.gather_database_stats( method_opt => 'FOR ALL COLUMNS SIZE SKEWONLY',estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,cascade=>TRUE,degree => 8);" | {{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba
+] ***
+Saturday 23 November 2024  12:32:29 +0000 (0:00:00.113)       0:00:00.113 ***** 
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish jid={{ gather_skewonly_stats_job.ansible_job_id }}] ***
+Saturday 23 November 2024  12:32:30 +0000 (0:00:01.808)       0:00:01.922 ***** 
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20160 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20159 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20158 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20157 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20156 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20155 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20154 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20153 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20152 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20151 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20150 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20149 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20148 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20147 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20146 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20145 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20144 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20143 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20142 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20141 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20140 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20139 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20138 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20137 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20136 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20135 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20134 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20133 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20132 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20131 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20130 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20129 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20128 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20127 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20126 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20125 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20124 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20123 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20122 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20121 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20120 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20119 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20118 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20117 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20116 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20115 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20114 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20113 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20112 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20111 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20110 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20109 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20108 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20107 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20106 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20105 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20104 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20103 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20102 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20101 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20100 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20099 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20098 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20097 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20096 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20095 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20094 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20093 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20092 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20091 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20090 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20089 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20088 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20087 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20086 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20085 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20084 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20083 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20082 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20081 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20080 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20079 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20078 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20077 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20076 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20075 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20074 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20073 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20072 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20071 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20070 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20069 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20068 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20067 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20066 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20065 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20064 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20063 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20062 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20061 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20060 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20059 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20058 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20057 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20056 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20055 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20054 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20053 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20052 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20051 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20050 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20049 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20048 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20047 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20046 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20045 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20044 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20043 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish (20042 retries left).
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Display gather_database_stats with SKEWONLY result msg={{ gather_skewonly_stats_result.stdout_lines }}] ***
+Saturday 23 November 2024  13:36:47 +0000 (1:04:16.996)       1:04:18.918 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "Elapsed: 01:03:52.66"
+    ]
+}
+
+TASK [post_mig_check : Execute DBMS_STATS.gather_dictionary_stats _raw_params=. /home/oracle/{{ target_db }}.env
+echo -e "SET TIME ON TIMING ON\n EXEC DBMS_STATS.gather_dictionary_stats;" | {{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba
+] ***
+Saturday 23 November 2024  13:36:47 +0000 (0:00:00.017)       1:04:18.936 ***** 
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Wait for DBMS_STATS.gather_dictionary_stats to finish jid={{ gather_dictionary_stats_job.ansible_job_id }}] ***
+Saturday 23 November 2024  13:36:48 +0000 (0:00:01.061)       1:04:19.998 ***** 
+FAILED - RETRYING: Wait for DBMS_STATS.gather_dictionary_stats to finish (20160 retries left).
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Display gather_dictionary_stats result msg={{ gather_dictionary_stats_result.stdout_lines }}] ***
+Saturday 23 November 2024  13:37:21 +0000 (0:00:32.211)       1:04:52.209 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "Elapsed: 00:00:16.49"
+    ]
+}
+
+TASK [post_mig_check : Execute DBMS_STATS.gather_system_stats _raw_params=. /home/oracle/{{ target_db }}.env
+echo -e "SET TIME ON TIMING ON\n EXEC DBMS_STATS.gather_system_stats;" | {{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba
+] ***
+Saturday 23 November 2024  13:37:21 +0000 (0:00:00.015)       1:04:52.224 ***** 
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Wait for DBMS_STATS.gather_system_stats to finish jid={{ gather_system_stats_job.ansible_job_id }}] ***
+Saturday 23 November 2024  13:37:22 +0000 (0:00:01.065)       1:04:53.290 ***** 
+FAILED - RETRYING: Wait for DBMS_STATS.gather_system_stats to finish (20160 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_system_stats to finish (20159 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_system_stats to finish (20158 retries left).
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Display gather_system_stats result msg={{ gather_system_stats_result.stdout_lines }}] ***
+Saturday 23 November 2024  13:38:56 +0000 (0:01:34.404)       1:06:27.694 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "Elapsed: 00:01:06.96"
+    ]
+}
+
+TASK [post_mig_check : Execute DBMS_STATS.gather_fixed_objects_stats _raw_params=. /home/oracle/{{ target_db }}.env
+echo -e "SET TIME ON TIMING ON\n EXEC DBMS_STATS.gather_fixed_objects_stats;" | {{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba
+] ***
+Saturday 23 November 2024  13:38:56 +0000 (0:00:00.016)       1:06:27.711 ***** 
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Wait for DBMS_STATS.gather_fixed_objects_stats to finish jid={{ gather_fixed_objects_stats_job.ansible_job_id }}] ***
+Saturday 23 November 2024  13:38:57 +0000 (0:00:01.053)       1:06:28.764 ***** 
+FAILED - RETRYING: Wait for DBMS_STATS.gather_fixed_objects_stats to finish (20160 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_fixed_objects_stats to finish (20159 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_fixed_objects_stats to finish (20158 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_fixed_objects_stats to finish (20157 retries left).
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Display gather_fixed_objects_stats result msg={{ gather_fixed_objects_stats_result.stdout_lines }}] ***
+Saturday 23 November 2024  13:41:04 +0000 (0:02:06.708)       1:08:35.472 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "Elapsed: 00:02:04.20"
+    ]
+}
+
+TASK [post_mig_check : Execute DBMS_STATS.gather_database_stats with AUTO _raw_params=. /home/oracle/{{ target_db }}.env
+echo -e "SET TIME ON TIMING ON\n EXEC DBMS_STATS.gather_database_stats( method_opt => 'FOR ALL COLUMNS SIZE AUTO',estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,cascade=>TRUE,degree => 8);" | {{ target_oracle_home }}/bin/sqlplus -s {{ target_conn_str }} as sysdba
+] ***
+Saturday 23 November 2024  13:41:04 +0000 (0:00:00.015)       1:08:35.488 ***** 
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Wait for DBMS_STATS.gather_database_stats with AUTO to finish jid={{ gather_auto_stats_job.ansible_job_id }}] ***
+Saturday 23 November 2024  13:41:05 +0000 (0:00:01.107)       1:08:36.595 ***** 
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20160 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20159 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20158 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20157 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20156 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20155 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20154 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20153 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20152 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20151 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20150 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20149 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20148 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20147 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20146 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20145 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20144 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20143 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20142 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20141 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20140 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20139 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20138 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20137 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20136 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20135 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20134 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20133 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20132 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20131 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20130 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20129 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20128 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20127 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20126 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20125 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20124 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20123 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20122 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20121 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20120 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20119 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20118 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20117 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20116 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20115 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20114 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20113 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20112 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20111 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20110 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20109 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20108 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20107 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20106 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20105 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20104 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20103 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20102 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20101 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20100 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20099 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20098 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20097 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20096 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20095 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20094 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20093 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20092 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20091 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20090 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20089 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20088 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20087 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20086 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20085 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20084 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20083 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20082 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20081 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20080 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20079 retries left).
+FAILED - RETRYING: Wait for DBMS_STATS.gather_database_stats with AUTO to finish (20078 retries left).
+changed: [10.100.36.15]
+
+TASK [post_mig_check : Display gather_database_stats with AUTO result msg={{ gather_auto_stats_result.stdout_lines }}] ***
+Saturday 23 November 2024  14:26:12 +0000 (0:45:06.783)       1:53:43.379 ***** 
+ok: [10.100.36.15] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed.",
+        "",
+        "Elapsed: 00:44:37.03"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+10.100.36.15               : ok=15   changed=10   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+Saturday 23 November 2024  14:26:12 +0000 (0:00:00.020)       1:53:43.400 ***** 
+=============================================================================== 
+post_mig_check : Wait for DBMS_STATS.gather_database_stats with SKEWONLY to finish  3857.00s
+post_mig_check : Wait for DBMS_STATS.gather_database_stats with AUTO to finish  2706.78s
+post_mig_check : Wait for DBMS_STATS.gather_fixed_objects_stats to finish - 126.71s
+post_mig_check : Wait for DBMS_STATS.gather_system_stats to finish ----- 94.40s
+post_mig_check : Wait for DBMS_STATS.gather_dictionary_stats to finish -- 32.21s
+post_mig_check : Execute DBMS_STATS.gather_database_stats with SKEWONLY --- 1.81s
+post_mig_check : Execute DBMS_STATS.gather_database_stats with AUTO ----- 1.11s
+post_mig_check : Execute DBMS_STATS.gather_system_stats ----------------- 1.07s
+post_mig_check : Execute DBMS_STATS.gather_dictionary_stats ------------- 1.06s
+post_mig_check : Execute DBMS_STATS.gather_fixed_objects_stats ---------- 1.05s
+post_mig_check : Display gather_database_stats with AUTO result --------- 0.02s
+post_mig_check : Display gather_database_stats with SKEWONLY result ----- 0.02s
+post_mig_check : Display gather_system_stats result --------------------- 0.02s
+post_mig_check : Display gather_fixed_objects_stats result -------------- 0.02s
+post_mig_check : Display gather_dictionary_stats result ----------------- 0.02s

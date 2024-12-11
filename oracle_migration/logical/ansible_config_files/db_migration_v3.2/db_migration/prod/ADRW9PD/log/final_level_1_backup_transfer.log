@@ -1,0 +1,187 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrmaxpd2035.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrmaxpd2035.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrmaxpd2035.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/BRPD_xtts_scratch] ***
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Saturday 23 November 2024  06:19:05 +0000 (0:00:00.076)       0:00:00.076 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.190.17.156 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.190.17.156]
+
+TASK [backup_transfer : Execute the rsync_backup transfer script _raw_params={{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.sh > {{ source_xtts_scripts_dir  }}/rsync_parallel_backup_transfer_v4.log] ***
+Saturday 23 November 2024  06:19:24 +0000 (0:00:18.657)       0:00:18.733 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [backup_transfer : Wait for rsync_backup task to complete jid={{ rsync_task.ansible_job_id }}] ***
+Saturday 23 November 2024  06:19:29 +0000 (0:00:05.333)       0:00:24.066 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+FAILED - RETRYING: Wait for rsync_backup task to complete (20160 retries left).
+changed: [10.190.17.156]
+
+TASK [backup_transfer : display the rsync status var=rsync_task] ***************
+Saturday 23 November 2024  06:20:10 +0000 (0:00:41.521)       0:01:05.588 ***** 
+ok: [10.190.17.156] => {
+    "rsync_task": {
+        "ansible_job_id": "396907193746.9372214",
+        "changed": true,
+        "failed": false,
+        "finished": 0,
+        "results_file": "/home/oracle/.ansible_async/396907193746.9372214",
+        "started": 1
+    }
+}
+
+TASK [check rsync_parallel_backup_transfer_v4.log _raw_params=grep "encountered an error" {{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log] ***
+Saturday 23 November 2024  06:20:11 +0000 (0:00:00.030)       0:01:05.619 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+fatal: [10.190.17.156]: FAILED! => {"changed": true, "cmd": "grep \"encountered an error\" /home/oracle/version1/ADRW9PD_xtts/rsync_parallel_backup_transfer_v4.log", "delta": "0:00:00.072336", "end": "2024-11-23 06:20:16.549928", "msg": "non-zero return code", "rc": 1, "start": "2024-11-23 06:20:16.477592", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+...ignoring
+
+TASK [backup_transfer : display the rsync errors msg={{rsync_error_out.stdout_lines}}] ***
+Saturday 23 November 2024  06:20:17 +0000 (0:00:06.107)       0:01:11.726 ***** 
+skipping: [10.190.17.156]
+
+TASK [backup_transfer : fail msg=errors while transferring the backups] ********
+Saturday 23 November 2024  06:20:17 +0000 (0:00:00.028)       0:01:11.755 ***** 
+skipping: [10.190.17.156]
+
+TASK [read the rsync_parallel_backup_transfer_v4.log src={{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log] ***
+Saturday 23 November 2024  06:20:17 +0000 (0:00:00.027)       0:01:11.782 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.156]
+
+TASK [backup_transfer : Decode the log file content log_content_decoded={{ log_content.content | b64decode }}] ***
+Saturday 23 November 2024  06:20:22 +0000 (0:00:05.450)       0:01:17.233 ***** 
+ok: [10.190.17.156]
+
+TASK [backup_transfer : Display the log file content msg={{ log_content_decoded }}] ***
+Saturday 23 November 2024  06:20:22 +0000 (0:00:00.032)       0:01:17.265 ***** 
+ok: [10.190.17.156] => {
+    "msg": "Start time: 23-11-2024_06:19:29\nStart time in seconds: 1732342769\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1r3ar0d4_238651_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1h3ar0b4_238641_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1g3ar0b4_238640_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1d3ar0b3_238637_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/163ar08k_238630_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1j3ar0b4_238643_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1f3ar0b4_238639_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/123ar08j_238626_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1t3ar0d5_238653_1_1 transfer started.\n23-11-2024_06:19:29:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/183ar08k_238632_1_1 transfer started.\n1j3ar0b4_238643_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n1d3ar0b3_238637_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n1f3ar0b4_238639_1_1\n1t3ar0d5_238653_1_1\n163ar08k_238630_1_1\n1g3ar0b4_238640_1_1\n183ar08k_238632_1_1\n1h3ar0b4_238641_1_1\n1r3ar0d4_238651_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         32.77K  50%    0.00kB/s    0:00:00  \r         32.77K  44%    0.00kB/s    0:00:00  \r         32.77K  44%    0.00kB/s    0:00:00  \r         32.77K   0%    0.00kB/s    0:00:00  123ar08j_238626_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  \r         65.54K 100%   31.25MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         32.77K   9%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         32.77K   0%    0.00kB/s    0:00:00  \r        360.45K 100%   18.38MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 886 bytes  received 35 bytes  1.84K bytes/sec\ntotal size is 73.73K  speedup is 80.05\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1j3ar0b4_238643_1_1 completed successfully.\n\nsent 892 bytes  received 35 bytes  1.85K bytes/sec\ntotal size is 73.73K  speedup is 79.53\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1d3ar0b3_238637_1_1 completed successfully.\n\nsent 884 bytes  received 35 bytes  1.84K bytes/sec\ntotal size is 73.73K  speedup is 80.23\n\nsent 888 bytes  received 35 bytes  1.85K bytes/sec\ntotal size is 73.73K  speedup is 79.88\n\nsent 891 bytes  received 35 bytes  1.85K bytes/sec\ntotal size is 73.73K  speedup is 79.62\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1f3ar0b4_238639_1_1 completed successfully.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1h3ar0b4_238641_1_1 completed successfully.\n\nsent 1.66K bytes  received 35 bytes  3.39K bytes/sec\ntotal size is 65.54K  speedup is 38.62\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1g3ar0b4_238640_1_1 completed successfully.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1t3ar0d5_238653_1_1 completed successfully.\n\nsent 70.89K bytes  received 35 bytes  141.86K bytes/sec\ntotal size is 360.45K  speedup is 5.08\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1r3ar0d4_238651_1_1 completed successfully.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1s3ar0d5_238652_1_1 transfer started.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1l3ar0b4_238645_1_1 transfer started.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/173ar08k_238631_1_1 transfer started.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1i3ar0b4_238642_1_1 transfer started.\n23-11-2024_06:19:30:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1b3ar0a3_238635_1_1 transfer started.\n23-11-2024_06:19:31:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1n3ar0bi_238647_1_1 transfer started.\n23-11-2024_06:19:31:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1a3ar0a3_238634_1_1 transfer started.\n1b3ar0a3_238635_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  1s3ar0d5_238652_1_1\n\r         32.77K  11%    0.00kB/s    0:00:00  1i3ar0b4_238642_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r        294.91K 100%   11.90MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 873 bytes  received 35 bytes  605.33 bytes/sec\ntotal size is 73.73K  speedup is 81.20\n23-11-2024_06:19:31:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1i3ar0b4_238642_1_1 completed successfully.\n\nsent 72.01K bytes  received 35 bytes  48.03K bytes/sec\ntotal size is 294.91K  speedup is 4.09\n23-11-2024_06:19:31:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1s3ar0d5_238652_1_1 completed successfully.\n1n3ar0bi_238647_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  173ar08k_238631_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  \r         12.29M  32%   11.69MB/s    0:00:02  \r         12.45M  25%   11.16MB/s    0:00:03  \r         13.04M  25%   11.69MB/s    0:00:03  \r          6.96M 100%   17.44MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 1.45M bytes  received 35 bytes  2.90M bytes/sec\ntotal size is 6.96M  speedup is 4.81\n23-11-2024_06:19:31:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1b3ar0a3_238635_1_1 completed successfully.\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/193ar09g_238633_1_1 transfer started.\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/153ar08k_238629_1_1 transfer started.\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/113ar08j_238625_1_1 transfer started.\n\r          6.07M 100%   11.85MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 1.78M bytes  received 35 bytes  1.19M bytes/sec\ntotal size is 6.07M  speedup is 3.41\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1n3ar0bi_238647_1_1 completed successfully.\n1l3ar0b4_238645_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n1a3ar0a3_238634_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  153ar08k_238629_1_1\n113ar08j_238625_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  \r         32.77K   0%    0.00kB/s    0:00:00  193ar09g_238633_1_1\n\r         32.77K  57%    0.00kB/s    0:00:00  \r         57.34K 100%   23.44MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 733 bytes  received 35 bytes  1.54K bytes/sec\ntotal size is 57.34K  speedup is 74.67\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/193ar09g_238633_1_1 completed successfully.\n\nsent 883 bytes  received 35 bytes  367.20 bytes/sec\ntotal size is 73.73K  speedup is 80.31\n23-11-2024_06:19:32:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1l3ar0b4_238645_1_1 completed successfully.\n\r         14.91M  42%   14.17MB/s    0:00:01  \r         22.32M  59%   10.62MB/s    0:00:01  \r         23.07M  46%   10.66MB/s    0:00:02  \r         24.77M  47%   11.45MB/s    0:00:02  23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1k3ar0b4_238644_1_1 transfer started.\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1c3ar0aj_238636_1_1 transfer started.\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1p3ar0ce_238649_1_1 transfer started.\n\r         24.87M  93%   23.69MB/s    0:00:00  \r         11.70M  30%   11.12MB/s    0:00:02  1p3ar0ce_238649_1_1\n\r         32.77K  57%    0.00kB/s    0:00:00  \r         57.34K 100%   23.44MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         12.06M  25%   11.47MB/s    0:00:03  1c3ar0aj_238636_1_1\n\r         32.77K  36%    0.00kB/s    0:00:00  \r         90.11K 100%   54.69MB/s    0:00:00 (xfr#1, to-chk=0/1)\n1k3ar0b4_238644_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   19.53MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 883 bytes  received 35 bytes  1.84K bytes/sec\ntotal size is 73.73K  speedup is 80.31\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1k3ar0b4_238644_1_1 completed successfully.\n\r         26.70M 100%   22.93MB/s    0:00:01 (xfr#1, to-chk=0/1)\n\nsent 736 bytes  received 35 bytes  1.54K bytes/sec\ntotal size is 57.34K  speedup is 74.38\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1p3ar0ce_238649_1_1 completed successfully.\n\nsent 1.38K bytes  received 35 bytes  2.83K bytes/sec\ntotal size is 90.11K  speedup is 63.68\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1c3ar0aj_238636_1_1 completed successfully.\n\r         26.15M  73%   12.45MB/s    0:00:00  \r         33.82M  89%   10.70MB/s    0:00:00  \r         37.29M  72%   11.61MB/s    0:00:01  \r         34.18M  68%   10.63MB/s    0:00:01  \nsent 2.93M bytes  received 35 bytes  1.17M bytes/sec\ntotal size is 26.70M  speedup is 9.11\n23-11-2024_06:19:33:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1a3ar0a3_238634_1_1 completed successfully.\n\r         37.70M 100%   10.69MB/s    0:00:03 (xfr#1, to-chk=0/1)\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/133ar08j_238627_1_1 transfer started.\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/143ar08j_238628_1_1 transfer started.\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1q3ar0d4_238650_1_1 transfer started.\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1o3ar0c0_238648_1_1 transfer started.\n\nsent 12.61M bytes  received 35 bytes  2.80M bytes/sec\ntotal size is 37.70M  speedup is 2.99\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/163ar08k_238630_1_1 completed successfully.\n\r         35.46M 100%   12.32MB/s    0:00:02 (xfr#1, to-chk=0/1)\n\r         24.58M  64%   11.70MB/s    0:00:01  \r         25.00M  52%   11.91MB/s    0:00:01  143ar08j_238628_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  1q3ar0d4_238650_1_1\n\r         32.77K  36%    0.00kB/s    0:00:00  \r         32.77K   3%    0.00kB/s    0:00:00  \r         90.11K 100%   27.34MB/s    0:00:00 (xfr#1, to-chk=0/1)\n133ar08j_238627_1_1\n\r         32.77K   0%    0.00kB/s    0:00:00  \r        860.16K 100%   39.45MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 13.42M bytes  received 35 bytes  2.98M bytes/sec\ntotal size is 35.46M  speedup is 2.64\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/173ar08k_238631_1_1 completed successfully.\n\nsent 1.61K bytes  received 35 bytes  3.30K bytes/sec\ntotal size is 90.11K  speedup is 54.65\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1q3ar0d4_238650_1_1 completed successfully.\n\nsent 46.47K bytes  received 35 bytes  93.02K bytes/sec\ntotal size is 860.16K  speedup is 18.49\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1o3ar0c0_238648_1_1 completed successfully.\n\r         49.57M 100%   11.81MB/s    0:00:04 (xfr#1, to-chk=0/1)\n\r         51.54M  99%   11.91MB/s    0:00:00  \r         51.76M 100%   11.91MB/s    0:00:04 (xfr#1, to-chk=0/1)\n\nsent 19.13M bytes  received 35 bytes  4.25M bytes/sec\ntotal size is 49.57M  speedup is 2.59\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/183ar08k_238632_1_1 completed successfully.\n\nsent 22.36M bytes  received 35 bytes  4.97M bytes/sec\ntotal size is 51.76M  speedup is 2.31\n23-11-2024_06:19:34:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/123ar08j_238626_1_1 completed successfully.\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1u3ar0d5_238654_1_1 transfer started.\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/103ar07s_238624_1_1 transfer started.\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1e3ar0b4_238638_1_1 transfer started.\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1m3ar0b5_238646_1_1 transfer started.\n\r         38.14M  99%   12.11MB/s    0:00:00  \r         37.42M  78%   11.88MB/s    0:00:00  \r         38.25M 100%   12.13MB/s    0:00:03 (xfr#1, to-chk=0/1)\n\r         13.93M  34%   13.25MB/s    0:00:01  1u3ar0d5_238654_1_1\n1e3ar0b4_238638_1_1\n103ar07s_238624_1_1\n\r         32.77K  28%    0.00kB/s    0:00:00  \r         32.77K  44%    0.00kB/s    0:00:00  \r         32.77K  57%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         57.34K 100%   23.44MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\r         14.22M  25%   13.53MB/s    0:00:03  \r        114.69K 100%   26.04MB/s    0:00:00 (xfr#1, to-chk=0/1)\n1m3ar0b5_238646_1_1\n\r         32.77K  44%    0.00kB/s    0:00:00  \r         73.73K 100%   39.06MB/s    0:00:00 (xfr#1, to-chk=0/1)\n\nsent 16.18K bytes  received 35 bytes  32.43K bytes/sec\ntotal size is 114.69K  speedup is 7.07\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1u3ar0d5_238654_1_1 completed successfully.\n\nsent 736 bytes  received 35 bytes  1.54K bytes/sec\ntotal size is 57.34K  speedup is 74.38\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/103ar07s_238624_1_1 completed successfully.\n\nsent 889 bytes  received 35 bytes  1.85K bytes/sec\ntotal size is 73.73K  speedup is 79.79\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1m3ar0b5_238646_1_1 completed successfully.\n\nsent 882 bytes  received 35 bytes  1.83K bytes/sec\ntotal size is 73.73K  speedup is 80.40\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/1e3ar0b4_238638_1_1 completed successfully.\n\nsent 12.36M bytes  received 35 bytes  3.53M bytes/sec\ntotal size is 38.25M  speedup is 3.09\n23-11-2024_06:19:35:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/153ar08k_238629_1_1 completed successfully.\n\r         47.39M 100%   12.73MB/s    0:00:03 (xfr#1, to-chk=0/1)\n\nsent 23.32M bytes  received 35 bytes  5.18M bytes/sec\ntotal size is 47.39M  speedup is 2.03\n23-11-2024_06:19:36:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/113ar08j_238625_1_1 completed successfully.\n\r         30.57M  75%   14.56MB/s    0:00:00  \r         33.10M  58%   15.77MB/s    0:00:01  \r         40.52M 100%   14.15MB/s    0:00:02 (xfr#1, to-chk=0/1)\n\nsent 13.92M bytes  received 35 bytes  3.98M bytes/sec\ntotal size is 40.52M  speedup is 2.91\n23-11-2024_06:19:37:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/143ar08j_238628_1_1 completed successfully.\n\r         48.23M  85%   15.32MB/s    0:00:00  \r         56.54M 100%   15.02MB/s    0:00:03 (xfr#1, to-chk=0/1)\n\nsent 22.20M bytes  received 35 bytes  4.93M bytes/sec\ntotal size is 56.54M  speedup is 2.55\n23-11-2024_06:19:38:  Rsync for /xtts/backup/version1/ADRW9PD_xtts_scratch/133ar08j_238627_1_1 completed successfully.\nEnd time: 23-11-2024_06:19:29\nEnd time in seconds: 1732342778\nTotal transfer time: 9 seconds\n"
+}
+
+TASK [backup_transfer : Get current timestamp _raw_params=date +%Y%m%d%H%M%S] ***
+Saturday 23 November 2024  06:20:22 +0000 (0:00:00.030)       0:01:17.296 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [rename rsync_parallel_backup_transfer_v4.log with the current timestamp _raw_params=mv "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log" "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4_{{timestamp.stdout}}.log"] ***
+Saturday 23 November 2024  06:20:28 +0000 (0:00:05.308)       0:01:22.604 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [backup_transfer : Additionally transfer the incrbackups.txt to the /home/oracle/version1/BRPD_xtts directory for the validation. _raw_params=rsync -vzh {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}] ***
+Saturday 23 November 2024  06:20:32 +0000 (0:00:04.918)       0:01:27.523 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [backup_transfer : fail msg=errors while transferring the incrbackups.txt file] ***
+Saturday 23 November 2024  06:20:39 +0000 (0:00:06.271)       0:01:33.794 ***** 
+skipping: [10.190.17.156]
+
+TASK [backup_transfer : display incrbackups_transfer_out msg={{ incrbackups_transfer_out.stdout_lines }}] ***
+Saturday 23 November 2024  06:20:39 +0000 (0:00:00.027)       0:01:33.822 ***** 
+ok: [10.190.17.156] => {
+    "msg": [
+        "incrbackups.txt",
+        "",
+        "sent 342 bytes  received 53 bytes  790.00 bytes/sec",
+        "total size is 1.95K  speedup is 4.94"
+    ]
+}
+
+TASK [backup_transfer : finally copy the res.txt file to the /home/oracle/version1/BRPD_xtts _raw_params=rsync -vzh --partial --progress --append {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}] ***
+Saturday 23 November 2024  06:20:39 +0000 (0:00:00.033)       0:01:33.855 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [backup_transfer : fail msg=errors while transferring the res.txt file] ***
+Saturday 23 November 2024  06:20:46 +0000 (0:00:07.148)       0:01:41.004 ***** 
+skipping: [10.190.17.156]
+
+TASK [backup_transfer : display res file transfer status msg={{ res_transfer_out.stdout_lines }}] ***
+Saturday 23 November 2024  06:20:46 +0000 (0:00:00.027)       0:01:41.031 ***** 
+ok: [10.190.17.156] => {
+    "msg": [
+        "res.txt",
+        "",
+        "         35.09K 100%    0.00kB/s    0:00:00  ",
+        "         35.09K 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=0/1)",
+        "",
+        "sent 1.10K bytes  received 35 bytes  2.27K bytes/sec",
+        "total size is 35.09K  speedup is 30.94"
+    ]
+}
+
+PLAY [transfer the full meta dumps to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/BRPD_dump] ***
+
+PLAY [do the final incremental restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.190.17.156              : ok=14   changed=7    unreachable=0    failed=0    skipped=4    rescued=0    ignored=1   
+
+Saturday 23 November 2024  06:20:46 +0000 (0:00:00.053)       0:01:41.085 ***** 
+=============================================================================== 
+backup_transfer : Wait for rsync_backup task to complete --------------- 41.52s
+Gathering Facts -------------------------------------------------------- 18.66s
+backup_transfer : finally copy the res.txt file to the /home/oracle/version1/BRPD_xtts --- 7.15s
+backup_transfer : Additionally transfer the incrbackups.txt to the /home/oracle/version1/BRPD_xtts directory for the validation. --- 6.27s
+check rsync_parallel_backup_transfer_v4.log ----------------------------- 6.11s
+read the rsync_parallel_backup_transfer_v4.log -------------------------- 5.45s
+backup_transfer : Execute the rsync_backup transfer script -------------- 5.33s
+backup_transfer : Get current timestamp --------------------------------- 5.31s
+rename rsync_parallel_backup_transfer_v4.log with the current timestamp --- 4.92s
+backup_transfer : display res file transfer status ---------------------- 0.05s
+backup_transfer : display incrbackups_transfer_out ---------------------- 0.03s
+backup_transfer : Decode the log file content --------------------------- 0.03s
+backup_transfer : display the rsync status ------------------------------ 0.03s
+backup_transfer : Display the log file content -------------------------- 0.03s
+backup_transfer : display the rsync errors ------------------------------ 0.03s
+backup_transfer : fail -------------------------------------------------- 0.03s
+backup_transfer : fail -------------------------------------------------- 0.03s
+backup_transfer : fail -------------------------------------------------- 0.03s

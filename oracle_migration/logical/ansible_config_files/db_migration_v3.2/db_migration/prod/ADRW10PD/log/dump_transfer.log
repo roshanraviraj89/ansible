@@ -1,0 +1,127 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrmaxpd2035.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrmaxpd2035.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrmaxpd2035.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_dump] ***
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Saturday 23 November 2024  08:56:03 +0000 (0:00:00.086)       0:00:00.086 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.190.17.156 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.190.17.156]
+
+TASK [dump_transfer : Rsync source_datapump directory to the target datapump_directory _raw_params=rsync -rvzh --partial --progress --append {{ source_dp_dir }}/ {{ dest_user }}@{{ target_ip_address }}:{{ target_dp_dir }}/] ***
+Saturday 23 November 2024  08:56:21 +0000 (0:00:17.517)       0:00:17.604 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [dump_transfer : Wait for the rsync job to finish jid={{ rsync_async_job.ansible_job_id }}] ***
+Saturday 23 November 2024  08:56:25 +0000 (0:00:04.972)       0:00:22.576 ***** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+FAILED - RETRYING: Wait for the rsync job to finish (20160 retries left).
+changed: [10.190.17.156]
+
+TASK [dump_transfer : Validate if the dumps have been transferred successfully to the target /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_dump directory msg={{ transfer_out.stdout_lines }}] ***
+Saturday 23 November 2024  08:57:05 +0000 (0:00:39.549)       0:01:02.125 ***** 
+ok: [10.190.17.156] => {
+    "msg": [
+        "sending incremental file list",
+        "adaptdomain1_sys_grants.sql",
+        "",
+        "            729 100%    0.00kB/s    0:00:00  ",
+        "            729 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=11/13)",
+        "grants.dmp",
+        "",
+        "         32.77K   0%   31.25MB/s    0:00:00  ",
+        "          4.92M 100%   38.42MB/s    0:00:00 (xfr#2, to-chk=10/13)",
+        "grants_exp.log",
+        "",
+        "          1.82K 100%   14.55kB/s    0:00:00  ",
+        "          1.82K 100%   14.55kB/s    0:00:00 (xfr#3, to-chk=9/13)",
+        "grants_export.par",
+        "",
+        "            106 100%    0.85kB/s    0:00:00  ",
+        "            106 100%    0.85kB/s    0:00:00 (xfr#4, to-chk=8/13)",
+        "meta_exp.log",
+        "",
+        "         32.77K  96%  260.16kB/s    0:00:00  ",
+        "         33.98K 100%  269.79kB/s    0:00:00 (xfr#5, to-chk=7/13)",
+        "meta_exp_01.dmp",
+        "",
+        "         32.77K  30%  260.16kB/s    0:00:00  ",
+        "        106.50K 100%  838.71kB/s    0:00:00 (xfr#6, to-chk=6/13)",
+        "meta_exp_02.dmp",
+        "",
+        "         12.29K 100%   96.77kB/s    0:00:00  ",
+        "         12.29K 100%   96.77kB/s    0:00:00 (xfr#7, to-chk=5/13)",
+        "meta_exp_03.dmp",
+        "",
+        "         32.77K  80%  256.00kB/s    0:00:00  ",
+        "         40.96K 100%  320.00kB/s    0:00:00 (xfr#8, to-chk=4/13)",
+        "meta_exp_04.dmp",
+        "",
+        "         12.29K 100%   96.00kB/s    0:00:00  ",
+        "         12.29K 100%   96.00kB/s    0:00:00 (xfr#9, to-chk=3/13)",
+        "meta_exp_05.dmp",
+        "",
+        "         32.77K   0%  253.97kB/s    0:01:05  ",
+        "         16.73M 100%   19.34MB/s    0:00:00 (xfr#10, to-chk=2/13)",
+        "meta_exp_06.dmp",
+        "",
+        "         32.77K   0%   38.79kB/s    0:48:38  ",
+        "          8.19M   7%    7.81MB/s    0:00:13  ",
+        "         56.20M  49%   26.81MB/s    0:00:02  ",
+        "        103.58M  91%   32.94MB/s    0:00:00  ",
+        "        113.22M 100%   33.22MB/s    0:00:03 (xfr#11, to-chk=1/13)",
+        "meta_export.par",
+        "",
+        "          1.03K 100%    4.03kB/s    0:00:00  ",
+        "          1.03K 100%    4.03kB/s    0:00:00 (xfr#12, to-chk=0/13)",
+        "",
+        "sent 15.03M bytes  received 244 bytes  3.34M bytes/sec",
+        "total size is 135.07M  speedup is 8.99"
+    ]
+}
+
+TASK [dump_transfer : Fail if rsync transfer did not complete successfully msg=Rsync transfer failed. Check the output above for errors.] ***
+Saturday 23 November 2024  08:57:05 +0000 (0:00:00.035)       0:01:02.160 ***** 
+skipping: [10.190.17.156]
+
+PLAY [do the final incremental restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.190.17.156              : ok=4    changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Saturday 23 November 2024  08:57:05 +0000 (0:00:00.042)       0:01:02.203 ***** 
+=============================================================================== 
+dump_transfer : Wait for the rsync job to finish ----------------------- 39.55s
+Gathering Facts -------------------------------------------------------- 17.52s
+dump_transfer : Rsync source_datapump directory to the target datapump_directory --- 4.97s
+dump_transfer : Fail if rsync transfer did not complete successfully ---- 0.04s
+dump_transfer : Validate if the dumps have been transferred successfully to the target /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_dump directory --- 0.04s

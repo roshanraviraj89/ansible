@@ -1,0 +1,581 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrmaxpd2033.emea.hays.loc] ************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.190.17.163 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.190.17.163]
+
+TASK [final_backup : purge the recyclebin _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n purge dba_recyclebin;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.163]
+
+TASK [final_backup : display recyclebin_out msg={{recyclebin_out.stdout_lines}}] ***
+ok: [10.190.17.163] => {
+    "msg": [
+        "",
+        "DBA Recyclebin purged."
+    ]
+}
+
+TASK [final_backup : list tablespaces msg=['{{tablespaces}}']] *****************
+ok: [10.190.17.163] => {
+    "msg": [
+        "ADAPTINTOUCH,ADAPT_DATA,ADAPT_USERS,BOISJMSDB,DAXTRALB_DATA,DHC_ROLLBACK_TRANSIENT,HRM_UK_DATA,OT_SCHD_DATA,SPMSGBRK_DATA,UK_BO_MSGREP_DATA,USERS_OLD,WEBINT_DATA"
+    ]
+}
+
+TASK [final_backup : alter the provided user tablspaces to read only _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n alter tablespace {{item}} read only;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.163] => (item=ADAPTINTOUCH)
+changed: [10.190.17.163] => (item=ADAPT_DATA)
+changed: [10.190.17.163] => (item=ADAPT_USERS)
+changed: [10.190.17.163] => (item=BOISJMSDB)
+changed: [10.190.17.163] => (item=DAXTRALB_DATA)
+changed: [10.190.17.163] => (item=DHC_ROLLBACK_TRANSIENT)
+changed: [10.190.17.163] => (item=HRM_UK_DATA)
+changed: [10.190.17.163] => (item=OT_SCHD_DATA)
+changed: [10.190.17.163] => (item=SPMSGBRK_DATA)
+changed: [10.190.17.163] => (item=UK_BO_MSGREP_DATA)
+changed: [10.190.17.163] => (item=USERS_OLD)
+changed: [10.190.17.163] => (item=WEBINT_DATA)
+
+TASK [final_backup : display tbs_out msg={{item.stdout_lines}}] ****************
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPTINTOUCH read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:07.891580', 'end': '2024-10-19 08:03:08.640296', 'delta': '0:00:00.748716', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPTINTOUCH read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'ADAPTINTOUCH', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPT_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:13.360529', 'end': '2024-10-19 08:03:28.740574', 'delta': '0:00:15.380045', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPT_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'ADAPT_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPT_USERS read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:33.713595', 'end': '2024-10-19 08:03:34.517613', 'delta': '0:00:00.804018', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace ADAPT_USERS read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'ADAPT_USERS', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace BOISJMSDB read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:38.828753', 'end': '2024-10-19 08:03:39.355590', 'delta': '0:00:00.526837', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace BOISJMSDB read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'BOISJMSDB', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace DAXTRALB_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:44.163925', 'end': '2024-10-19 08:03:44.730934', 'delta': '0:00:00.567009', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace DAXTRALB_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'DAXTRALB_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace DHC_ROLLBACK_TRANSIENT read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:49.163989', 'end': '2024-10-19 08:03:50.167161', 'delta': '0:00:01.003172', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace DHC_ROLLBACK_TRANSIENT read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'DHC_ROLLBACK_TRANSIENT', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace HRM_UK_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:54.555198', 'end': '2024-10-19 08:03:55.360301', 'delta': '0:00:00.805103', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace HRM_UK_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'HRM_UK_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace OT_SCHD_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:03:59.868969', 'end': '2024-10-19 08:04:00.495497', 'delta': '0:00:00.626528', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace OT_SCHD_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'OT_SCHD_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace SPMSGBRK_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:04.771950', 'end': '2024-10-19 08:04:05.405942', 'delta': '0:00:00.633992', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace SPMSGBRK_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'SPMSGBRK_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace UK_BO_MSGREP_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:10.005688', 'end': '2024-10-19 08:04:10.793337', 'delta': '0:00:00.787649', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace UK_BO_MSGREP_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'UK_BO_MSGREP_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace USERS_OLD read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:15.203046', 'end': '2024-10-19 08:04:18.006020', 'delta': '0:00:02.802974', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace USERS_OLD read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'USERS_OLD', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+ok: [10.190.17.163] => (item={'cmd': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace WEBINT_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', 'stdout': '\nTablespace altered.', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:23.140327', 'end': '2024-10-19 08:04:25.605386', 'delta': '0:00:02.465059', 'changed': True, 'invocation': {'module_args': {'_raw_params': 'export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\nprintf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\\n alter tablespace WEBINT_DATA read only;" | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba  \n', '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': ['', 'Tablespace altered.'], 'stderr_lines': [], 'failed': False, 'item': 'WEBINT_DATA', 'ansible_loop_var': 'item'}) => {
+    "msg": [
+        "",
+        "Tablespace altered."
+    ]
+}
+
+TASK [final_backup : run the verification scripts capture the source db objects details _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+cd {{source_verification_dir}}
+printf '@{{ item }}' | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/Application_Objects_In_System_Sysaux.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/DB_Links_Details.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/Granted_Roles.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/Invalid_Objects.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/List_Schemas_And_Default_TBS.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/Object_Count_Per_Schema.sql)
+changed: [10.190.17.163] => (item=/home/oracle/version1/AD11PRD_verification/Schedules_jobs.sql)
+
+TASK [final_backup : display sql_out msg={{item.stdout_lines}}] ****************
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Application_Objects_In_System_Sysaux.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:30.743970', 'end': '2024-10-19 08:04:31.504695', 'delta': '0:00:00.760725', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Application_Objects_In_System_Sysaux.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/Application_Objects_In_System_Sysaux.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/DB_Links_Details.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:36.202219', 'end': '2024-10-19 08:04:36.550664', 'delta': '0:00:00.348445', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/DB_Links_Details.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/DB_Links_Details.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Granted_Roles.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:41.287586', 'end': '2024-10-19 08:04:41.715900', 'delta': '0:00:00.428314', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Granted_Roles.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/Granted_Roles.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Invalid_Objects.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:46.421268', 'end': '2024-10-19 08:04:47.119348', 'delta': '0:00:00.698080', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Invalid_Objects.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/Invalid_Objects.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/List_Schemas_And_Default_TBS.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:52.063871', 'end': '2024-10-19 08:04:52.458544', 'delta': '0:00:00.394673', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/List_Schemas_And_Default_TBS.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/List_Schemas_And_Default_TBS.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Object_Count_Per_Schema.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:04:57.392446', 'end': '2024-10-19 08:04:58.547988', 'delta': '0:00:01.155542', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Object_Count_Per_Schema.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/Object_Count_Per_Schema.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+ok: [10.190.17.163] => (item={'cmd': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Schedules_jobs.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", 'stdout': '', 'stderr': '', 'rc': 0, 'start': '2024-10-19 08:05:03.236863', 'end': '2024-10-19 08:05:04.034131', 'delta': '0:00:00.797268', 'changed': True, 'invocation': {'module_args': {'_raw_params': "export ORACLE_SID=A11PRDF1\nexport ORACLE_HOME=/u01/app/oracle/product/19c\ncd /home/oracle/version1/AD11PRD_verification\nprintf '@/home/oracle/version1/AD11PRD_verification/Schedules_jobs.sql' | /u01/app/oracle/product/19c/bin/sqlplus -s oci_mig/version1_Oc1_M1g@XTTS_UKPROD as sysdba\n", '_uses_shell': True, 'warn': True, 'stdin_add_newline': True, 'strip_empty_ends': True, 'argv': None, 'chdir': None, 'executable': None, 'creates': None, 'removes': None, 'stdin': None}}, 'stdout_lines': [], 'stderr_lines': [], 'failed': False, 'item': '/home/oracle/version1/AD11PRD_verification/Schedules_jobs.sql', 'ansible_loop_var': 'item'}) => {
+    "msg": []
+}
+
+TASK [final_backup : create a directory on Ansible controller node to store the db verification log files path=/home/ansibleadmin/db_reconciliation/{{ source_db }}, state=directory] ***
+ok: [10.190.17.163 -> localhost]
+
+TASK [final_backup : find the.log files from "/home/oracle/version1/AD11PRD_verification" directory paths={{source_verification_dir}}/, patterns=*.log] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.190.17.163]
+
+TASK [final_backup : copy the verification log files from the source db to Ansible-controller for reconciliation src={{ item.path }}, dest=/home/ansibleadmin/db_reconciliation/{{ source_db }}/, flat=True] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/Application_Objects_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 1810, 'inode': 65607, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.4782171, 'mtime': 1729321471.495064, 'ctime': 1729321471.495064, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/DB_Links_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 78079, 'inode': 65608, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.4849806, 'mtime': 1729321476.533806, 'ctime': 1729321476.533806, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/Scheduled_Jobs_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 24099, 'inode': 65613, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.4903169, 'mtime': 1729321504.027409, 'ctime': 1729321504.027409, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/Schemas_and_def_tablespace_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 89179, 'inode': 65611, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.4958723, 'mtime': 1729321492.4513464, 'ctime': 1729321492.4513464, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/granted_roles_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 29431, 'inode': 65609, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.501973, 'mtime': 1729321481.7067747, 'ctime': 1729321481.7067747, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+ok: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/invalid_objects_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 34616, 'inode': 65610, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.501973, 'mtime': 1729321487.1129515, 'ctime': 1729321487.1129515, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+changed: [10.190.17.163] => (item={'path': '/home/oracle/version1/AD11PRD_verification/object_countsByType_A11PRDF1_hrmaxpd2033.log', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 1100, 'gid': 1000, 'size': 192051, 'inode': 65612, 'dev': -9223371993905102840, 'nlink': 1, 'atime': 1728871241.508211, 'mtime': 1729321498.5399714, 'ctime': 1729321498.5399714, 'gr_name': 'oinstall', 'pw_name': 'oracle', 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False})
+
+TASK [final_backup : Do the final incremental backup on hrmaxpd2033.emea.hays.loc _raw_params=export TMPDIR={{ source_xtts_scripts_dir }}
+export ORACLE_SID={{ source_oracle_sid }}
+export ORACLE_HOME={{ source_oracle_home }}
+export NLS_LANG={{ nls_lang }}
+cd {{ source_xtts_scripts_dir }}
+{{ source_oracle_home }}/perl/bin/perl xttdriver.pl --backup
+] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.163]
+
+TASK [final_backup : Wait for the final incremental backup job to finish jid={{ backup_async_job.ansible_job_id }}] ***
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20160 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20159 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20158 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20157 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20156 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20155 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20154 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20153 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20152 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20151 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20150 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20149 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20148 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20147 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20146 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20145 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20144 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20143 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20142 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20141 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20140 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20139 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20138 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20137 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20136 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20135 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20134 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20133 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20132 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20131 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20130 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20129 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20128 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20127 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20126 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20125 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20124 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20123 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20122 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20121 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20120 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20119 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20118 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20117 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20116 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20115 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20114 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20113 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20112 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20111 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20110 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20109 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20108 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20107 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20106 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20105 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20104 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20103 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20102 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20101 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20100 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20099 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20098 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20097 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20096 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20095 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20094 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20093 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20092 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20091 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20090 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20089 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20088 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20087 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20086 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20085 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20084 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20083 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20082 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20081 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20080 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20079 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20078 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20077 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20076 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20075 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20074 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20073 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20072 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20071 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20070 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20069 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20068 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20067 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20066 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20065 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20064 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20063 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20062 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20061 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20060 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20059 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20058 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20057 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20056 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20055 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20054 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20053 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20052 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20051 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20050 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20049 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20048 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20047 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20046 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20045 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20044 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20043 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20042 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20041 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20040 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20039 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20038 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20037 retries left).
+FAILED - RETRYING: Wait for the final incremental backup job to finish (20036 retries left).
+changed: [10.190.17.163]
+
+TASK [final_backup : Validate if the final incremental backup has been completed successfully msg=['Final incremental backup has now been completed', '{{ backup_out.stdout_lines }}']] ***
+ok: [10.190.17.163] => {
+    "msg": [
+        "Final incremental backup has now been completed",
+        [
+            "============================================================",
+            "trace file is /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//Oct19_Sat_08_05_48_12_.log",
+            "=============================================================",
+            "",
+            "--------------------------------------------------------------------",
+            "Parsing properties",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Done parsing properties",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Checking properties",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Maximum 8 files will be fetched in parallel",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Done checking properties",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Backup incremental",
+            "--------------------------------------------------------------------",
+            "",
+            "scalar(or12",
+            "XXX: adding here for 2, 0, ADAPTINTOUCH,ADAPT_DATA,ADAPT_USERS,BOISJMSDB,DAXTRALB_DATA,DHC_ROLLBACK_TRANSIENT,HRM_UK_DATA,OT_SCHD_DATA,SPMSGBRK_DATA,UK_BO_MSGREP_DATA,USERS_OLD,WEBINT_DATA",
+            "Prepare newscn for Tablespaces: 'ADAPTINTOUCH'",
+            "Prepare newscn for Tablespaces: 'ADAPT_DATA'",
+            "Prepare newscn for Tablespaces: 'ADAPT_USERS'",
+            "Prepare newscn for Tablespaces: 'BOISJMSDB'",
+            "Prepare newscn for Tablespaces: 'DAXTRALB_DATA'",
+            "Prepare newscn for Tablespaces: 'DHC_ROLLBACK_TRANSIENT'",
+            "Prepare newscn for Tablespaces: 'HRM_UK_DATA'",
+            "Prepare newscn for Tablespaces: 'OT_SCHD_DATA'",
+            "Prepare newscn for Tablespaces: 'SPMSGBRK_DATA'",
+            "Prepare newscn for Tablespaces: 'UK_BO_MSGREP_DATA'",
+            "Prepare newscn for Tablespaces: 'USERS_OLD'",
+            "Prepare newscn for Tablespaces: 'WEBINT_DATA'",
+            "Prepare newscn for Tablespaces: ''''",
+            "Prepare newscn for Tablespaces: ''''",
+            "Prepare newscn for Tablespaces: ''''",
+            "Prepare newscn for Tablespaces: ''''",
+            "",
+            "--------------------------------------------------------------------",
+            "Starting incremental backup",
+            "--------------------------------------------------------------------",
+            "",
+            "",
+            "--------------------------------------------------------------------",
+            "Done backing up incrementals",
+            "--------------------------------------------------------------------",
+            "",
+            "Prepare newscn for Tablespaces: 'ADAPTINTOUCH'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'ADAPT_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'ADAPT_USERS'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'BOISJMSDB'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'DAXTRALB_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'DHC_ROLLBACK_TRANSIENT'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'HRM_UK_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'OT_SCHD_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'SPMSGBRK_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'UK_BO_MSGREP_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'USERS_OLD'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: 'WEBINT_DATA'",
+            "DECLARE*",
+            "ERROR at line 1:",
+            "ORA-20001: TABLESPACE(S) IS READONLY OR,",
+            "OFFLINE JUST CONVERT, COPY",
+            "ORA-06512: at line 284",
+            "",
+            "####################################################################",
+            "Warning:",
+            "------",
+            "Warnings found in executing /home/oracle/version1/AD11PRD_xtts/backup_Oct19_Sat_08_05_48_12//xttpreparenextiter.sql",
+            "####################################################################",
+            "Prepare newscn for Tablespaces: ''''''''''''''''",
+            "New /home/oracle/version1/AD11PRD_xtts/xttplan.txt with FROM SCN's generated"
+        ]
+    ]
+}
+
+PLAY [do the  metadata export on hrmaxpd2033.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrmaxpd2033.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump] ***
+
+PLAY [do the final incremental restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.190.17.163              : ok=14   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+Playbook run took 0 days, 1 hours, 15 minutes, 52 seconds

@@ -1,0 +1,138 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrraxdv2028.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrraxdv2028.emea.hays.loc] ********************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  10:32:29 +0000 (0:00:00.069)       0:00:00.069 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.53.64.8 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.53.64.8]
+
+TASK [meta_export : create data pump directory XTTS_DUMP and grant permission to system user on XTTS_DUMP _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{source_dp_dir}}';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to {{ source_system_user }};" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  10:32:59 +0000 (0:00:30.039)       0:00:30.109 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [meta_export : debug msg={{dir_out.stdout_lines}}] ************************
+Friday 06 December 2024  10:33:06 +0000 (0:00:06.870)       0:00:36.980 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "",
+        "Directory created.",
+        "",
+        "",
+        "Grant succeeded."
+    ]
+}
+
+TASK [meta_export : Do metadata export on US2SUP _raw_params=export ORACLE_SID={{ source_oracle_sid }}
+export ORACLE_HOME={{ source_oracle_home }}
+cd {{ source_dp_dir }}
+{{ source_oracle_home }}/bin/expdp {{ source_system_user }}/{{ source_system_passwd }}@{{ source_srv }} parfile={{ exp_par_file }}
+] ***
+Friday 06 December 2024  10:33:06 +0000 (0:00:00.025)       0:00:37.006 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [meta_export : Wait for the metadata export job to finish jid={{ exp_async_job.ansible_job_id }}] ***
+Friday 06 December 2024  10:33:11 +0000 (0:00:05.097)       0:00:42.103 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+FAILED - RETRYING: Wait for the metadata export job to finish (20160 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20159 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20158 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20157 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20156 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20155 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20154 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20153 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20152 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20151 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20150 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20149 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20148 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20147 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20146 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20145 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20144 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20143 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20142 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20141 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20140 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20139 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20138 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20137 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20136 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20135 retries left).
+FAILED - RETRYING: Wait for the metadata export job to finish (20134 retries left).
+changed: [10.53.64.8]
+
+TASK [meta_export : Validate if the metadata export has been successfully completed _raw_params=grep "successfully completed" {{ source_dp_dir }}/{{ exp_logfile }}] ***
+Friday 06 December 2024  10:49:29 +0000 (0:16:17.812)       0:16:59.916 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [meta_export : Fail if the metadata export was not successful msg=Errors on export. Fix the issue and re-run the metadata export.] ***
+Friday 06 December 2024  10:49:35 +0000 (0:00:06.501)       0:17:06.418 ******* 
+skipping: [10.53.64.8]
+
+TASK [meta_export : Display metadata export results msg={{ exp_validation.stdout_lines }}] ***
+Friday 06 December 2024  10:49:35 +0000 (0:00:00.022)       0:17:06.440 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "06-DEC-24 10:48:58.130: Job \"OCI_MIG\".\"SYS_EXPORT_FULL_01\" successfully completed at Fri Dec 6 10:48:58 2024 elapsed 0 00:15:40"
+    ]
+}
+
+PLAY [do the  grants export on hrraxdv2028.emea.hays.loc] **********************
+
+PLAY [transfer the final incremental backups to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_dump] ***
+
+PLAY [do the final incremental restore on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.53.64.8                 : ok=7    changed=4    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Friday 06 December 2024  10:49:35 +0000 (0:00:00.063)       0:17:06.504 ******* 
+=============================================================================== 
+meta_export : Wait for the metadata export job to finish -------------- 977.81s
+Gathering Facts -------------------------------------------------------- 30.04s
+meta_export : create data pump directory XTTS_DUMP and grant permission to system user on XTTS_DUMP --- 6.87s
+meta_export : Validate if the metadata export has been successfully completed --- 6.50s
+meta_export : Do metadata export on US2SUP ------------------------------ 5.10s
+meta_export : Display metadata export results --------------------------- 0.06s
+meta_export : debug ----------------------------------------------------- 0.03s
+meta_export : Fail if the metadata export was not successful ------------ 0.02s

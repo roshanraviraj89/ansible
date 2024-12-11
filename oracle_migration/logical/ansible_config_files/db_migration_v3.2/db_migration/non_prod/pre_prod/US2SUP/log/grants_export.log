@@ -1,0 +1,102 @@
+nohup: ignoring input
+
+PLAY [do the final incremental backup on hrraxdv2028.emea.hays.loc] ************
+
+PLAY [do the  metadata export on hrraxdv2028.emea.hays.loc] ********************
+
+PLAY [do the  grants export on hrraxdv2028.emea.hays.loc] **********************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  11:06:02 +0000 (0:00:00.068)       0:00:00.068 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.53.64.8 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.53.64.8]
+
+TASK [grants_export : do full grants export on US2SUP _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+cd {{source_dp_dir}}
+{{source_oracle_home}}/bin/expdp {{ source_system_user }}/{{source_system_passwd}}@{{source_srv}} parfile={{grants_exp_par_file}}
+] ***
+Friday 06 December 2024  11:06:23 +0000 (0:00:20.829)       0:00:20.897 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [grants_export : validate if the grants export has been successfully completed. _raw_params=grep "successfully completed" {{source_dp_dir}}/{{grants_exp_logfile}}] ***
+Friday 06 December 2024  11:08:25 +0000 (0:02:02.284)       0:02:23.181 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [grants_export : fail msg={{Errors on export. Fix the issue and re-run the grants export}}] ***
+Friday 06 December 2024  11:08:30 +0000 (0:00:05.019)       0:02:28.201 ******* 
+skipping: [10.53.64.8]
+
+TASK [grants_export : debug msg={{grants_exp_out.stdout_lines}}] ***************
+Friday 06 December 2024  11:08:30 +0000 (0:00:00.022)       0:02:28.223 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "Job \"OCI_MIG\".\"SYS_EXPORT_FULL_01\" successfully completed at Fri Dec 6 11:08:23 2024 elapsed 0 00:01:52"
+    ]
+}
+
+TASK [grants_export : Get the list of  the ADAPTDOMAIN1 users privileges on sys objects _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SPOOL {{ source_dp_dir }}/adaptdomain1_sys_grants.sql\n select 'GRANT ' || privilege || ' ON SYS.' || table_name || ' TO ' || GRANTEE || ';'  from dba_tab_privs where grantee = 'ADAPTDOMAIN1' and owner='SYS';
+SPOOL OFF;
+EXIT;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  11:08:30 +0000 (0:00:00.027)       0:02:28.250 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [grants_export : display ADAPTDOMAIN1 users privileges on sys objects msg={{grants_out.stdout_lines}}] ***
+Friday 06 December 2024  11:08:37 +0000 (0:00:06.358)       0:02:34.609 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "GRANT EXECUTE ON SYS.DBMS_SQL TO ADAPTDOMAIN1;",
+        "GRANT EXECUTE ON SYS.DBMS_LOCK TO ADAPTDOMAIN1;",
+        "GRANT EXECUTE ON SYS.DBMS_PIPE TO ADAPTDOMAIN1;",
+        "GRANT EXECUTE ON SYS.DBMS_JOB TO ADAPTDOMAIN1;"
+    ]
+}
+
+PLAY [transfer the final incremental backups to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_xtts_scratch] ***
+
+PLAY [transfer the full meta dumps to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_dump] ***
+
+PLAY [do the final incremental restore on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [find the datafiles on ASM on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the metadata import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the grants import on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY [do the post migration check on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.53.64.8                 : ok=6    changed=3    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Friday 06 December 2024  11:08:37 +0000 (0:00:00.059)       0:02:34.668 ******* 
+=============================================================================== 
+grants_export : do full grants export on US2SUP ----------------------- 122.28s
+Gathering Facts -------------------------------------------------------- 20.83s
+grants_export : Get the list of  the ADAPTDOMAIN1 users privileges on sys objects --- 6.36s
+grants_export : validate if the grants export has been successfully completed. --- 5.02s
+grants_export : display ADAPTDOMAIN1 users privileges on sys objects ---- 0.06s
+grants_export : debug --------------------------------------------------- 0.03s
+grants_export : fail ---------------------------------------------------- 0.02s

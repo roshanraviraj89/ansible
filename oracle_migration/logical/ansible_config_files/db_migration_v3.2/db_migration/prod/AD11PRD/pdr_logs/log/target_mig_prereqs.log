@@ -1,0 +1,204 @@
+nohup: ignoring input
+
+PLAY [check the privilege escalation on hrmaxpd2033.emea.hays.loc] *************
+
+PLAY [do the pre migration checks on hrmaxpd2033.emea.hays.loc] ****************
+
+PLAY [check the database characterset and national character on the AD11PRD] ***
+
+PLAY [check the database characterset and national character on the OTCHPDUK] ***
+
+PLAY [compare the character set output] ****************************************
+
+PLAY [Configure Migration prerequisites on the source vm] **********************
+
+PLAY [Configure Migration prerequisites on the target vm] **********************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+[WARNING]: Platform linux on host 10.100.36.15 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.100.36.15]
+
+TASK [target_mig_prereqs : Check if the directories already exist on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com path={{ item }}] ***
+ok: [10.100.36.15] => (item=/home/oracle/version1/UKPD_xtts_stage)
+ok: [10.100.36.15] => (item=/home/oracle/version1/UKPD_xtts)
+ok: [10.100.36.15] => (item=/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch)
+ok: [10.100.36.15] => (item=/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump)
+ok: [10.100.36.15] => (item=/home/oracle/version1/UKPD_verification)
+
+TASK [target_mig_prereqs : display dir_result variable var=dir_result] *********
+ok: [10.100.36.15] => {
+    "dir_result": {
+        "changed": false,
+        "msg": "All items completed",
+        "results": [
+            {
+                "ansible_loop_var": "item",
+                "changed": false,
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "checksum_algorithm": "sha1",
+                        "follow": false,
+                        "get_attributes": true,
+                        "get_checksum": true,
+                        "get_md5": false,
+                        "get_mime": true,
+                        "path": "/home/oracle/version1/UKPD_xtts_stage"
+                    }
+                },
+                "item": "/home/oracle/version1/UKPD_xtts_stage",
+                "stat": {
+                    "exists": false
+                }
+            },
+            {
+                "ansible_loop_var": "item",
+                "changed": false,
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "checksum_algorithm": "sha1",
+                        "follow": false,
+                        "get_attributes": true,
+                        "get_checksum": true,
+                        "get_md5": false,
+                        "get_mime": true,
+                        "path": "/home/oracle/version1/UKPD_xtts"
+                    }
+                },
+                "item": "/home/oracle/version1/UKPD_xtts",
+                "stat": {
+                    "exists": false
+                }
+            },
+            {
+                "ansible_loop_var": "item",
+                "changed": false,
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "checksum_algorithm": "sha1",
+                        "follow": false,
+                        "get_attributes": true,
+                        "get_checksum": true,
+                        "get_md5": false,
+                        "get_mime": true,
+                        "path": "/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch"
+                    }
+                },
+                "item": "/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch",
+                "stat": {
+                    "exists": false
+                }
+            },
+            {
+                "ansible_loop_var": "item",
+                "changed": false,
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "checksum_algorithm": "sha1",
+                        "follow": false,
+                        "get_attributes": true,
+                        "get_checksum": true,
+                        "get_md5": false,
+                        "get_mime": true,
+                        "path": "/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump"
+                    }
+                },
+                "item": "/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump",
+                "stat": {
+                    "exists": false
+                }
+            },
+            {
+                "ansible_loop_var": "item",
+                "changed": false,
+                "failed": false,
+                "invocation": {
+                    "module_args": {
+                        "checksum_algorithm": "sha1",
+                        "follow": false,
+                        "get_attributes": true,
+                        "get_checksum": true,
+                        "get_md5": false,
+                        "get_mime": true,
+                        "path": "/home/oracle/version1/UKPD_verification"
+                    }
+                },
+                "item": "/home/oracle/version1/UKPD_verification",
+                "stat": {
+                    "exists": false
+                }
+            }
+        ]
+    }
+}
+
+TASK [target_mig_prereqs : display a message if the directories exist on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com msg=directory {{ item.item }} exists] ***
+skipping: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_xtts_stage', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_xtts_stage', 'ansible_loop_var': 'item'}) 
+skipping: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_xtts', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_xtts', 'ansible_loop_var': 'item'}) 
+skipping: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch', 'ansible_loop_var': 'item'}) 
+skipping: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump', 'ansible_loop_var': 'item'}) 
+skipping: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_verification', 'ansible_loop_var': 'item'}) 
+skipping: [10.100.36.15]
+
+TASK [target_mig_prereqs : create directories on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com path={{ item.item }}, state=directory, owner=oracle, group=oinstall, recurse=True, mode=0775] ***
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_xtts_stage', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_xtts_stage', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_xtts', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_xtts', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/home/oracle/version1/UKPD_verification', 'ansible_loop_var': 'item'})
+
+TASK [target_mig_prereqs : check if verification scripts are already present in the /home/oracle/version1/UKPD_verification path={{target_verification_dir}}/{{item}}] ***
+ok: [10.100.36.15] => (item=Application_Objects_In_System_Sysaux.sql)
+ok: [10.100.36.15] => (item=DB_Links_Details.sql)
+ok: [10.100.36.15] => (item=Granted_Roles.sql)
+ok: [10.100.36.15] => (item=Invalid_Objects.sql)
+ok: [10.100.36.15] => (item=List_Schemas_And_Default_TBS.sql)
+ok: [10.100.36.15] => (item=Object_Count_Per_Schema.sql)
+ok: [10.100.36.15] => (item=Schedules_jobs.sql)
+
+TASK [target_mig_prereqs : copy the verification *.sql files to /home/oracle/version1/UKPD_verification src={{item.item}}, dest={{target_verification_dir}}/, owner=oracle, group=oinstall] ***
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/Application_Objects_In_System_Sysaux.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Application_Objects_In_System_Sysaux.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/DB_Links_Details.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'DB_Links_Details.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/Granted_Roles.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Granted_Roles.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/Invalid_Objects.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Invalid_Objects.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/List_Schemas_And_Default_TBS.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'List_Schemas_And_Default_TBS.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/Object_Count_Per_Schema.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Object_Count_Per_Schema.sql', 'ansible_loop_var': 'item'})
+changed: [10.100.36.15] => (item={'changed': False, 'stat': {'exists': False}, 'invocation': {'module_args': {'path': '/home/oracle/version1/UKPD_verification/Schedules_jobs.sql', 'follow': False, 'get_md5': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': 'Schedules_jobs.sql', 'ansible_loop_var': 'item'})
+
+TASK [target_mig_prereqs : check if rman_xttconvert_VER4.3.zip already exists on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com path={{ target_xtts_stage_dir }}/{{ rman_xttconvert }}] ***
+ok: [10.100.36.15]
+
+TASK [target_mig_prereqs : Copy rman_xttconvert_VER4.3.zip to /home/oracle/version1/UKPD_xtts_stage on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com src={{ rman_xttconvert }}, dest={{ target_xtts_stage_dir }}/, owner=oracle, group=oinstall] ***
+changed: [10.100.36.15]
+
+TASK [target_mig_prereqs : check if rman_xttconvert_VER4.3.zip has already been unzipped into the  /home/oracle/version1/UKPD_xtts on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com paths={{ target_xtts_scripts_dir }}, file_type=any] ***
+ok: [10.100.36.15]
+
+TASK [target_mig_prereqs : unzip rman_xttconvert_VER4.3.zip into the  /home/oracle/version1/UKPD_xtts on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com src={{target_xtts_stage_dir}}/{{rman_xttconvert}}, dest={{ target_xtts_scripts_dir }}, mode=0775, owner=oracle, group=oinstall, remote_src=true] ***
+changed: [10.100.36.15]
+
+TASK [target_mig_prereqs : generate xtt.properties file for foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=rx] ***
+changed: [10.100.36.15] => (item={'src': 'xtt.properties.j2', 'dest': '/home/oracle/version1/UKPD_xtts/xtt.properties'})
+
+TASK [target_mig_prereqs : generate meta data import par file src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=r] ***
+changed: [10.100.36.15] => (item={'src': 'meta_import.par.j2', 'dest': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump/meta_import.par'})
+
+TASK [target_mig_prereqs : generate grants import par file src={{ item.src }}, dest={{ item.dest }}, owner=oracle, group=oinstall, mode=u=rwx,g=rwx,o=r] ***
+changed: [10.100.36.15] => (item={'src': 'grants_import.par.j2', 'dest': '/mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_dump/grants_import.par'})
+
+PLAY [do level 0 backup on hrmaxpd2033.emea.hays.loc] **************************
+
+PLAY [transfer the level_0 backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/UKPD_xtts_scratch] ***
+
+PLAY [do level 0 restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.100.36.15               : ok=13   changed=7    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Playbook run took 0 days, 0 hours, 0 minutes, 47 seconds

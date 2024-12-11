@@ -1,0 +1,487 @@
+nohup: ignoring input
+
+PLAY [check the privilege escalation on hrraxdv2028.emea.hays.loc] *************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  08:52:39 +0000 (0:00:00.055)       0:00:00.055 ******* 
+[WARNING]: Platform linux on host 10.100.72.47 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.100.72.47]
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.53.64.8 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.53.64.8]
+
+TASK [shell _raw_params=hostname
+whoami
+date
+python --version
+] ****************
+Friday 06 December 2024  08:53:00 +0000 (0:00:20.665)       0:00:20.721 ******* 
+changed: [10.100.72.47]
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [debug var=output.stdout_lines] *******************************************
+Friday 06 December 2024  08:53:05 +0000 (0:00:05.243)       0:00:25.965 ******* 
+ok: [10.53.64.8] => {
+    "output.stdout_lines": [
+        "hrraxdv2028.emea.hays.loc",
+        "oracle",
+        "Fri  6 Dec 08:53:04 2024",
+        "Python 3.7.15"
+    ]
+}
+ok: [10.100.72.47] => {
+    "output.stdout_lines": [
+        "foaukl1npdb-swdo81",
+        "oracle",
+        "Fri Dec  6 08:53:01 GMT 2024",
+        "Python 3.6.8"
+    ]
+}
+
+PLAY [do the pre migration checks on hrraxdv2028.emea.hays.loc] ****************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  08:53:05 +0000 (0:00:00.061)       0:00:26.027 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.53.64.8]
+
+TASK [pre_mig_check : crosscheck the tablespaces and users to be migrated, and identify any users whose default tablespace is not included in the tabelsapce list _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF SERVEROUTPUT on FEEDBACK OFF\n 
+DECLARE
+        CURSOR invalid_tablespaces_cursor IS
+            SELECT username, default_tablespace
+            FROM dba_users
+            WHERE oracle_maintained = 'N'
+              AND username IN ({{ db_users | replace(',', "', '") | regex_replace('^', "'") | regex_replace('$', "'") }})
+              AND default_tablespace NOT IN ({{ tablespaces | replace(',', "', '") | regex_replace('^', "'") | regex_replace('$', "'") }})
+            ORDER BY username;
+    BEGIN
+        FOR rec IN invalid_tablespaces_cursor LOOP
+            DBMS_OUTPUT.PUT_LINE('User: ' || rec.username || ', Default Tablespace: ' || rec.default_tablespace);
+        END LOOP;
+    END;
+    /
+    EXIT;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:53:28 +0000 (0:00:22.993)       0:00:49.021 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.53.64.8]
+
+TASK [pre_mig_check : Check if any rows were returned msg=All users default tabelsapces are included in the tablespace list; continuing playbook execution.] ***
+Friday 06 December 2024  08:53:33 +0000 (0:00:04.937)       0:00:53.958 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : Fail if returned rows contain tablespaces other than USERS or SYSTEM msg=['Some users have a default tablespace that is not included in the tablespace list, nor is it USERS or SYSTEM.', '{{sql_output.stdout_lines}}']] ***
+Friday 06 December 2024  08:53:33 +0000 (0:00:00.022)       0:00:53.981 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : Continue if all returned tablespaces are in USERS or SYSTEM msg=['All tablespaces returned that are not part of the tablespace list are either USERS or SYSTEM. Hence proceeding with the playbook.', '{{sql_output.stdout_lines}}']] ***
+Friday 06 December 2024  08:53:33 +0000 (0:00:00.026)       0:00:54.007 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "All tablespaces returned that are not part of the tablespace list are either USERS or SYSTEM. Hence proceeding with the playbook.",
+        [
+            "User: GLOBAL_BI, Default Tablespace: USERS"
+        ]
+    ]
+}
+
+TASK [pre_mig_check : check  if all the tablespaces are self contained _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n EXECUTE DBMS_TTS.TRANSPORT_SET_CHECK('{{tablespaces}}', TRUE);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:53:33 +0000 (0:00:00.029)       0:00:54.036 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display transport check out msg={{out.stdout_lines}}] ****
+Friday 06 December 2024  08:54:35 +0000 (0:01:01.629)       0:01:55.666 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "",
+        "PL/SQL procedure successfully completed."
+    ]
+}
+
+TASK [pre_mig_check : check if any violations are reported _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SELECT * FROM TRANSPORT_SET_VIOLATIONS;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:54:35 +0000 (0:00:00.026)       0:01:55.692 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display transport   violations out msg={{violations_out.stdout_lines}}] ***
+Friday 06 December 2024  08:54:40 +0000 (0:00:05.451)       0:02:01.144 ******* 
+ok: [10.53.64.8] => {
+    "msg": []
+}
+
+TASK [pre_mig_check : fail msg=One or more tablespaces are not self contained. Violations have been reported] ***
+Friday 06 December 2024  08:54:40 +0000 (0:00:00.023)       0:02:01.168 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : check if the source database has already been set archivelog mode _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select log_mode from v\$database;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:54:40 +0000 (0:00:00.023)       0:02:01.192 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display the archivelog mode msg={{archive_mode.stdout_lines}}] ***
+Friday 06 December 2024  08:54:47 +0000 (0:00:06.446)       0:02:07.638 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "ARCHIVELOG"
+    ]
+}
+
+TASK [pre_mig_check : fail msg=Source Database is on NOARCHIVELOG mode. It must be on ARCHIVELOG mode] ***
+Friday 06 December 2024  08:54:47 +0000 (0:00:00.095)       0:02:07.733 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : check if the block change tracking has been enabled on source database _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select status from v\$block_change_tracking;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:54:47 +0000 (0:00:00.097)       0:02:07.831 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display the block_change_tracking msg={{block_change_tracking.stdout_lines}}] ***
+Friday 06 December 2024  08:54:55 +0000 (0:00:07.823)       0:02:15.655 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "ENABLED"
+    ]
+}
+
+TASK [pre_mig_check : fail msg=Block change tracking is not enabled on the source database] ***
+Friday 06 December 2024  08:54:55 +0000 (0:00:00.127)       0:02:15.782 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : check RMAN default device type _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SHOW DEFAULT DEVICE TYPE;" | {{ source_oracle_home }}/bin/rman target /
+] ***
+Friday 06 December 2024  08:54:55 +0000 (0:00:00.105)       0:02:15.887 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display RMAN default device type configuration msg={{ default_device_out.stdout_lines }}] ***
+Friday 06 December 2024  08:55:10 +0000 (0:00:15.457)       0:02:31.345 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "",
+        "Recovery Manager: Release 19.0.0.0.0 - Production on Fri Dec 6 08:55:02 2024",
+        "Version 19.11.0.0.0",
+        "",
+        "Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.",
+        "",
+        "connected to target database: US2SUP (DBID=1331891994)",
+        "",
+        "RMAN> ",
+        "using target database control file instead of recovery catalog",
+        "RMAN configuration parameters for database with db_unique_name US2SUP are:",
+        "CONFIGURE DEFAULT DEVICE TYPE TO DISK; # default",
+        "",
+        "RMAN> ",
+        "",
+        "Recovery Manager complete."
+    ]
+}
+
+TASK [pre_mig_check : fail msg=RMAN configuration default device type not set to  disk] ***
+Friday 06 December 2024  08:55:10 +0000 (0:00:00.024)       0:02:31.369 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : check RMAN backupset configuration _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SHOW DEVICE TYPE;" | {{ source_oracle_home }}/bin/rman target /
+] ***
+Friday 06 December 2024  08:55:10 +0000 (0:00:00.024)       0:02:31.394 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display RMAN backupset configuration msg={{ backupset_out.stdout_lines }}] ***
+Friday 06 December 2024  08:55:21 +0000 (0:00:10.316)       0:02:41.711 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "",
+        "Recovery Manager: Release 19.0.0.0.0 - Production on Fri Dec 6 08:55:17 2024",
+        "Version 19.11.0.0.0",
+        "",
+        "Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.",
+        "",
+        "connected to target database: US2SUP (DBID=1331891994)",
+        "",
+        "RMAN> ",
+        "using target database control file instead of recovery catalog",
+        "RMAN configuration parameters for database with db_unique_name US2SUP are:",
+        "CONFIGURE DEVICE TYPE DISK BACKUP TYPE TO BACKUPSET PARALLELISM 10;",
+        "",
+        "RMAN> ",
+        "",
+        "Recovery Manager complete."
+    ]
+}
+
+TASK [pre_mig_check : fail msg=RMAN configuration contains COMPRESSED BACKUPSET, which is not allowed.] ***
+Friday 06 December 2024  08:55:21 +0000 (0:00:00.024)       0:02:41.735 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : Ensure there is no unusable indexes in the source database _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select table_owner,table_name,owner,index_name,status,tablespace_name from dba_indexes where status='UNUSABLE' and tablespace_name in ({{ "'" + tablespaces | regex_replace(',', "','") + "'" }});" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:55:21 +0000 (0:00:00.023)       0:02:41.759 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display the unusable indexes msg={{unusable_out.stdout_lines}}] ***
+Friday 06 December 2024  08:55:27 +0000 (0:00:06.367)       0:02:48.126 ******* 
+ok: [10.53.64.8] => {
+    "msg": []
+}
+
+TASK [pre_mig_check : fail msg=One or more indexes are unusable] ***************
+Friday 06 December 2024  08:55:27 +0000 (0:00:00.047)       0:02:48.174 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : Check if CTXSYS user exists _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select username from dba_users where username='CTXSYS';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+] ***
+Friday 06 December 2024  08:55:27 +0000 (0:00:00.042)       0:02:48.216 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : Ensure there are no indexes with pending rows in DR$PENDING _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select u.username, i.idx_name from ctxsys.dr\$index i, dba_users u where u.user_id=i.idx_owner# and idx_id in (select pnd_cid from ctxsys.dr\$pending);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+] ***
+Friday 06 December 2024  08:55:34 +0000 (0:00:06.469)       0:02:54.686 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : Display pending indexes output msg={{pending_indexes_out.stdout_lines}}] ***
+Friday 06 December 2024  08:55:40 +0000 (0:00:06.562)       0:03:01.249 ******* 
+ok: [10.53.64.8] => {
+    "msg": []
+}
+
+TASK [pre_mig_check : fail msg=One or more indexes have pending rows in DR$PENDING. Synchronize them using the following command format: exec ctx_ddl.sync_index('USERNAME.INDEX');] ***
+Friday 06 December 2024  08:55:40 +0000 (0:00:00.026)       0:03:01.276 ******* 
+skipping: [10.53.64.8]
+
+TASK [pre_mig_check : Ensure there are no APPLICATION='Y' objects in the database _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select a.object_name from dba_objects a inner join dba_users b on a.owner=b.username where b.oracle_maintained='N' and SHARING='NONE' and application='Y' order by 1;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+] ***
+Friday 06 December 2024  08:55:40 +0000 (0:00:00.025)       0:03:01.301 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [pre_mig_check : display the objects with APPLICATION='Y' msg={{application_out.stdout_lines}}] ***
+Friday 06 December 2024  08:55:48 +0000 (0:00:07.932)       0:03:09.233 ******* 
+ok: [10.53.64.8] => {
+    "msg": []
+}
+
+TASK [pre_mig_check : fail msg=One or more APPLICATION='Y' objects found ] *****
+Friday 06 December 2024  08:55:48 +0000 (0:00:00.024)       0:03:09.258 ******* 
+skipping: [10.53.64.8]
+
+PLAY [check the database characterset and national character on the US2SUP] ****
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  08:55:48 +0000 (0:00:00.029)       0:03:09.287 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+ok: [10.53.64.8]
+
+TASK [source_pre_character_set_check : check database character set and national character set on the US2SUP _raw_params=export ORACLE_SID={{source_oracle_sid}}
+export ORACLE_HOME={{source_oracle_home}}
+printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select property_name, property_value from database_properties where property_name in ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+] ***
+Friday 06 December 2024  08:56:16 +0000 (0:00:28.017)       0:03:37.305 ******* 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.53.64.8]
+
+TASK [source_pre_character_set_check : display the character set output msg={{source_cha_out.stdout_lines}}] ***
+Friday 06 December 2024  08:56:22 +0000 (0:00:06.289)       0:03:43.594 ******* 
+ok: [10.53.64.8] => {
+    "msg": [
+        "NLS_NCHAR_CHARACTERSET",
+        "UTF8",
+        "",
+        "NLS_CHARACTERSET",
+        "AL32UTF8"
+    ]
+}
+
+TASK [source_pre_character_set_check : store the source characterset value in a local file content={{source_cha_out.stdout_lines}}, dest={{source_db}}_source_cha_set.txt] ***
+Friday 06 December 2024  08:56:22 +0000 (0:00:00.026)       0:03:43.621 ******* 
+ok: [10.53.64.8 -> localhost]
+
+PLAY [check the database characterset and national character on the OTCHPPUS] ***
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  08:56:23 +0000 (0:00:00.563)       0:03:44.184 ******* 
+ok: [10.100.72.47]
+
+TASK [target_pre_character_set_check : check database character set and national character set on the OTCHPPUS_USPP _raw_params=export ORACLE_SID={{target_oracle_sid}}
+export ORACLE_HOME={{target_oracle_home}}
+export TNS_ADMIN={{target_tns_admin}}
+echo -e "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select property_name, property_value from database_properties where property_name in ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET');" | {{ target_oracle_home }}/bin/sqlplus -s {{target_conn_str}} as sysdba
+] ***
+Friday 06 December 2024  08:56:25 +0000 (0:00:02.147)       0:03:46.332 ******* 
+changed: [10.100.72.47]
+
+TASK [target_pre_character_set_check : display the target character set output msg=['{{target_cha_out.stdout_lines}}']] ***
+Friday 06 December 2024  08:56:27 +0000 (0:00:02.258)       0:03:48.591 ******* 
+ok: [10.100.72.47] => {
+    "msg": [
+        [
+            "NLS_NCHAR_CHARACTERSET",
+            "UTF8",
+            "",
+            "NLS_CHARACTERSET",
+            "AL32UTF8"
+        ]
+    ]
+}
+
+TASK [target_pre_character_set_check : store the target characterset value in a local file content={{target_cha_out.stdout_lines}}, dest={{target_pdb}}_target_cha_set.txt] ***
+Friday 06 December 2024  08:56:27 +0000 (0:00:00.036)       0:03:48.627 ******* 
+ok: [10.100.72.47 -> localhost]
+
+PLAY [compare the character set output] ****************************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Friday 06 December 2024  08:56:28 +0000 (0:00:00.344)       0:03:48.971 ******* 
+ok: [localhost]
+
+TASK [generate diff _raw_params=diff {{source_db}}_source_cha_set.txt {{target_pdb}}_target_cha_set.txt] ***
+Friday 06 December 2024  08:56:28 +0000 (0:00:00.466)       0:03:49.438 ******* 
+changed: [localhost]
+
+TASK [show diff result var=diff_result] ****************************************
+Friday 06 December 2024  08:56:28 +0000 (0:00:00.180)       0:03:49.618 ******* 
+ok: [localhost] => {
+    "diff_result": {
+        "changed": true,
+        "cmd": [
+            "diff",
+            "US2SUP_source_cha_set.txt",
+            "USPP_target_cha_set.txt"
+        ],
+        "delta": "0:00:00.002578",
+        "end": "2024-12-06 08:56:28.964504",
+        "failed": false,
+        "rc": 0,
+        "start": "2024-12-06 08:56:28.961926",
+        "stderr": "",
+        "stderr_lines": [],
+        "stdout": "",
+        "stdout_lines": []
+    }
+}
+
+TASK [fail msg=the database character set and the national character sets are not the same between the source and the target] ***
+Friday 06 December 2024  08:56:29 +0000 (0:00:00.018)       0:03:49.637 ******* 
+skipping: [localhost]
+
+PLAY [Configure Migration prerequisites on the source vm] **********************
+
+PLAY [Configure Migration prerequisites on the target vm] **********************
+
+PLAY [do level 0 backup on hrraxdv2028.emea.hays.loc] **************************
+
+PLAY [transfer the level_0 backups to the /mnt/otchukl1npfss01/xtts_backup/version1/USPP_xtts_scratch] ***
+
+PLAY [do level 0 restore on foaukl1npdb-swdo81.otchukl1npexcl.otchukl1npvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.100.72.47               : ok=7    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+10.53.64.8                 : ok=29   changed=12   unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   
+localhost                  : ok=3    changed=1    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+Friday 06 December 2024  08:56:29 +0000 (0:00:00.041)       0:03:49.678 ******* 
+=============================================================================== 
+pre_mig_check : check  if all the tablespaces are self contained ------- 61.63s
+Gathering Facts -------------------------------------------------------- 28.02s
+Gathering Facts -------------------------------------------------------- 22.99s
+Gathering Facts -------------------------------------------------------- 20.67s
+pre_mig_check : check RMAN default device type ------------------------- 15.46s
+pre_mig_check : check RMAN backupset configuration --------------------- 10.32s
+pre_mig_check : Ensure there are no APPLICATION='Y' objects in the database --- 7.93s
+pre_mig_check : check if the block change tracking has been enabled on source database --- 7.82s
+pre_mig_check : Ensure there are no indexes with pending rows in DR$PENDING --- 6.56s
+pre_mig_check : Check if CTXSYS user exists ----------------------------- 6.47s
+pre_mig_check : check if the source database has already been set archivelog mode --- 6.45s
+pre_mig_check : Ensure there is no unusable indexes in the source database --- 6.37s
+source_pre_character_set_check : check database character set and national character set on the US2SUP --- 6.29s
+pre_mig_check : check if any violations are reported -------------------- 5.45s
+shell ------------------------------------------------------------------- 5.24s
+pre_mig_check : crosscheck the tablespaces and users to be migrated, and identify any users whose default tablespace is not included in the tabelsapce list --- 4.94s
+target_pre_character_set_check : check database character set and national character set on the OTCHPPUS_USPP --- 2.26s
+Gathering Facts --------------------------------------------------------- 2.15s
+source_pre_character_set_check : store the source characterset value in a local file --- 0.56s
+Gathering Facts --------------------------------------------------------- 0.47s

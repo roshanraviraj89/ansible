@@ -1,0 +1,219 @@
+nohup: ignoring input
+
+PLAY [check the privilege escalation on hrmaxpd2035.emea.hays.loc] *************
+
+PLAY [do the pre migration checks on hrmaxpd2035.emea.hays.loc] ****************
+
+PLAY [check the database characterset and national character on the ADRW10PD] ***
+
+PLAY [check the database characterset and national character on the OTCHPDCA] ***
+
+PLAY [compare the character set output] ****************************************
+
+PLAY [Configure Migration prerequisites on the source vm] **********************
+
+PLAY [Configure Migration prerequisites on the target vm] **********************
+
+PLAY [do level 0 backup on hrmaxpd2035.emea.hays.loc] **************************
+
+TASK [Gathering Facts gather_subset=['all'], gather_timeout=10] ****************
+Tuesday 19 November 2024  02:00:20 +0000 (0:00:00.093)       0:00:00.093 ****** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+[WARNING]: Platform aix on host 10.190.17.156 is using the discovered Python
+interpreter at /usr/bin/python, but future installation of another Python
+interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
+ce_appendices/interpreter_discovery.html for more information.
+ok: [10.190.17.156]
+
+TASK [level_0_backup : Do a level 0 backup on hrmaxpd2035.emea.hays.loc _raw_params=export ORACLE_SID={{ source_oracle_sid }}
+export ORACLE_HOME={{ source_oracle_home }} 
+export NLS_LANG={{ nls_lang }}
+export TMPDIR={{ source_xtts_scripts_dir }} 
+cd {{ source_xtts_scripts_dir }}
+{{ source_oracle_home }}/perl/bin/perl xttdriver.pl --backup
+] ***
+Tuesday 19 November 2024  02:01:04 +0000 (0:00:43.164)       0:00:43.257 ****** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+changed: [10.190.17.156]
+
+TASK [level_0_backup : Wait for the backup job to finish jid={{ backup_async_job.ansible_job_id }}] ***
+Tuesday 19 November 2024  02:01:11 +0000 (0:00:07.084)       0:00:50.342 ****** 
+[WARNING]: Using world-readable permissions for temporary files Ansible needs
+to create when becoming an unprivileged user. This may be insecure. For
+information on securing this, see
+https://docs.ansible.com/ansible/become.html#becoming-an-unprivileged-user
+FAILED - RETRYING: Wait for the backup job to finish (20160 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20159 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20158 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20157 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20156 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20155 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20154 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20153 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20152 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20151 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20150 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20149 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20148 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20147 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20146 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20145 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20144 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20143 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20142 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20141 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20140 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20139 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20138 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20137 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20136 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20135 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20134 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20133 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20132 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20131 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20130 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20129 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20128 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20127 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20126 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20125 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20124 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20123 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20122 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20121 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20120 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20119 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20118 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20117 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20116 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20115 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20114 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20113 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20112 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20111 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20110 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20109 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20108 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20107 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20106 retries left).
+FAILED - RETRYING: Wait for the backup job to finish (20105 retries left).
+changed: [10.190.17.156]
+
+TASK [level_0_backup : Validate if the backup has been completed successfully msg={{ backup_out.stdout_lines }}] ***
+Tuesday 19 November 2024  02:35:00 +0000 (0:33:49.857)       0:34:40.199 ****** 
+ok: [10.190.17.156] => {
+    "msg": [
+        "============================================================",
+        "trace file is /home/oracle/version1/ADRW10PD_xtts/backup_Nov19_Tue_02_01_12_219//Nov19_Tue_02_01_12_219_.log",
+        "=============================================================",
+        "",
+        "--------------------------------------------------------------------",
+        "Parsing properties",
+        "--------------------------------------------------------------------",
+        "",
+        "",
+        "--------------------------------------------------------------------",
+        "Done parsing properties",
+        "--------------------------------------------------------------------",
+        "",
+        "",
+        "--------------------------------------------------------------------",
+        "Checking properties",
+        "--------------------------------------------------------------------",
+        "",
+        "",
+        "--------------------------------------------------------------------",
+        "Maximum 8 files will be fetched in parallel",
+        "--------------------------------------------------------------------",
+        "",
+        "",
+        "--------------------------------------------------------------------",
+        "Done checking properties",
+        "--------------------------------------------------------------------",
+        "",
+        "",
+        "--------------------------------------------------------------------",
+        "Starting backup phase",
+        "--------------------------------------------------------------------",
+        "",
+        "Prepare source for Tablespaces:",
+        "                  'ADAPTDOMAIN1_DATA'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'ADAPTDOMAIN1_DATA' started at Tue Nov 19 02:01:14 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:01:15 2024",
+        "Prepare source for Tablespaces:",
+        "                  'ADAPT_DATA'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'ADAPT_DATA' started at Tue Nov 19 02:02:08 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:02:09 2024",
+        "Prepare source for Tablespaces:",
+        "                  'ADAPTINTOUCH'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'ADAPTINTOUCH' started at Tue Nov 19 02:28:50 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:28:51 2024",
+        "Prepare source for Tablespaces:",
+        "                  'ADAPT_USERS'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'ADAPT_USERS' started at Tue Nov 19 02:29:17 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:29:18 2024",
+        "Prepare source for Tablespaces:",
+        "                  'BOISJMSDB'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'BOISJMSDB' started at Tue Nov 19 02:29:47 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:29:48 2024",
+        "Prepare source for Tablespaces:",
+        "                  'DHC_ROLLBACK_TRANSIENT'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'DHC_ROLLBACK_TRANSIENT' started at Tue Nov 19 02:30:45 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:30:47 2024",
+        "Prepare source for Tablespaces:",
+        "                  'FUZZY_SEARCH'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'FUZZY_SEARCH' started at Tue Nov 19 02:31:42 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:31:44 2024",
+        "Prepare source for Tablespaces:",
+        "                  'OT_SCHD_DATA'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'OT_SCHD_DATA' started at Tue Nov 19 02:32:23 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:32:24 2024",
+        "Prepare source for Tablespaces:",
+        "                  'SPMSGBRK_DATA'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'SPMSGBRK_DATA' started at Tue Nov 19 02:32:52 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:32:53 2024",
+        "Prepare source for Tablespaces:",
+        "                  'WEBINT_DATA'  /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch",
+        "xttpreparesrc.sql for 'WEBINT_DATA' started at Tue Nov 19 02:33:21 2024",
+        "xttpreparesrc.sql for  ended at Tue Nov 19 02:33:22 2024",
+        "",
+        "--------------------------------------------------------------------",
+        "Done with backup phase",
+        "--------------------------------------------------------------------",
+        "",
+        "Prepare newscn for Tablespaces: 'ADAPTDOMAIN1_DATA'",
+        "Prepare newscn for Tablespaces: 'ADAPT_DATA'",
+        "Prepare newscn for Tablespaces: 'ADAPTINTOUCH'",
+        "Prepare newscn for Tablespaces: 'ADAPT_USERS'",
+        "Prepare newscn for Tablespaces: 'BOISJMSDB'",
+        "Prepare newscn for Tablespaces: 'DHC_ROLLBACK_TRANSIENT'",
+        "Prepare newscn for Tablespaces: 'FUZZY_SEARCH'",
+        "Prepare newscn for Tablespaces: 'OT_SCHD_DATA'",
+        "Prepare newscn for Tablespaces: 'SPMSGBRK_DATA'",
+        "Prepare newscn for Tablespaces: 'WEBINT_DATA'",
+        "New /home/oracle/version1/ADRW10PD_xtts/xttplan.txt with FROM SCN's generated",
+        "scalar(or10",
+        "XXX: adding here for 2, 0, ADAPTDOMAIN1_DATA,ADAPT_DATA,ADAPTINTOUCH,ADAPT_USERS,BOISJMSDB,DHC_ROLLBACK_TRANSIENT,FUZZY_SEARCH,OT_SCHD_DATA,SPMSGBRK_DATA,WEBINT_DATA"
+    ]
+}
+
+PLAY [transfer the level_0 backups to the /mnt/foaexaukl1pdfss01/xtts_backup/version1/CAPD_xtts_scratch] ***
+
+PLAY [do level 0 restore on foaukl1pddb-4kxck1.otchukl1pdexcl.otchukl1pdvcn01.oraclevcn.com] ***
+
+PLAY RECAP *********************************************************************
+10.190.17.156              : ok=4    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+Tuesday 19 November 2024  02:35:01 +0000 (0:00:00.058)       0:34:40.257 ****** 
+=============================================================================== 
+level_0_backup : Wait for the backup job to finish ------------------- 2029.86s
+Gathering Facts -------------------------------------------------------- 43.16s
+level_0_backup : Do a level 0 backup on hrmaxpd2035.emea.hays.loc ------- 7.08s
+level_0_backup : Validate if the backup has been completed successfully --- 0.06s
