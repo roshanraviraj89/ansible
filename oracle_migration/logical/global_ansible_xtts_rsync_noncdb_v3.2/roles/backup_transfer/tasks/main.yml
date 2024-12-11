@@ -1,0 +1,110 @@
+---
+# tasks file for backup_transfer
+
+# - name: rysnc source_backups directory to the target backup_directory
+#   shell: rsync -rvzh --partial --progress --append {{source_xtts_scratch_dir}}/ {{dest_user}}@{{target_ip_address}}:{{target_xtts_scratch_dir}}/
+#   register: transfer_out
+
+# - name: validate if the backup has been transfered ok to the target {{target_xtts_scratch_dir}} directory
+#   debug: 
+#     msg: "{{transfer_out.stdout_lines}}"
+#   when: transfer_out.rc == 0
+
+
+- name: Execute the rsync_backup transfer script
+  shell: "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.sh > {{ source_xtts_scripts_dir  }}/rsync_parallel_backup_transfer_v4.log"
+  ##shell: "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4_temp.sh > {{ source_xtts_scripts_dir  }}/rsync_parallel_backup_transfer_v4.log"
+  async: 604800  # Allow the task to run asynchronously for up to a week (604800 seconds)
+  poll: 0     # Check the status of the task every 5 minute (300 seconds)
+  register: rsync_task
+
+- name: Wait for rsync_backup task to complete
+  async_status:
+    jid: "{{ rsync_task.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 20160  # This should cover up to 168 hours (1 week)
+  delay: 30
+
+##{{ source_xtts_scripts_dir  }}/rsync_parallel_backup_transfer_v4.log"
+- name: display the rsync status
+  debug: var=rsync_task
+
+
+##
+- name: check rsync_parallel_backup_transfer_v4.log
+  shell: grep "encountered an error" {{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log
+  ignore_errors: true
+  register: rsync_error_out
+
+- name: display the rsync errors
+  debug: 
+    msg: "{{rsync_error_out.stdout_lines}}"
+  when: rsync_error_out.rc == 0
+
+- fail: 
+   msg: "errors while transferring the backups"
+  when:  rsync_error_out.rc == 0
+
+- name: read the rsync_parallel_backup_transfer_v4.log
+  slurp: 
+    src: "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log"
+  register: log_content
+
+- name: Decode the log file content
+  set_fact:
+    log_content_decoded: "{{ log_content.content | b64decode }}"
+
+- name: Display the log file content
+  debug:
+    msg: "{{ log_content_decoded }}"
+
+
+- name: Get current timestamp
+  command: date +%Y%m%d%H%M%S
+  register: timestamp
+
+- name: rename rsync_parallel_backup_transfer_v4.log with the current timestamp
+  command: mv "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.log" "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4_{{timestamp.stdout}}.log"
+
+
+
+
+
+
+- name: Additionally transfer the incrbackups.txt to the {{target_xtts_scripts_dir}} directory for the validation.
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh {{source_xtts_scripts_dir}}/incrbackups.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: not rsync_error_out.rc == 0
+  register: incrbackups_transfer_out
+
+- fail: 
+   msg: "errors while transferring the incrbackups.txt file"
+  when: not incrbackups_transfer_out.rc == 0
+
+- name: display incrbackups_transfer_out
+  debug: 
+    msg: "{{ incrbackups_transfer_out.stdout_lines }}"
+  when: incrbackups_transfer_out.rc == 0
+
+- name: finally copy the res.txt file to the {{target_xtts_scripts_dir}}
+  #shell: scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  shell: rsync -vzh --partial --progress --append {{source_xtts_scripts_dir}}/res.txt {{dest_user}}@{{target_ip_address}}:{{target_xtts_scripts_dir}}
+  when: not rsync_error_out.rc == 0
+  register: res_transfer_out
+
+- fail: 
+   msg: "errors while transferring the res.txt file"
+  when: not res_transfer_out.rc == 0
+
+- name: display res file transfer status
+  debug: 
+    msg: "{{ res_transfer_out.stdout_lines }}"
+  when: res_transfer_out.rc == 0
+
+
+
+
+
+  
+  

@@ -1,0 +1,71 @@
+---
+# tasks file for meta_export
+
+- name: create data pump directory {{dump_dir}} and grant permission to system user on {{dump_dir}}
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n CREATE OR REPLACE DIRECTORY {{dump_dir}} as '{{source_dp_dir}}';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+    printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n grant read, write on directory {{dump_dir}} to {{ source_system_user }};" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: dir_out
+
+- debug: 
+    msg: "{{dir_out.stdout_lines}}"
+
+
+# - name: do metadata export on {{source_db}}
+#   shell: |
+#     export ORACLE_SID={{source_oracle_sid}}
+#     export ORACLE_HOME={{source_oracle_home}}
+#     cd {{source_dp_dir}}
+#     {{source_oracle_home}}/bin/expdp {{ source_system_user }}/{{source_system_passwd}}@{{source_srv}} parfile={{exp_par_file}}
+
+
+# - name:  validate if the metadata export has been successfully completed.
+#   shell: grep "successfully completed" {{source_dp_dir}}/{{exp_logfile}}
+#   register: exp_out
+
+# - fail: 
+#    msg: "{{Errors on export. Fix the issue and re-run the meta data export}}"
+#   when: not exp_out.rc == 0
+  
+# - debug:
+#     msg: "{{exp_out.stdout_lines}}"
+#   when:  exp_out.rc == 0
+
+
+
+- name: Do metadata export on {{ source_db }}
+  async: 604800 # Maximum wait time for the task in seconds (1 week)
+  poll: 0       # Start the task and don't wait for it to finish
+  shell: |
+    export ORACLE_SID={{ source_oracle_sid }}
+    export ORACLE_HOME={{ source_oracle_home }}
+    cd {{ source_dp_dir }}
+    {{ source_oracle_home }}/bin/expdp {{ source_system_user }}/{{ source_system_passwd }}@{{ source_srv }} parfile={{ exp_par_file }}
+  register: exp_async_job
+
+- name: Wait for the metadata export job to finish
+  async_status:
+    jid: "{{ exp_async_job.ansible_job_id }}"
+  register: exp_out
+  until: exp_out.finished
+  retries: 20160  # Retry up to 1 week (20160 retries with 30-second delay each)
+  delay: 30       # Delay between retries
+
+- name: Validate if the metadata export has been successfully completed
+  shell: grep "successfully completed" {{ source_dp_dir }}/{{ exp_logfile }}
+  register: exp_validation
+
+- name: Fail if the metadata export was not successful
+  fail:
+    msg: "Errors on export. Fix the issue and re-run the metadata export."
+  when: exp_validation.rc != 0
+
+- name: Display metadata export results
+  debug:
+    msg: "{{ exp_validation.stdout_lines }}"
+  when: exp_validation.rc == 0
+
+
+     

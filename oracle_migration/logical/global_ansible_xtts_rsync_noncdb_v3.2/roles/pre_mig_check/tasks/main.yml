@@ -1,0 +1,221 @@
+---
+# tasks file for pre_mig_check
+
+## do the pre migration checks
+
+- name: crosscheck the tablespaces and users to be migrated, and identify any users whose default tablespace is not included in the tabelsapce list
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF SERVEROUTPUT on FEEDBACK OFF\n 
+    DECLARE
+            CURSOR invalid_tablespaces_cursor IS
+                SELECT username, default_tablespace
+                FROM dba_users
+                WHERE oracle_maintained = 'N'
+                  AND username IN ({{ db_users | replace(',', "', '") | regex_replace('^', "'") | regex_replace('$', "'") }})
+                  AND default_tablespace NOT IN ({{ tablespaces | replace(',', "', '") | regex_replace('^', "'") | regex_replace('$', "'") }})
+                ORDER BY username;
+        BEGIN
+            FOR rec IN invalid_tablespaces_cursor LOOP
+                DBMS_OUTPUT.PUT_LINE('User: ' || rec.username || ', Default Tablespace: ' || rec.default_tablespace);
+            END LOOP;
+        END;
+        /
+        EXIT;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: sql_output
+  failed_when: sql_output.rc != 0
+  changed_when: false
+
+- name: Check if any rows were returned
+  debug:
+     msg: "All users default tabelsapces are included in the tablespace list; continuing playbook execution."
+  when: sql_output.stdout | trim | length == 0
+ 
+- name: Fail if returned rows contain tablespaces other than USERS or SYSTEM
+  fail:
+    msg:
+     - "Some users have a default tablespace that is not included in the tablespace list, nor is it USERS or SYSTEM."
+     - "{{sql_output.stdout_lines}}"
+  when: 
+    - sql_output.stdout | trim | length > 0
+    - sql_output.stdout | regex_findall('^(?!.*(USERS|SYSTEM)).*', multiline=True) | length > 0
+   # - sql_output.stdout | split('\n') | select('search', '^(?!.*(USERS|SYSTEM)).*') | length > 0
+ 
+- name: Continue if all returned tablespaces are in USERS or SYSTEM
+  debug:
+    msg: 
+     - "All tablespaces returned that are not part of the tablespace list are either USERS or SYSTEM. Hence proceeding with the playbook."
+     - "{{sql_output.stdout_lines}}"
+  when:
+    - sql_output.stdout | trim | length > 0
+    - sql_output.stdout | regex_findall('^(?!.*(USERS|SYSTEM)).*', multiline=True) | length == 0
+    #- sql_output.stdout | split('\n') | select('search', '^(?!.*(USERS|SYSTEM)).*') | length == 0
+
+- name: check  if all the tablespaces are self contained
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 VERIFY OFF HEADING OFF ECHO OFF\n EXECUTE DBMS_TTS.TRANSPORT_SET_CHECK('{{tablespaces}}', TRUE);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: out
+
+- name: display transport check out
+  debug: 
+    msg: "{{out.stdout_lines}}"
+
+- name: check if any violations are reported 
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n SELECT * FROM TRANSPORT_SET_VIOLATIONS;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: violations_out
+
+- name: display transport   violations out
+  debug: 
+    msg: "{{violations_out.stdout_lines}}"
+  #when: violations_out.rc == 0 and violations_out.stdout_lines | length == 0
+
+- fail:
+    msg: "One or more tablespaces are not self contained. Violations have been reported" 
+  when: violations_out.rc == 0 and violations_out.stdout_lines | length > 0
+
+- name: check if the source database has already been set archivelog mode
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select log_mode from v\$database;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: archive_mode
+
+- name: display the archivelog mode
+  debug: 
+    msg: "{{archive_mode.stdout_lines}}"
+
+# fail if the source db is  on no-archivelog mode
+- fail:
+    msg: "Source Database is on NOARCHIVELOG mode. It must be on ARCHIVELOG mode"
+  when: archive_mode.rc == 0 and  "NOARCHIVELOG" in archive_mode.stdout_lines
+
+- name: check if the block change tracking has been enabled on source database
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select status from v\$block_change_tracking;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: block_change_tracking
+
+- name: display the block_change_tracking
+  debug: 
+    msg: "{{block_change_tracking.stdout_lines}}"
+
+- fail: 
+    msg: "Block change tracking is not enabled on the source database"
+  when: block_change_tracking.rc == 0 and "ENABLED" not in block_change_tracking.stdout_lines
+
+- name: check RMAN default device type
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SHOW DEFAULT DEVICE TYPE;" | {{ source_oracle_home }}/bin/rman target /
+  register: default_device_out
+
+- name: display RMAN default device type configuration
+  debug: 
+    msg: "{{ default_device_out.stdout_lines }}"
+
+
+- fail: 
+   msg: "RMAN configuration default device type not set to  disk"
+  when: default_device_out.rc == 0 and "DISK" not in default_device_out.stdout
+
+- name: check RMAN backupset configuration
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SHOW DEVICE TYPE;" | {{ source_oracle_home }}/bin/rman target /
+  register: backupset_out
+
+- name: display RMAN backupset configuration
+  debug: 
+    msg: "{{ backupset_out.stdout_lines }}"
+
+- fail: 
+   msg: "RMAN configuration contains COMPRESSED BACKUPSET, which is not allowed."
+  when: backupset_out.rc == 0 and "COMPRESSED BACKUPSET" in backupset_out.stdout
+
+- name: Ensure there is no unusable indexes in the source database  
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select table_owner,table_name,owner,index_name,status,tablespace_name from dba_indexes where status='UNUSABLE' and tablespace_name in ({{ "'" + tablespaces | regex_replace(',', "','") + "'" }});" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: unusable_out
+
+- name: display the unusable indexes
+  debug: 
+    msg: "{{unusable_out.stdout_lines}}"
+  #when: violations_out.rc == 0 and violations_out.stdout_lines | length == 0
+
+- fail:
+    msg: "One or more indexes are unusable" 
+  when: unusable_out.rc == 0 and unusable_out.stdout_lines | length > 0
+
+# only uncomment for prod db only
+# - name: Ensure there are no indexes have pending rows in DR$PENDING  
+#   shell: |
+#     export ORACLE_SID={{source_oracle_sid}}
+#     export ORACLE_HOME={{source_oracle_home}}
+#     printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select u.username, i.idx_name from ctxsys.dr\$index i, dba_users u where u.user_id=i.idx_owner# and idx_id in (select pnd_cid from ctxsys.dr\$pending);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+#   register: pending_indexes_out
+
+# - name: display pending indexes out
+#   debug: 
+#     msg: "{{pending_indexes_out.stdout_lines}}"
+  
+
+# - fail:
+#     msg: "One or more indexes have pending rows in DR$PENDING. Synchronize them using following format of command: exec ctx_ddl.sync_index('USERNAME.INDEX'); " 
+#   when: pending_indexes_out.rc == 0 and pending_indexes_out.stdout_lines | length > 0
+
+- name: Check if CTXSYS user exists
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select username from dba_users where username='CTXSYS';" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+  register: ctxsys_user_check
+ 
+- name: Ensure there are no indexes with pending rows in DR$PENDING
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select u.username, i.idx_name from ctxsys.dr\$index i, dba_users u where u.user_id=i.idx_owner# and idx_id in (select pnd_cid from ctxsys.dr\$pending);" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba
+  register: pending_indexes_out
+  when: "'CTXSYS' in ctxsys_user_check.stdout"  # Only continue if the output contains 'CTXSYS'
+ 
+- name: Display pending indexes output
+  debug:
+    msg: "{{pending_indexes_out.stdout_lines}}"
+  when: "'CTXSYS' in ctxsys_user_check.stdout"  # Only continue if the output contains 'CTXSYS'
+ 
+- fail:
+    msg: "One or more indexes have pending rows in DR$PENDING. Synchronize them using the following command format: exec ctx_ddl.sync_index('USERNAME.INDEX');"
+  when: "'CTXSYS' in ctxsys_user_check.stdout and pending_indexes_out.rc == 0 and pending_indexes_out.stdout_lines | length > 0"
+
+- name: Ensure there are no APPLICATION='Y' objects in the database
+  shell: |
+    export ORACLE_SID={{source_oracle_sid}}
+    export ORACLE_HOME={{source_oracle_home}}
+    printf "SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF ECHO OFF\n select a.object_name from dba_objects a inner join dba_users b on a.owner=b.username where b.oracle_maintained='N' and SHARING='NONE' and application='Y' order by 1;" | {{ source_oracle_home }}/bin/sqlplus -s {{source_conn_str}} as sysdba  
+  register: application_out
+
+- name: display the objects with APPLICATION='Y'
+  debug: 
+    msg: "{{application_out.stdout_lines}}"
+  
+
+- fail:
+    msg: "One or more APPLICATION='Y' objects found " 
+  when: application_out.rc == 0 and application_out.stdout_lines | length > 0
+
+
+
+
+
+    

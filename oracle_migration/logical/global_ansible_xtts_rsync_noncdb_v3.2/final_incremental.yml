@@ -1,0 +1,94 @@
+- name: do the final incremental backup on {{source_hostname}}
+  hosts: onprem_vm
+  tags: final_backup
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - final_backup
+
+- name: do the  metadata export on {{source_hostname}}
+  hosts: onprem_vm
+  tags: meta_export
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - meta_export
+
+- name: do the  grants export on {{source_hostname}}
+  hosts: onprem_vm
+  tags: grants_export
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - grants_export
+
+- name: transfer the final incremental backups to the {{target_xtts_scratch_dir}}
+  hosts: onprem_vm
+  tags: backup_transfer
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - backup_transfer
+
+- name: transfer the full meta dumps to the {{target_dp_dir}}
+  hosts: onprem_vm
+  tags: dump_transfer
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - dump_transfer  
+
+- name: do the final incremental restore on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: final_restore
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - final_restore
+
+## find the datafiles  on ASM and add the datafile info to the meta_import.par
+
+- name: find the datafiles on ASM on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: find_datafiles
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: grid
+  roles:
+    - find_datafiles
+
+
+
+- name: do the metadata import on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: meta_import
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - meta_import
+
+- name: do the grants import on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: grants_import
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - grants_import
+##post migration check
+
+- name: do the post migration check on {{target_hostname}}
+  hosts: target_oci_vm
+  tags: post_mig_check
+  #vars_files: host_vars/mig_vars.yml
+  become: true
+  become_user: oracle
+  roles:
+    - post_mig_check

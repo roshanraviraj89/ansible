@@ -1,0 +1,143 @@
+---
+# tasks file for source_mig_prereqs
+- block:
+    - name: Check if the directories already exist on {{source_hostname}}
+      stat:
+        path: "{{ item }}"
+      with_items:
+        - "{{source_xtts_stage_dir}}"
+        - "{{ source_xtts_scripts_dir }}"
+        - "{{ source_xtts_scratch_dir }}"
+        - "{{ source_dp_dir }}"
+        - "{{ source_verification_dir }}"
+      register: dir_result
+
+    - name: display dir_result variable
+      debug: var=dir_result.stdout_lines
+
+    - name: display a message if the directories already present on {{source_hostname}}
+      debug:
+        msg: "directory {{ item.item }} exists"
+      with_items: "{{ dir_result.results }}"
+      when: item.stat.exists
+
+    - name: create directories on {{source_hostname}}
+      file:
+        path: "{{ item.item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        recurse: yes
+        mode: "0755"
+      with_items:
+        - "{{ dir_result.results }}"
+      when: not item.stat.exists
+
+    - name: check if verification scripts are already present in the {{source_verification_dir}}
+      stat:
+        path: "{{source_verification_dir}}/{{item}}"
+      with_items: 
+         - Application_Objects_In_System_Sysaux.sql
+         - DB_Links_Details.sql
+         - Granted_Roles.sql
+         - Invalid_Objects.sql
+         - List_Schemas_And_Default_TBS.sql
+         - Object_Count_Per_Schema.sql
+         - Schedules_jobs.sql
+      register: sql_out
+
+    - name: copy the verification *.sql files to {{source_verification_dir}}
+      copy: 
+        src: "{{item.item}}"
+        dest: "{{source_verification_dir}}/"
+        owner: oracle
+        group: oinstall
+      with_items: "{{sql_out.results}}"
+      when: not item.stat.exists  
+
+    - name: check if {{rman_xttconvert}} already exists on {{ source_hostname }}
+      stat:
+        path: "{{ source_xtts_stage_dir }}/{{ rman_xttconvert }}"
+      register: rman_xttconvert_result
+
+      #copy rman_xttconvert_VER4.3.zip
+    - name: Copy {{ rman_xttconvert }} to the {{ source_xtts_stage_dir }} on {{ source_hostname }}
+      copy:
+        src: "{{ rman_xttconvert }}"
+        dest: "{{ source_xtts_stage_dir }}/"
+        owner: oracle
+        group: oinstall
+      when:
+        not rman_xttconvert_result.stat.exists
+
+        #unzip rman_xttconvert_VER4.3.zip
+    - name: check if {{ rman_xttconvert }} has already been unzipped into the  {{ source_xtts_scripts_dir }} on {{ source_hostname }}
+      find:
+        paths: "{{ source_xtts_scripts_dir }}"
+        file_type: any
+      register: xtts_out
+ 
+    - block:
+        - name: unzip {{ rman_xttconvert }} into the  {{ source_xtts_scripts_dir }} on {{ source_hostname }}
+          become: true
+          become_user: oracle
+          unarchive: src="{{source_xtts_stage_dir}}/{{rman_xttconvert}}"
+            dest="{{ source_xtts_scripts_dir }}"
+            mode=0775
+            owner=oracle
+            group=oinstall
+            remote_src=true
+        - name: generate xtt.properties file for {{ source_hostname }}
+          template:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: oracle
+            group: oinstall
+            mode: "u=rwx,g=rwx,o=rx"
+          with_items:
+            - {
+                src: "xtt.properties.j2",
+                dest: "{{ source_xtts_scripts_dir }}/xtt.properties",
+              }
+      when: xtts_out.matched == 0
+
+    - name: generate meta data export par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - {
+            src: "meta_export.par.j2",
+            dest: "{{ source_dp_dir }}/meta_export.par",
+          }
+    - name: generate grants export par file
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - {
+            src: "grants_export.par.j2",
+            dest: "{{ source_dp_dir }}/grants_export.par",
+          }
+
+    - name: generate rysnc_transfer.sh
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: oracle
+        group: oinstall
+        mode: "u=rwx,g=rwx,o=r"
+      with_items:
+        - {
+            src: "rsync_parallel_backup_transfer_v4.sh.j2",
+            dest: "{{ source_xtts_scripts_dir }}/rsync_parallel_backup_transfer_v4.sh",
+          }
+
+
+  when: inventory_hostname in groups['onprem_vm']

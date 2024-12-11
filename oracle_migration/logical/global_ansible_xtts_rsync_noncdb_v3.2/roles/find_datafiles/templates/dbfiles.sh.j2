@@ -1,0 +1,34 @@
+#!/bin/bash
+export ORACLE_SID={{target_grid_sid}}
+export ORACLE_HOME={{target_grid_home}}
+export PATH=$PATH:{{target_grid_home}}/bin
+export LD_LIBRARY_PATH={{target_grid_home}}/lib
+
+
+
+# echo '' >> {{target_dp_dir}}/{{imp_par_file}}
+
+db_files=$(asmcmd ls +{{ target_datafile_location }}/ | grep -Ev '(\.dbf$|^SYSAUX|^SYSTEM|^UNDOTBS1|^UNDO_2|^USERS)')
+
+db_files_array=(${db_files})
+
+
+for file in "${db_files_array[@]}"
+do
+  echo -e "TRANSPORT_DATAFILES='+{{ target_datafile_location }}/${file}'" >> {{ target_dp_dir }}/{{ imp_par_file }}
+  echo "+{{ target_datafile_location }}/${file} has been successfully added to the meta_import.par"
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+

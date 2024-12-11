@@ -1,0 +1,50 @@
+---
+# tasks file for level_0_backup
+# Note: if you enable ssh passwordless authentication between source and target for Oracle user, then the backups will be copied automatically to the target
+
+# - name: do a level 0 backup on {{source_hostname}}
+#   shell: |
+#     export ORACLE_SID={{source_oracle_sid}}
+#     export ORACLE_HOME={{source_oracle_home}} 
+#     export NLS_LANG={{ nls_lang }}
+#     export TMPDIR={{source_xtts_scripts_dir}} 
+#     cd {{source_xtts_scripts_dir}}
+#     {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+#   register: backup_out
+  
+#   # shell: export ORACLE_SID={{source_oracle_sid}}; export ORACLE_HOME={{source_oracle_home}};  export TMPDIR={{source_xtts_scripts_dir}}; cd {{source_xtts_scripts_dir}}; {{source_oracle_home}}/perl/bin/perl xttdriver.pl --backup
+#   # register: backup_out
+
+# - name: validate if the backup has been completed successfully
+#   debug: 
+#     msg: "{{ backup_out.stdout_lines }}"
+#   when: backup_out.rc == 0
+
+
+- name: Do a level 0 backup on {{source_hostname}}
+  async: 604800 # Maximum wait time for the task in seconds (1 week)
+  poll: 0       # Start the task and don't wait for it to finish
+  shell: |
+    export ORACLE_SID={{ source_oracle_sid }}
+    export ORACLE_HOME={{ source_oracle_home }} 
+    export NLS_LANG={{ nls_lang }}
+    export TMPDIR={{ source_xtts_scripts_dir }} 
+    cd {{ source_xtts_scripts_dir }}
+    {{ source_oracle_home }}/perl/bin/perl xttdriver.pl --backup
+  register: backup_async_job
+
+- name: Wait for the backup job to finish
+  async_status:
+    jid: "{{ backup_async_job.ansible_job_id }}"
+  register: backup_out
+  until: backup_out.finished
+  retries: 20160  # Retry up to 1 week (20160 retries with 30-second delay each)
+  delay: 30       # Delay between retries
+
+- name: Validate if the backup has been completed successfully
+  debug: 
+    msg: "{{ backup_out.stdout_lines }}"
+  when: backup_out.rc == 0
+ 
+
+   
