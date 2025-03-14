@@ -1,5 +1,0 @@
-nohup: ignoring input
-[WARNING]: Platform linux on host 10.100.72.47 is using the discovered Python
-interpreter at /usr/bin/python, but future installation of another Python
-interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
-ce_appendices/interpreter_discovery.html for more information.
